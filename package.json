@@ -1,0 +1,67 @@
+{
+  "name": "vscode-book-reader",
+  "displayName": "book reader",
+  "description": "",
+  "version": "1.0.0",
+  "engines": {
+    "vscode": "^1.85.2"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "bookReader",
+        "title": "book reader"
+      }
+    ],
+    "customEditors": [
+      {
+        "viewType": "bookReader",
+        "displayName": "book reader",
+        "selector": [
+          {
+            "filenamePattern": "*.epub"
+          }
+        ]
+      }
+    ]
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "vscode:prepublish": "pnpm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "pnpm run compile && pnpm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "vscode-test",
+    "format": "prettier --write src/**/*.{ts} resource/**/*.{ts,vue}"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.6",
+    "@types/node": "18.x",
+    "@types/vscode": "^1.88.0",
+    "@typescript-eslint/eslint-plugin": "^7.4.0",
+    "@typescript-eslint/parser": "^7.4.0",
+    "@vitejs/plugin-vue": "^5.0.4",
+    "@vscode/test-cli": "^0.0.8",
+    "@vscode/test-electron": "^2.3.9",
+    "eslint": "^8.57.0",
+    "prettier": "^3.2.5",
+    "typescript": "^5.3.3",
+    "vite": "^5.2.10",
+    "vite-plugin-singlefile": "^2.0.1"
+  },
+  "dependencies": {
+    "@element-plus/icons-vue": "^2.3.1",
+    "element-plus": "^2.7.3",
+    "vue": "^3.4.26",
+    "vue-easy-lightbox": "^1.19.0",
+    "vue-reader": "^1.2.12"
+  }
+}
