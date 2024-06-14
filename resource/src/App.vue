@@ -3,6 +3,7 @@
     <vue-reader
       :url="url"
       :getRendition="getRendition"
+      @update:location="locationChange"
       :epubInitOptions="{ spreads: false }"
     />
     <!-- lightbox -->
@@ -19,34 +20,159 @@
       class="slider"
       @change="change"
     ></el-slider>
-    <!-- setting -->
-    <el-icon class="setting-icon" color="#ccc" @click="setting = true"
-      ><Setting
-    /></el-icon>
-    <el-drawer v-model="setting" title="search">
-      <!-- search -->
-      <el-input
-        clearable
-        v-model="searchText"
-        size="small"
-        width="300"
-        placeholder="search"
-        :suffix-icon="searchText ? '' : Search"
-        @keyup.enter="search"
-      />
-      <el-table
-        :key="searchResult.length"
-        :show-header="false"
-        :data="searchResult"
-        @cell-click="onNodeClick"
+    <div class="setting-box">
+      <!-- setting -->
+      <el-icon class="setting-icon" color="#ccc" @click="setting = true">
+        <Setting />
+      </el-icon>
+      <el-drawer
+        v-model="setting"
+        title="setting"
+        :with-header="false"
+        :size="250"
       >
-        <el-table-column prop="label">
-          <template #default="scope">
-            <span v-html="scope.row.label" />
-          </template>
-        </el-table-column>
-      </el-table>
-    </el-drawer>
+        <el-form :model="theme" label-width="auto" style="max-width: 100%">
+          <el-form-item label="Flow">
+            <el-radio-group
+              v-model="flow"
+              size="small"
+              style="flex-wrap: nowrap"
+            >
+              <el-radio-button value="paginated" border>
+                Paged
+              </el-radio-button>
+              <el-radio-button value="scrolled-doc" border>
+                Scrolled
+              </el-radio-button>
+            </el-radio-group>
+          </el-form-item>
+          <el-form-item label="Line Spacing">
+            <el-input-number
+              v-model="theme.lineSpacing"
+              :precision="2"
+              :step="0.1"
+              :min="1.3"
+              :max="2.0"
+              size="small"
+            ></el-input-number>
+          </el-form-item>
+          <el-form-item label="Font Size">
+            <el-input-number
+              v-model="theme.fontSize"
+              :step="2"
+              :min="10"
+              :max="300"
+              size="small"
+            ></el-input-number>
+          </el-form-item>
+          <el-form-item label="Font">
+            <el-select
+              v-model="theme.font"
+              class="font-select"
+              width="50"
+              size="small"
+            >
+              <el-option
+                v-for="{ label, value } in fontFamily"
+                :key="value"
+                :label="label"
+                :value="value"
+              >
+                <span :style="{ fontFamily: value }">{{ label }}</span>
+              </el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="Text To Speech">
+            <el-switch v-model="isReading" @change="speak" />
+          </el-form-item>
+          <el-form-item label="Speed">
+            <el-select
+              class="font-select"
+              width="50"
+              size="small"
+              v-model="speed"
+            >
+              <el-option
+                v-for="(item, index) in speedList"
+                :key="index"
+                :label="item"
+                :value="item"
+              >
+              </el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="Voice">
+            <el-select
+              class="font-select"
+              width="50"
+              size="small"
+              v-model="voiceIndex"
+            >
+              <el-option
+                v-for="(item, index) in voices"
+                :key="item.name"
+                :label="item.name"
+                :value="index"
+              >
+              </el-option>
+            </el-select>
+          </el-form-item>
+        </el-form>
+      </el-drawer>
+      <!-- searching -->
+      <el-icon class="setting-icon" @click="searching = true" color="#ccc">
+        <Search />
+      </el-icon>
+      <el-drawer
+        v-model="searching"
+        title="search"
+        :with-header="false"
+        :size="250"
+      >
+        <el-input
+          clearable
+          v-model="searchText"
+          size="small"
+          width="300"
+          placeholder="search"
+          :suffix-icon="searchText ? '' : Search"
+          @keyup.enter="search"
+          class="search"
+        />
+        <el-table
+          :key="searchResult.length"
+          :show-header="false"
+          :data="searchResult"
+          @cell-click="onNodeClick"
+          height="calc(100% - 26px)"
+        >
+          <el-table-column prop="label">
+            <template #default="scope">
+              <span v-html="scope.row.label" />
+            </template>
+          </el-table-column>
+        </el-table>
+      </el-drawer>
+      <!-- info -->
+      <el-icon class="setting-icon" color="#ccc" @click="info = true"
+        ><WarningFilled
+      /></el-icon>
+      <el-drawer v-model="info" title="search" :with-header="false" :size="250">
+        <div v-if="information" class="information">
+          <el-image
+            :src="information.cover"
+            :alt="information.title"
+          />
+          <p>标题:{{ information.title }}</p>
+          <p>作者:{{ information.creator }}</p>
+          <p>出版社:{{ information.publisher }}</p>
+          <p>语言:{{ information.language }}</p>
+          <p>出版日期:{{ information.pubdate }}</p>
+          <p>修改日期:{{ information.modified_date }}</p>
+          <p>介绍:{{ information.description }}</p>
+        </div>
+      </el-drawer>
+    </div>
   </div>
   <!-- import -->
   <div v-else class="import">
@@ -71,7 +197,7 @@
 import { VueReader } from 'vue-reader'
 import VueEasyLightbox from 'vue-easy-lightbox'
 import { Search } from '@element-plus/icons-vue'
-import { ref } from 'vue'
+import { ref, reactive, watch, onMounted } from 'vue'
 
 //vscode
 const vscode =
@@ -133,6 +259,10 @@ const getRendition = (val) => {
   displayed = rendition.display()
   book.ready
     .then(() => {
+      book.loaded.metadata.then(async (metadata) => {
+        const cover = await book.coverUrl()
+        information.value = { ...metadata, cover }
+      })
       return book.locations.generate(1600)
     })
     .then((locations) => {
@@ -154,10 +284,8 @@ const change = (val) => {
   var cfi = book.locations.cfiFromPercentage(val / 100)
   rendition.display(cfi)
 }
-//setting
-const setting = ref(true)
-
 //search
+const searching = ref(false)
 const searchText = ref('')
 const searchResult = ref([])
 const search = () => {
@@ -177,22 +305,163 @@ const search = () => {
       searchResult.value = results.map((result) => {
         result.label = result.excerpt
           .trim()
-          .replace(
-            text,
-            `<span style='color: orange;'>${text}</span>`,
-          )
+          .replace(text, `<span style='color: orange;'>${text}</span>`)
         return result
       })
     })
 }
-const onNodeClick = (item) => {
-  rendition.display(item.cfi || item.href)
+const onNodeClick = (item) => rendition.display(item.cfi || item.href)
+//theme
+const setting = ref(false)
+const flow = ref('paginated')
+watch(flow, (value) => rendition.flow(value))
+const theme = reactive({
+  fontSize: 100,
+  font: '',
+  lineSpacing: 1.5,
+})
+const fontFamily = [
+  {
+    label: 'Arial',
+    value: "'Arial', Arimo, Liberation Sans, sans-serif",
+  },
+  {
+    label: 'Lato',
+    value: "'Lato', sans-serif",
+  },
+  {
+    label: 'Georgia',
+    value: "'Georgia', Liberation Serif, serif",
+  },
+  {
+    label: 'Times New Roman',
+    value: "Times New Roman', Tinos, Liberation Serif, Times, serif",
+  },
+  {
+    label: 'Arbutus Slab',
+    value: "'Arbutus Slab', serif",
+  },
+]
+const updateStyle = ({ font, fontSize, lineSpacing }) => {
+  const rules = {
+    p: {
+      'font-family': font !== '' ? `${font} !important` : '!invalid-hack',
+      'font-size': fontSize !== '' ? `${fontSize} !important` : '!invalid-hack',
+    },
+    body: {
+      'font-family': font !== '' ? `${font} !important` : '!invalid-hack',
+      // "text-align": `${theme.ta} !important`,
+    },
+    '*': {
+      'line-height': `${lineSpacing} !important`,
+      'font-size':
+        fontSize !== '' ? `${fontSize}% !important` : '!invalid-hack',
+    },
+  }
+  if (!rendition) return
+  rendition.getContents().forEach((content) => {
+    content.addStylesheetRules(rules)
+  })
+  // if (rendition && rendition.manager) {
+  //   rendition.start()
+  // }
 }
+watch(theme, (val) => {
+  updateStyle(val)
+})
+//speak
+let isAudioOn = false,
+  text = ''
+const isReading = ref(false)
+const speed = ref(1)
+const speedList = ref([
+  '0.1',
+  '0.2',
+  '0.3',
+  '0.4',
+  '0.5',
+  '0.75',
+  '1',
+  '1.25',
+  '1.5',
+  '1.75',
+  '2',
+  '3',
+  '4',
+  '5',
+])
+
+const locationChange = () => {
+  const range = rendition.getRange(rendition.currentLocation().start.cfi)
+  const endRange = rendition.getRange(rendition.currentLocation().end.cfi)
+  range.setEnd(endRange.startContainer, endRange.startOffset)
+  text = range
+    .toString()
+    .replace(/\s\s/g, '')
+    .replace(/\r/g, '')
+    .replace(/\n/g, '')
+    .replace(/\t/g, '')
+    .replace(/\f/g, '')
+}
+
+const speak = (val) => {
+  if (val) {
+    voice(text, speed.value)
+  } else {
+    isAudioOn = false
+    window.speechSynthesis.cancel()
+  }
+}
+
+const voice = (text, rate = 1) => {
+  isAudioOn = true
+  const msg = new SpeechSynthesisUtterance()
+  msg.text = text
+  msg.voice = window.speechSynthesis.getVoices()[0]
+  msg.rate = rate
+  window.speechSynthesis.speak(msg)
+  msg.onerror = (err) => {
+    console.log(err)
+  }
+  msg.onend = async (event) => {
+    if (!isReading.value && !isAudioOn) return
+    rendition.next()
+    speak()
+  }
+}
+
+const voices = ref([])
+const voiceIndex = ref(0)
+
+const setSpeech = () => {
+  return new Promise((resolve, reject) => {
+    let synth = window.speechSynthesis
+    let id
+
+    id = setInterval(() => {
+      if (synth.getVoices().length !== 0) {
+        resolve(synth.getVoices())
+        clearInterval(id)
+      } else {
+        this.setState({ isSupported: false })
+      }
+    }, 10)
+  })
+}
+
+onMounted(async () => {
+  voices.value = await setSpeech()
+})
+
+//info
+const info = ref(true)
+const information = ref(null)
 </script>
 <style>
 .book-reader {
   height: 100vh;
 }
+
 .book-reader .slider {
   position: absolute;
   bottom: 1rem;
@@ -203,16 +472,26 @@ const onNodeClick = (item) => {
   margin: auto;
 }
 
-.book-reader .setting-icon {
+.book-reader .setting-box {
   position: absolute;
-  right: 1rem;
   top: 1rem;
+  right: 1rem;
+  display: flex;
+  gap: 5px;
+  flex-direction: row-reverse;
+}
+
+.setting-box .setting-icon {
   cursor: pointer;
   z-index: 5;
 }
 
-.book-reader .setting-icon:hover {
+.setting-box .setting-icon:hover {
   color: #409efc;
+}
+
+.setting-box .information{
+ color: #000;
 }
 
 .import {
