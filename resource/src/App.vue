@@ -1,10 +1,19 @@
 <template>
   <div v-if="url" class="book-reader">
-    <vue-reader
+    <!-- epub book-->
+    <epub-reader
+      v-if="extend && extend === 'epub'"
       :url="url"
       :getRendition="getRendition"
       @update:location="locationChange"
       :epubInitOptions="{ spreads: false }"
+    />
+    <!-- other book -->
+    <book-reader
+      v-else-if="extend"
+      :url="url"
+      :getRendition="getBookRendition"
+      @update:location="locationChange"
     />
     <!-- lightbox -->
     <vue-easy-lightbox
@@ -154,22 +163,27 @@
         </el-table>
       </el-drawer>
       <!-- info -->
-      <el-icon class="setting-icon" color="#ccc" @click="info = true"
-        ><WarningFilled
-      /></el-icon>
+      <el-icon class="setting-icon" color="#ccc" @click="info = true">
+        <WarningFilled />
+      </el-icon>
       <el-drawer v-model="info" title="search" :with-header="false" :size="250">
         <div v-if="information" class="information">
           <el-image
             :src="information.cover"
             :alt="information.title"
+            :preview-src-list="[information.cover]"
           />
-          <p>标题:{{ information.title }}</p>
-          <p>作者:{{ information.creator }}</p>
-          <p>出版社:{{ information.publisher }}</p>
-          <p>语言:{{ information.language }}</p>
-          <p>出版日期:{{ information.pubdate }}</p>
-          <p>修改日期:{{ information.modified_date }}</p>
-          <p>介绍:{{ information.description }}</p>
+          <p v-if="information.title">标题:{{ information.title }}</p>
+          <p v-if="information.creator">作者:{{ information.creator }}</p>
+          <p v-if="information.publisher">出版社:{{ information.publisher }}</p>
+          <p v-if="information.language">语言:{{ information.language }}</p>
+          <p v-if="information.pubdate">出版日期:{{ information.pubdate }}</p>
+          <p v-if="information.modified_date">
+            修改日期:{{ information.modified_date }}
+          </p>
+          <p v-if="information.description">
+            介绍:{{ information.description }}
+          </p>
         </div>
       </el-drawer>
     </div>
@@ -184,7 +198,7 @@
           ref="input"
           type="file"
           :multiple="false"
-          accept=".epub"
+          accept=".epub,.mobi,.fk8,.azw3,fb2,cbz,pdf"
           @change="onchange"
         />Open a Book</el-button
       >
@@ -194,10 +208,11 @@
 <script setup>
 //http://element-plus.org/zh-CN/component/overview.html
 //https://www.npmjs.com/package/bing-translate-api
-import { VueReader } from 'vue-reader'
+import { VueReader as EpubReader } from 'vue-reader'
+import { VueReader as BookReader } from 'vue-book-reader'
 import VueEasyLightbox from 'vue-easy-lightbox'
 import { Search } from '@element-plus/icons-vue'
-import { ref, reactive, watch, onMounted } from 'vue'
+import { ref, reactive, watch, computed, onMounted } from 'vue'
 
 //vscode
 const vscode =
@@ -211,7 +226,13 @@ window.addEventListener('message', ({ data }) => {
 })
 
 //Import file
-const url = ref('alice.epub')
+const url = ref('')
+const extend = computed(() => {
+  const type = url.value.split('.')
+  const filetype = type[type.length - 1]
+  console.log(filetype, 'filetype')
+  return filetype || ''
+})
 const input = ref(null)
 const importFile = () => input.value.click()
 const onchange = (e) => {
@@ -280,9 +301,33 @@ const getRendition = (val) => {
       })
     })
 }
+const getBookRendition = (val) => {
+  rendition = val
+  const { book } = rendition
+  const { author } = book.metadata
+  const bookAuthor =
+    typeof author === 'string'
+      ? author
+      : author
+          ?.map((author) => (typeof author === 'string' ? author : author.name))
+          ?.join(', ') ?? ''
+  information.value = {
+    ...book.metadata,
+    creator: bookAuthor,
+    pubdate: book.metadata.published,
+  }
+  book.getCover?.().then((blob) => {
+    information.value.cover = URL.createObjectURL(blob)
+  })
+}
 const change = (val) => {
-  var cfi = book.locations.cfiFromPercentage(val / 100)
-  rendition.display(cfi)
+  if (extend.value === 'epub') {
+    var cfi = book.locations.cfiFromPercentage(val / 100)
+    rendition.display(cfi)
+  } else {
+    sliderValue.value = val
+    rendition.goToFraction(parseFloat(val / 100))
+  }
 }
 //search
 const searching = ref(false)
@@ -391,17 +436,23 @@ const speedList = ref([
   '5',
 ])
 
-const locationChange = () => {
-  const range = rendition.getRange(rendition.currentLocation().start.cfi)
-  const endRange = rendition.getRange(rendition.currentLocation().end.cfi)
-  range.setEnd(endRange.startContainer, endRange.startOffset)
-  text = range
-    .toString()
-    .replace(/\s\s/g, '')
-    .replace(/\r/g, '')
-    .replace(/\n/g, '')
-    .replace(/\t/g, '')
-    .replace(/\f/g, '')
+const locationChange = (detail) => {
+  if (extend.value === 'epub') {
+    const range = rendition.getRange(rendition.currentLocation().start.cfi)
+    const endRange = rendition.getRange(rendition.currentLocation().end.cfi)
+    range.setEnd(endRange.startContainer, endRange.startOffset)
+    text = range
+      .toString()
+      .replace(/\s\s/g, '')
+      .replace(/\r/g, '')
+      .replace(/\n/g, '')
+      .replace(/\t/g, '')
+      .replace(/\f/g, '')
+  } else {
+    const { fraction } = detail
+    const percent = Math.floor(fraction * 100)
+    sliderValue.value = percent
+  }
 }
 
 const speak = (val) => {
@@ -454,7 +505,7 @@ onMounted(async () => {
 })
 
 //info
-const info = ref(true)
+const info = ref(false)
 const information = ref(null)
 </script>
 <style>
@@ -490,8 +541,8 @@ const information = ref(null)
   color: #409efc;
 }
 
-.setting-box .information{
- color: #000;
+.setting-box .information {
+  color: #000;
 }
 
 .import {
