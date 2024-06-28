@@ -9,7 +9,9 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onView:book-reader"
+  ],
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [
@@ -18,6 +20,24 @@
         "title": "book reader"
       }
     ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "book-reader",
+          "title": "book-reader",
+          "icon": "resource/public/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "book-reader": [
+        {
+          "id": "book-reader-webview",
+          "name": "view",
+          "type": "webview"
+        }
+      ]
+    },
     "customEditors": [
       {
         "viewType": "bookReader",

@@ -2,15 +2,15 @@
   <div v-if="url" class="book-reader">
     <!-- epub book-->
     <epub-reader
-      v-if="extend && extend === 'epub'"
+      v-if="type && type === 'epub'"
       :url="url"
       :getRendition="getRendition"
       @update:location="locationChange"
       :epubInitOptions="{ spreads: false }"
     />
-    <!-- other book -->
+    <!-- other type book -->
     <book-reader
-      v-else-if="extend"
+      v-else-if="type"
       :url="url"
       :getRendition="getBookRendition"
       @update:location="locationChange"
@@ -54,6 +54,12 @@
                 Scrolled
               </el-radio-button>
             </el-radio-group>
+          </el-form-item>
+          <el-form-item label="Text color">
+            <el-color-picker v-model="theme.textColor" show-alpha />
+          </el-form-item>
+          <el-form-item label="Background color">
+            <el-color-picker v-model="theme.backgroundColor" show-alpha />
           </el-form-item>
           <el-form-item label="Line Spacing">
             <el-input-number
@@ -198,7 +204,7 @@
           ref="input"
           type="file"
           :multiple="false"
-          accept=".epub,.mobi,.fk8,.azw3,fb2,cbz,pdf"
+          accept=".epub,.mobi,.fk8,.azw3,.fb2,.cbz,.pdf"
           @change="onchange"
         />Open a Book</el-button
       >
@@ -222,25 +228,30 @@ vscode && vscode.postMessage({ type: 'init' })
 window.addEventListener('message', ({ data }) => {
   if (data && data.type === 'open') {
     url.value = data.content
+    type.value = fileType(data.content)
   }
 })
 
 //Import file
 const url = ref('')
-const extend = computed(() => {
-  const type = url.value.split('.')
-  const filetype = type[type.length - 1]
-  console.log(filetype, 'filetype')
-  return filetype || ''
-})
+const type = ref('')
+const fileType = (path) => {
+  const type = path.split('.')
+  return type[type.length - 1] || ''
+}
 const input = ref(null)
 const importFile = () => input.value.click()
 const onchange = (e) => {
   const file = e.target.files[0]
-  if (window.FileReader) {
-    var reader = new FileReader()
-    reader.onloadend = () => (url.value = reader.result)
-    reader.readAsArrayBuffer(file)
+  type.value = fileType(file.name)
+  if (type.value === 'epub') {
+    if (window.FileReader) {
+      var reader = new FileReader()
+      reader.onloadend = () => (url.value = reader.result)
+      reader.readAsArrayBuffer(file)
+    }
+  } else {
+    url.value = file
   }
 }
 
@@ -321,7 +332,7 @@ const getBookRendition = (val) => {
   })
 }
 const change = (val) => {
-  if (extend.value === 'epub') {
+  if (type.value === 'epub') {
     var cfi = book.locations.cfiFromPercentage(val / 100)
     rendition.display(cfi)
   } else {
@@ -336,34 +347,61 @@ const searchResult = ref([])
 const search = () => {
   const text = searchText.value
   if (!text) return
-  const book = rendition.book
-  return Promise.all(
-    book.spine.spineItems.map((item) =>
-      item
-        .load(book.load.bind(book))
-        .then(item.find.bind(item, text))
-        .finally(item.unload.bind(item)),
-    ),
-  )
-    .then((results) => results.flat())
-    .then((results) => {
-      searchResult.value = results.map((result) => {
-        result.label = result.excerpt
-          .trim()
-          .replace(text, `<span style='color: orange;'>${text}</span>`)
-        return result
+  if (type.value === 'epub') {
+    const book = rendition.book
+    return Promise.all(
+      book.spine.spineItems.map((item) =>
+        item
+          .load(book.load.bind(book))
+          .then(item.find.bind(item, text))
+          .finally(item.unload.bind(item)),
+      ),
+    )
+      .then((results) => results.flat())
+      .then((results) => {
+        searchResult.value = results.map((result) => {
+          result.label = result.excerpt
+            .trim()
+            .replace(text, `<span style='color: orange;'>${text}</span>`)
+          return result
+        })
       })
-    })
+  }else{
+    console.log(rendition)
+  }
 }
 const onNodeClick = (item) => rendition.display(item.cfi || item.href)
 //theme
 const setting = ref(false)
 const flow = ref('paginated')
-watch(flow, (value) => rendition.flow(value))
+watch(flow, (value) => {
+  if (type.value === 'epub') {
+    rendition.flow(value)
+  } else {
+    rendition?.renderer.setAttribute(
+      'flow',
+      value === 'paginated' ? 'paginated' : 'scrolled',
+    )
+  }
+})
+const textList = [
+  'rgba(0,0,0,1)',
+  'rgba(255,255,255,1)',
+  'rgba(89, 68, 41,1)',
+  'rgba(54, 80, 62,1)',
+]
+const backgroundList = [
+  'rgba(255,255,255,1)',
+  'rgba(44,47,49,1)',
+  'rgba(233, 216, 188,1)',
+  'rgba(197, 231, 207,1)',
+]
 const theme = reactive({
   fontSize: 100,
   font: '',
   lineSpacing: 1.5,
+  textColor: textList[0],
+  backgroundColor: backgroundList[0],
 })
 const fontFamily = [
   {
@@ -387,29 +425,67 @@ const fontFamily = [
     value: "'Arbutus Slab', serif",
   },
 ]
-const updateStyle = ({ font, fontSize, lineSpacing }) => {
+const getCSS = ({
+  font,
+  fontSize,
+  lineSpacing,
+  textColor,
+  backgroundColor,
+}) => [
+  `
+p {
+  font-family: ${font};
+  font-size:  ${fontSize}px;
+  color: ${textColor};
+}
+
+body * {
+  font-family: ${font} !important;
+  color: ${textColor} !important;
+  background-color: ${backgroundColor} !important;
+}
+html,body {
+  line-height: ${lineSpacing} !important;
+  font-size: ${fontSize}px !important;
+  color: ${textColor} !important;
+  background-color: ${backgroundColor} !important;
+}
+`,
+]
+const updateStyle = ({
+  font,
+  fontSize,
+  lineSpacing,
+  textColor,
+  backgroundColor,
+}) => {
   const rules = {
     p: {
       'font-family': font !== '' ? `${font} !important` : '!invalid-hack',
       'font-size': fontSize !== '' ? `${fontSize} !important` : '!invalid-hack',
+      color: textColor,
     },
     body: {
       'font-family': font !== '' ? `${font} !important` : '!invalid-hack',
-      // "text-align": `${theme.ta} !important`,
+      color: textColor,
+      'background-color': backgroundColor,
     },
     '*': {
       'line-height': `${lineSpacing} !important`,
       'font-size':
         fontSize !== '' ? `${fontSize}% !important` : '!invalid-hack',
+      color: textColor,
     },
   }
-  if (!rendition) return
-  rendition.getContents().forEach((content) => {
-    content.addStylesheetRules(rules)
-  })
-  // if (rendition && rendition.manager) {
-  //   rendition.start()
-  // }
+  if (type.value === 'epub') {
+    if (!rendition) return
+    rendition.getContents().forEach((content) => {
+      content.addStylesheetRules(rules)
+    })
+    // rendition.start()
+  } else {
+    rendition?.renderer.setStyles(getCSS({ font, fontSize, lineSpacing }))
+  }
 }
 watch(theme, (val) => {
   updateStyle(val)
@@ -437,7 +513,7 @@ const speedList = ref([
 ])
 
 const locationChange = (detail) => {
-  if (extend.value === 'epub') {
+  if (type.value === 'epub') {
     const range = rendition.getRange(rendition.currentLocation().start.cfi)
     const endRange = rendition.getRange(rendition.currentLocation().end.cfi)
     range.setEnd(endRange.startContainer, endRange.startOffset)
@@ -494,7 +570,7 @@ const setSpeech = () => {
         resolve(synth.getVoices())
         clearInterval(id)
       } else {
-        this.setState({ isSupported: false })
+        // this.setState({ isSupported: false })
       }
     }, 10)
   })
@@ -511,6 +587,13 @@ const information = ref(null)
 <style>
 .book-reader {
   height: 100vh;
+}
+
+.book-reader .reader {
+  inset: 50px 0 20px;
+}
+.book-reader .arrow {
+  display: none;
 }
 
 .book-reader .slider {
