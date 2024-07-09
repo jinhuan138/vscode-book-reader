@@ -9,5 +9,8 @@ export default defineConfig({
 		port: 8025,
 	},
 	root:"./resource",
-	base:"./resource"
+	base:"./resource",
+	esbuild:{
+      exclude:['./resource/public/files']
+	}
 });
