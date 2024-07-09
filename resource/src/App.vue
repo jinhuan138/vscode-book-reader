@@ -609,7 +609,7 @@ const info = ref(false)
 const information = ref(null)
 
 //sidebarViewer
-const isSidebar = ref(true)
+const isSidebar = ref(false)
 </script>
 <style>
 .book-reader,
