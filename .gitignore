@@ -1,6 +1,7 @@
 out
 dist
 resource/dist
+resource/public/files
 node_modules
 pnpm-lock.yaml
 .vscode-test/

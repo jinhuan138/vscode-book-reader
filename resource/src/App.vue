@@ -1,20 +1,30 @@
 <template>
-  <div v-if="url" class="book-reader">
+  <div v-if="url" :class="[isSidebar ? 'sidebar-reader' : 'book-reader']">
     <!-- epub book-->
-    <epub-reader
-      v-if="type && type === 'epub'"
-      :url="url"
-      :getRendition="getRendition"
-      @update:location="locationChange"
-      :epubInitOptions="{ spreads: false }"
-    />
+    <template v-if="type === 'epub'">
+      <epub-reader
+        v-if="!isSidebar"
+        :url="url"
+        :getRendition="getRendition"
+        @update:location="locationChange"
+      />
+      <EpubView v-else :url="url" :getRendition="getRendition" />
+    </template>
     <!-- other type book -->
-    <book-reader
-      v-else-if="type"
-      :url="url"
-      :getRendition="getBookRendition"
-      @update:location="locationChange"
-    />
+    <template v-else-if="type">
+      <book-reader
+        v-if="!isSidebar"
+        :url="url"
+        :getRendition="getBookRendition"
+        @update:location="locationChange"
+      />
+      <BookView
+        v-else
+        :url="url"
+        :getRendition="getBookRendition"
+        @update:location="locationChange"
+      />
+    </template>
     <!-- lightbox -->
     <vue-easy-lightbox
       :visible="visibleRef"
@@ -29,7 +39,7 @@
       class="slider"
       @change="change"
     ></el-slider>
-    <div class="setting-box">
+    <div class="setting-box" v-if="!isSidebar">
       <!-- setting -->
       <el-icon class="setting-icon" color="#ccc" @click="setting = true">
         <Setting />
@@ -214,11 +224,11 @@
 <script setup>
 //http://element-plus.org/zh-CN/component/overview.html
 //https://www.npmjs.com/package/bing-translate-api
-import { VueReader as EpubReader } from 'vue-reader'
-import { VueReader as BookReader } from 'vue-book-reader'
+import { VueReader as EpubReader, EpubView } from 'vue-reader'
+import { VueReader as BookReader, BookView } from 'vue-book-reader'
 import VueEasyLightbox from 'vue-easy-lightbox'
 import { Search } from '@element-plus/icons-vue'
-import { ref, reactive, watch, computed, onMounted } from 'vue'
+import { ref, reactive, watch, onMounted } from 'vue'
 
 //vscode
 const vscode =
@@ -230,10 +240,15 @@ window.addEventListener('message', ({ data }) => {
     url.value = data.content
     type.value = fileType(data.content)
   }
+  if (data && data.type === 'type') {
+    if (data.content === 'sidebar') {
+      isSidebar.value = true
+    }
+  }
 })
 
 //Import file
-const url = ref('')
+const url = ref('/files/啼笑因缘.mobi')
 const type = ref('')
 const fileType = (path) => {
   const type = path.split('.')
@@ -254,6 +269,15 @@ const onchange = (e) => {
     url.value = file
   }
 }
+watch(
+  url,
+  (val) => {
+    if (val && typeof val === 'string') {
+      type.value = val.split('.').pop()
+    }
+  },
+  { immediate: true },
+)
 
 //Image Lightbox
 let rendition, book, displayed
@@ -366,7 +390,7 @@ const search = () => {
           return result
         })
       })
-  }else{
+  } else {
     console.log(rendition)
   }
 }
@@ -583,20 +607,33 @@ onMounted(async () => {
 //info
 const info = ref(false)
 const information = ref(null)
+
+//sidebarViewer
+const isSidebar = ref(true)
 </script>
 <style>
-.book-reader {
+.book-reader,
+sidebar-reader {
   height: 100vh;
+  width: 100%;
 }
 
 .book-reader .reader {
   inset: 50px 0 20px;
 }
+.sidebar-reader .reader {
+  inset: 0 !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+}
 .book-reader .arrow {
   display: none;
 }
 
-.book-reader .slider {
+.book-reader .slider,
+.sidebar-reader .slider {
   position: absolute;
   bottom: 1rem;
   right: 0;
@@ -604,6 +641,11 @@ const information = ref(null)
   z-index: 22;
   width: 80%;
   margin: auto;
+  display: none;
+}
+.book-reader:hover .slider,
+.sidebar-reader:hover .slider {
+  display: block;
 }
 
 .book-reader .setting-box {
