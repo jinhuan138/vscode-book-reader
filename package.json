@@ -1,11 +1,18 @@
 {
   "name": "vscode-book-reader",
   "displayName": "book reader",
-  "description": "",
+  "description": "Support reading epub files.",
+  "publisher": "jinhuan",
   "version": "1.0.0",
+  "icon":"resource/public/logo.png",
+  "repository": {
+		"url": "https://github.com/jinhuan138/vscode-book-reader.git",
+		"type": "git"
+	},
   "engines": {
     "vscode": "^1.85.2"
   },
+  "keywords": ["reader","epub","mobi","pdf","azw3","fk8","cbz","fb2"],
   "categories": [
     "Other"
   ],
@@ -73,6 +80,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "vscode:prepublish": "pnpm run compile",
+    "package": "pnpm vsce package",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "pretest": "pnpm run compile && pnpm run lint",
@@ -83,7 +91,7 @@
   "devDependencies": {
     "@types/mocha": "^10.0.6",
     "@types/node": "~18.19.31",
-    "@types/vscode": "^1.88.0",
+    "@types/vscode": "^1.85.2",
     "@typescript-eslint/eslint-plugin": "^7.4.0",
     "@typescript-eslint/parser": "^7.4.0",
     "@vitejs/plugin-vue": "^5.0.4",
@@ -104,5 +112,9 @@
     "vue-book-reader": "^1.0.5",
     "vue-easy-lightbox": "^1.19.0",
     "vue-reader": "^1.2.12"
+  },
+  "vsce": {
+    "dependencies": false,
+    "useYarn": false
   }
 }

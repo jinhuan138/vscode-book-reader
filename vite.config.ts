@@ -10,7 +10,5 @@ export default defineConfig({
 	},
 	root:"./resource",
 	base:"./resource",
-	esbuild:{
-      exclude:['./resource/public/files']
-	}
+	// publicDir:false
 });

@@ -14,17 +14,24 @@ export class SidebarViewerProvider implements vscode.WebviewViewProvider {
     webview.options = {
       enableScripts: true,
     }
-    webview.onDidReceiveMessage(
-      async () =>
+    webview.onDidReceiveMessage(async (message) => {
+      if (message.type === 'init') {
         webview.postMessage({
           type: 'type',
           content: 'sidebar',
-        }),
-    )
+        })
+      }
+    })
     this.emitter.on('open', (url: string) => {
       webview.postMessage({
         type: 'open',
         content: url,
+      })
+    })
+    this.emitter.on('style', (theme:any) => {
+      webview.postMessage({
+        type: 'style',
+        content: theme,
       })
     })
     webviewView.webview.html = Util.buildPath(
