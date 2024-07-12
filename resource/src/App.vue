@@ -1,22 +1,29 @@
 <template>
   <div v-if="url" :class="[isSidebar ? 'sidebar-reader' : 'book-reader']">
-    <!-- epub book-->
-    <template v-if="type === 'epub'">
+    <el-icon class="navigation-icon" color="#ccc" v-if="isSidebar"
+      ><IconNavigation
+    /></el-icon>
+    <!-- book viewer -->
+    <template v-if="!isSidebar">
       <epub-reader
-        v-if="!isSidebar"
+        v-if="type === 'epub'"
         :url="url"
         :getRendition="getRendition"
         @update:location="locationChange"
       />
-      <EpubView v-else :url="url" :getRendition="getRendition" />
-    </template>
-    <!-- other type book -->
-    <template v-else-if="type">
       <book-reader
-        v-if="!isSidebar"
+        v-else
         :url="url"
         :getRendition="getBookRendition"
         @update:location="locationChange"
+      />
+    </template>
+    <!-- sidebar viewer -->
+    <template v-else>
+      <EpubView
+        v-if="type === 'epub'"
+        :url="url"
+        :getRendition="getRendition"
       />
       <BookView
         v-else
@@ -48,9 +55,14 @@
         v-model="setting"
         title="setting"
         :with-header="false"
-        :size="250"
+        :size="400"
       >
-        <el-form :model="theme" label-width="auto" style="max-width: 100%">
+        <el-form
+          :model="theme"
+          label-width="auto"
+          style="max-width: 100%"
+          class="theme"
+        >
           <el-form-item label="Flow">
             <el-radio-group
               v-model="flow"
@@ -67,9 +79,23 @@
           </el-form-item>
           <el-form-item label="Text color">
             <el-color-picker v-model="theme.textColor" show-alpha />
+            <li
+              class="background-color-circle"
+              v-for="color in textList"
+              :key="color"
+              :style="{ backgroundColor: color }"
+              @click="theme.textColor = color"
+            ></li>
           </el-form-item>
           <el-form-item label="Background color">
             <el-color-picker v-model="theme.backgroundColor" show-alpha />
+            <li
+              class="background-color-circle"
+              v-for="color in backgroundList"
+              :key="color"
+              :style="{ backgroundColor: color }"
+              @click="theme.backgroundColor = color"
+            ></li>
           </el-form-item>
           <el-form-item label="Line Spacing">
             <el-input-number
@@ -152,7 +178,7 @@
         v-model="searching"
         title="search"
         :with-header="false"
-        :size="250"
+        :size="400"
       >
         <el-input
           clearable
@@ -182,7 +208,7 @@
       <el-icon class="setting-icon" color="#ccc" @click="info = true">
         <WarningFilled />
       </el-icon>
-      <el-drawer v-model="info" title="search" :with-header="false" :size="250">
+      <el-drawer v-model="info" title="search" :with-header="false" :size="400">
         <div v-if="information" class="information">
           <el-image
             :src="information.cover"
@@ -236,19 +262,25 @@ const vscode =
 vscode && vscode.postMessage({ type: 'init' })
 
 window.addEventListener('message', ({ data }) => {
-  if (data && data.type === 'open') {
-    url.value = data.content
-    type.value = fileType(data.content)
-  }
-  if (data && data.type === 'type') {
-    if (data.content === 'sidebar') {
-      isSidebar.value = true
+  if (data) {
+    if (data.type === 'open') {
+      url.value = data.content
+      type.value = fileType(data.content)
+    } else if (data.type === 'type') {
+      isSidebar.value = data.content === 'sidebar'
+    } else if (data.type === 'style') {
+      const { key, theme } = JSON.parse(data.content)
+      if (key === bookKey) {
+        Object.keys(newTheme).forEach((key) => {
+          theme[key] = newTheme[key]
+        })
+      }
     }
   }
 })
 
 //Import file
-const url = ref('/files/啼笑因缘.mobi')
+const url = ref('/files/啼笑因缘.epub')
 const type = ref('')
 const fileType = (path) => {
   const type = path.split('.')
@@ -280,7 +312,7 @@ watch(
 )
 
 //Image Lightbox
-let rendition, book, displayed
+let rendition, book, displayed, bookKey
 const imgsRef = ref([])
 const indexRef = ref(0)
 const visibleRef = ref(false)
@@ -310,9 +342,18 @@ const getRendition = (val) => {
       imgsRef.value.push(img.src || img.getAttribute('xlink:href'))
     })
   })
+  //updateStyles
+  rendition.on('relocated', () => {
+    rendition.hooks.content.register(() => updateStyle(theme))
+  })
+  rendition.on('displayError', () => {
+    console.err('error rendering book')
+    url.value = ''
+  })
   //slider
   book = rendition.book
   displayed = rendition.display()
+  bookKey = book.key()
   book.ready
     .then(() => {
       book.loaded.metadata.then(async (metadata) => {
@@ -476,13 +517,15 @@ html,body {
 }
 `,
 ]
-const updateStyle = ({
-  font,
-  fontSize,
-  lineSpacing,
-  textColor,
-  backgroundColor,
-}) => {
+const updateStyle = (theme) => {
+  const { font, fontSize, lineSpacing, textColor, backgroundColor } = theme
+  // update sidebar style
+  !isSidebar.value &&
+    vscode &&
+    vscode.postMessage({
+      type: 'style',
+      content: JSON.stringify({ key:bookKey, theme }),
+    })
   const rules = {
     p: {
       'font-family': font !== '' ? `${font} !important` : '!invalid-hack',
@@ -506,7 +549,6 @@ const updateStyle = ({
     rendition.getContents().forEach((content) => {
       content.addStylesheetRules(rules)
     })
-    // rendition.start()
   } else {
     rendition?.renderer.setStyles(getCSS({ font, fontSize, lineSpacing }))
   }
@@ -643,6 +685,10 @@ sidebar-reader {
   margin: auto;
   display: none;
 }
+.book-reader .slider .el-slider__bar,
+.sidebar-reader .slider .el-slider__bar {
+  background-color: #ccc;
+}
 .book-reader:hover .slider,
 .sidebar-reader:hover .slider {
   display: block;
@@ -670,6 +716,11 @@ sidebar-reader {
   color: #000;
 }
 
+.navigation-icon {
+  cursor: pointer;
+  z-index: 5;
+}
+
 .import {
   width: 100%;
   height: 100%;
@@ -680,5 +731,26 @@ sidebar-reader {
 
 .import .import-button {
   margin: 5px auto 0;
+}
+
+.theme .background-color-list {
+  margin: 10px 0px 0px;
+  width: 100%;
+  min-height: 44px;
+  padding-bottom: 6px;
+}
+.theme .background-color-circle {
+  display: inline-block;
+  width: 35px;
+  height: 35px;
+  font-size: 20px;
+  border-radius: 50%;
+  opacity: 1;
+  cursor: pointer;
+  margin: 7px;
+  margin-top: 3px;
+  box-sizing: border-box;
+  position: relative;
+  box-shadow: 0px 0px 2px rgba(0, 0, 0, 0.18);
 }
 </style>

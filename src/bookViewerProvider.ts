@@ -30,14 +30,17 @@ export class BookViewerProvider implements vscode.CustomReadonlyEditorProvider {
       enableScripts: true,
       localResourceRoots: [vscode.Uri.file(this.extensionPath), folderPath],
     }
-    webview.onDidReceiveMessage(
-      async () =>
+    webview.onDidReceiveMessage(async (message) => {
+      if (message.type === 'init') {
         webview.postMessage({
           type: 'open',
           content: webview.asWebviewUri(uri).toString(),
-        }),
-      this.emitter.emit('open', webview.asWebviewUri(uri).toString()),
-    )
+        })
+        this.emitter.emit('open', webview.asWebviewUri(uri).toString())
+      }else if(message.type === 'style'){
+        this.emitter.emit('style', message.content)
+      }
+    })
     webview.html = Util.buildPath(
       readFileSync(this.extensionPath + '/resource/dist/index.html', 'utf8'),
       webview,
