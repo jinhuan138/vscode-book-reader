@@ -1,7 +1,7 @@
 {
   "name": "vscode-book-reader",
   "displayName": "book reader",
-  "description": "Support reading epub files.",
+  "description": "Support reading epub、mobi、azw3、pdf、fk8、fb2、cbz files.",
   "publisher": "jinhuan",
   "version": "1.0.0",
   "icon":"resource/public/logo.png",
@@ -109,9 +109,9 @@
     "element-plus": "^2.7.3",
     "mitt": "^3.0.1",
     "vue": "^3.4.26",
-    "vue-book-reader": "^1.0.5",
+    "vue-book-reader": "^1.0.6",
     "vue-easy-lightbox": "^1.19.0",
-    "vue-reader": "^1.2.12"
+    "vue-reader": "^1.2.14"
   },
   "vsce": {
     "dependencies": false,

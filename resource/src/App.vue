@@ -8,12 +8,14 @@
       <epub-reader
         v-if="type === 'epub'"
         :url="url"
+        :backgroundColor="theme.backgroundColor"
         :getRendition="getRendition"
         @update:location="locationChange"
       />
       <book-reader
         v-else
         :url="url"
+        :backgroundColor="theme.backgroundColor"
         :getRendition="getBookRendition"
         @update:location="locationChange"
       />
@@ -250,6 +252,7 @@
 <script setup>
 //http://element-plus.org/zh-CN/component/overview.html
 //https://www.npmjs.com/package/bing-translate-api
+//https://marketplace.visualstudio.com/manage/publishers/lindacong/newvsextension
 import { VueReader as EpubReader, EpubView } from 'vue-reader'
 import { VueReader as BookReader, BookView } from 'vue-book-reader'
 import VueEasyLightbox from 'vue-easy-lightbox'
@@ -269,7 +272,7 @@ window.addEventListener('message', ({ data }) => {
     } else if (data.type === 'type') {
       isSidebar.value = data.content === 'sidebar'
     } else if (data.type === 'style') {
-      const { key, theme } = JSON.parse(data.content)
+      const { key, theme: newTheme } = JSON.parse(data.content)
       if (key === bookKey) {
         Object.keys(newTheme).forEach((key) => {
           theme[key] = newTheme[key]
@@ -280,7 +283,7 @@ window.addEventListener('message', ({ data }) => {
 })
 
 //Import file
-const url = ref('/files/啼笑因缘.epub')
+const url = ref('')
 const type = ref('')
 const fileType = (path) => {
   const type = path.split('.')
@@ -378,6 +381,7 @@ const getRendition = (val) => {
     })
 }
 const getBookRendition = (val) => {
+  bookKey = url.value
   rendition = val
   const { book } = rendition
   const { author } = book.metadata
@@ -496,27 +500,29 @@ const getCSS = ({
   lineSpacing,
   textColor,
   backgroundColor,
-}) => [
-  `
+}) => {
+  return [
+    `
 p {
-  font-family: ${font};
-  font-size:  ${fontSize}px;
+  font-family: ${font || '!invalid-hack'};
+  font-size:  ${fontSize}%;
   color: ${textColor};
 }
 
 body * {
-  font-family: ${font} !important;
+  font-family: ${font || '!invalid-hack'} !important;
   color: ${textColor} !important;
   background-color: ${backgroundColor} !important;
 }
 html,body {
   line-height: ${lineSpacing} !important;
-  font-size: ${fontSize}px !important;
+  font-size: ${fontSize}% !important;
   color: ${textColor} !important;
   background-color: ${backgroundColor} !important;
 }
 `,
-]
+  ]
+}
 const updateStyle = (theme) => {
   const { font, fontSize, lineSpacing, textColor, backgroundColor } = theme
   // update sidebar style
@@ -524,7 +530,7 @@ const updateStyle = (theme) => {
     vscode &&
     vscode.postMessage({
       type: 'style',
-      content: JSON.stringify({ key:bookKey, theme }),
+      content: JSON.stringify({ key: bookKey, theme }),
     })
   const rules = {
     p: {
@@ -550,7 +556,9 @@ const updateStyle = (theme) => {
       content.addStylesheetRules(rules)
     })
   } else {
-    rendition?.renderer.setStyles(getCSS({ font, fontSize, lineSpacing }))
+    rendition?.renderer.setStyles(
+      getCSS({ font, fontSize, lineSpacing, textColor, backgroundColor }),
+    )
   }
 }
 watch(theme, (val) => {
@@ -591,9 +599,19 @@ const locationChange = (detail) => {
       .replace(/\t/g, '')
       .replace(/\f/g, '')
   } else {
-    const { fraction } = detail
+    const { fraction, range } = detail
     const percent = Math.floor(fraction * 100)
     sliderValue.value = percent
+    const innerText = range.commonAncestorContainer.innerText
+    if (innerText) {
+      text = innerText
+        .toString()
+        .replace(/\s\s/g, '')
+        .replace(/\r/g, '')
+        .replace(/\n/g, '')
+        .replace(/\t/g, '')
+        .replace(/\f/g, '')
+    }
   }
 }
 
