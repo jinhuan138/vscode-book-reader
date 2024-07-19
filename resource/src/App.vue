@@ -1,20 +1,20 @@
 <template>
   <div v-if="url" :class="[isSidebar ? 'sidebar-reader' : 'book-reader']">
-    <el-icon class="navigation-icon" color="#ccc" v-if="isSidebar"
-      ><IconNavigation
-    /></el-icon>
     <!-- book viewer -->
     <template v-if="!isSidebar">
       <epub-reader
         v-if="type === 'epub'"
         :url="url"
+        :location="location"
         :backgroundColor="theme.backgroundColor"
         :getRendition="getRendition"
+        :tocChanged="(val) => (toc = val)"
         @update:location="locationChange"
       />
       <book-reader
         v-else
         :url="url"
+        :location="location"
         :backgroundColor="theme.backgroundColor"
         :getRendition="getBookRendition"
         @update:location="locationChange"
@@ -27,12 +27,7 @@
         :url="url"
         :getRendition="getRendition"
       />
-      <BookView
-        v-else
-        :url="url"
-        :getRendition="getBookRendition"
-        @update:location="locationChange"
-      />
+      <BookView v-else :url="url" :getRendition="getBookRendition" />
     </template>
     <!-- lightbox -->
     <vue-easy-lightbox
@@ -41,13 +36,7 @@
       :index="indexRef"
       @hide="visibleRef = false"
     ></vue-easy-lightbox>
-    <!-- slider -->
-    <el-slider
-      v-model="sliderValue"
-      :step="0.01"
-      class="slider"
-      @change="change"
-    ></el-slider>
+     <!-- setting -->
     <div class="setting-box" v-if="!isSidebar">
       <!-- setting -->
       <el-icon class="setting-icon" color="#ccc" @click="setting = true">
@@ -57,7 +46,7 @@
         v-model="setting"
         title="setting"
         :with-header="false"
-        :size="400"
+        :size="420"
       >
         <el-form
           :model="theme"
@@ -79,7 +68,7 @@
               </el-radio-button>
             </el-radio-group>
           </el-form-item>
-          <el-form-item label="Text color">
+          <el-form-item label="Text Color">
             <el-color-picker v-model="theme.textColor" show-alpha />
             <li
               class="background-color-circle"
@@ -89,7 +78,7 @@
               @click="theme.textColor = color"
             ></li>
           </el-form-item>
-          <el-form-item label="Background color">
+          <el-form-item label="Background Color">
             <el-color-picker v-model="theme.backgroundColor" show-alpha />
             <li
               class="background-color-circle"
@@ -170,6 +159,22 @@
               </el-option>
             </el-select>
           </el-form-item>
+          <el-form-item label="Process Display">
+            <el-select
+              class="font-select"
+              width="50"
+              size="small"
+              v-model="progressDisplay"
+            >
+              <el-option
+                v-for="(item, index) in displayType"
+                :key="item"
+                :label="item"
+                :value="item"
+              >
+              </el-option>
+            </el-select>
+          </el-form-item>
         </el-form>
       </el-drawer>
       <!-- searching -->
@@ -231,6 +236,25 @@
         </div>
       </el-drawer>
     </div>
+    <!-- footer -->
+    <div class="footer">
+      <!-- page -->
+      <div
+        v-if="progressDisplay === 'location'"
+        class="page"
+        :style="pageStyle"
+        :title="page"
+      >
+        {{ page }}
+      </div>
+      <!-- slider -->
+      <el-slider
+        v-else-if="progressDisplay === 'bar'"
+        v-model="sliderValue"
+        :step="0.01"
+        @change="change"
+      ></el-slider>
+    </div>
   </div>
   <!-- import -->
   <div v-else class="import">
@@ -252,17 +276,38 @@
 <script setup>
 //http://element-plus.org/zh-CN/component/overview.html
 //https://www.npmjs.com/package/bing-translate-api
-//https://marketplace.visualstudio.com/manage/publishers/lindacong/newvsextension
+//https://marketplace.visualstudio.com/manage/publishers/
 import { VueReader as EpubReader, EpubView } from 'vue-reader'
 import { VueReader as BookReader, BookView } from 'vue-book-reader'
 import VueEasyLightbox from 'vue-easy-lightbox'
 import { Search } from '@element-plus/icons-vue'
-import { ref, reactive, watch, onMounted } from 'vue'
+import {
+  ref,
+  reactive,
+  watch,
+  onMounted,
+  onBeforeMount,
+  toRaw,
+  computed,
+} from 'vue'
 
 //vscode
 const vscode =
   typeof acquireVsCodeApi != 'undefined' ? acquireVsCodeApi() : null
 vscode && vscode.postMessage({ type: 'init' })
+
+onBeforeMount(() => {
+  if (vscode) {
+    textList.unshift('var(--vscode-editor-foreground) !important')
+    backgroundList.unshift('var(--vscode-editor-background) !important')
+    theme.textColor = textList[0]
+    theme.backgroundColor = backgroundList[0]
+  }
+  const stored = localStorage.getItem(url.value)
+  if (stored && url.value && type.value !== 'epub') {
+    location.value = stored
+  }
+})
 
 window.addEventListener('message', ({ data }) => {
   if (data) {
@@ -284,6 +329,7 @@ window.addEventListener('message', ({ data }) => {
 
 //Import file
 const url = ref('')
+const location = ref('')
 const type = ref('')
 const fileType = (path) => {
   const type = path.split('.')
@@ -322,6 +368,8 @@ const visibleRef = ref(false)
 const sliderValue = ref(0)
 const getRendition = (val) => {
   rendition = val
+  book = rendition.book
+  bookKey = book.key()
   //image
   rendition.themes.default({
     img: {
@@ -353,10 +401,13 @@ const getRendition = (val) => {
     console.err('error rendering book')
     url.value = ''
   })
+  //save position
+  rendition.on('relocated', (event) => {
+    localStorage.setItem(bookKey, event.start.cfi)
+  })
   //slider
-  book = rendition.book
-  displayed = rendition.display()
-  bookKey = book.key()
+  const stored = localStorage.getItem(bookKey)
+  displayed = rendition.display(stored || 1)
   book.ready
     .then(() => {
       book.loaded.metadata.then(async (metadata) => {
@@ -378,6 +429,12 @@ const getRendition = (val) => {
         const percentage = Math.floor(percent * 100)
         sliderValue.value = percentage
       })
+      if (stored) {
+        location.value = stored
+        const percent = book.locations.percentageFromCfi(stored)
+        const percentage = Math.floor(percent * 100)
+        sliderValue.value = percentage
+      }
     })
 }
 const getBookRendition = (val) => {
@@ -388,9 +445,9 @@ const getBookRendition = (val) => {
   const bookAuthor =
     typeof author === 'string'
       ? author
-      : author
+      : (author
           ?.map((author) => (typeof author === 'string' ? author : author.name))
-          ?.join(', ') ?? ''
+          ?.join(', ') ?? '')
   information.value = {
     ...book.metadata,
     creator: bookAuthor,
@@ -398,6 +455,9 @@ const getBookRendition = (val) => {
   }
   book.getCover?.().then((blob) => {
     information.value.cover = URL.createObjectURL(blob)
+  })
+  rendition.addEventListener('relocate', ({ detail }) => {
+    localStorage.setItem(bookKey, detail.cfi)
   })
 }
 const change = (val) => {
@@ -443,6 +503,8 @@ const onNodeClick = (item) => rendition.display(item.cfi || item.href)
 //theme
 const setting = ref(false)
 const flow = ref('paginated')
+const displayType = ['location', 'bar']
+const progressDisplay = ref('location')
 watch(flow, (value) => {
   if (type.value === 'epub') {
     rendition.flow(value)
@@ -525,6 +587,7 @@ html,body {
 }
 const updateStyle = (theme) => {
   const { font, fontSize, lineSpacing, textColor, backgroundColor } = theme
+  localStorage.setItem('theme', JSON.stringify(toRaw(theme)))
   // update sidebar style
   !isSidebar.value &&
     vscode &&
@@ -561,9 +624,40 @@ const updateStyle = (theme) => {
     )
   }
 }
+const userTheme = localStorage.getItem('theme')
+if (userTheme) {
+  const newTheme = JSON.parse(userTheme)
+  Object.keys(newTheme).forEach((key) => {
+    theme[key] = newTheme[key]
+  })
+}
 watch(theme, (val) => {
   updateStyle(val)
 })
+//page
+const page = ref('')
+const toc = ref([])
+const pageStyle = computed(() => ({
+  color: theme.textColor,
+  fontFamily: theme.font,
+  fontSize: theme.fontSize + '%',
+}))
+const getLabel = (toc, href) => {
+  let label = 'n/a'
+  toc.some((item) => {
+    if (item.subitems.length > 0) {
+      const subChapter = getLabel(item.subitems, href)
+      if (subChapter !== 'n/a') {
+        label = subChapter
+        return true
+      }
+    } else if (item.href.includes(href)) {
+      label = item.label
+      return true
+    }
+  })
+  return label
+}
 //speak
 let isAudioOn = false,
   text = ''
@@ -598,8 +692,15 @@ const locationChange = (detail) => {
       .replace(/\n/g, '')
       .replace(/\t/g, '')
       .replace(/\f/g, '')
+    if (detail) {
+      const { displayed, href } = rendition.location.start
+      if (href !== 'titlepage.xhtml') {
+        const label = getLabel(toc.value, href)
+        page.value = `${displayed.page}/${displayed.total} ${label}`
+      }
+    }
   } else {
-    const { fraction, range } = detail
+    const { fraction, range, tocItem } = detail
     const percent = Math.floor(fraction * 100)
     sliderValue.value = percent
     const innerText = range.commonAncestorContainer.innerText
@@ -612,6 +713,7 @@ const locationChange = (detail) => {
         .replace(/\t/g, '')
         .replace(/\f/g, '')
     }
+    page.value = tocItem.label || ''
   }
 }
 
@@ -688,12 +790,13 @@ sidebar-reader {
   right: 0 !important;
   bottom: 0 !important;
 }
+
 .book-reader .arrow {
   display: none;
 }
-
-.book-reader .slider,
-.sidebar-reader .slider {
+/* footer */
+.book-reader .footer,
+.sidebar-reader .footer {
   position: absolute;
   bottom: 1rem;
   right: 0;
@@ -701,17 +804,23 @@ sidebar-reader {
   z-index: 22;
   width: 80%;
   margin: auto;
-  display: none;
-}
-.book-reader .slider .el-slider__bar,
-.sidebar-reader .slider .el-slider__bar {
-  background-color: #ccc;
-}
-.book-reader:hover .slider,
-.sidebar-reader:hover .slider {
-  display: block;
 }
 
+.book-reader .footer .el-slider__bar,
+.sidebar-reader .footer .el-slider__bar {
+  background-color: #ccc;
+}
+
+.book-reader .footer .page,
+.sidebar-reader .footer .page {
+  width: 100%;
+  text-align: center;
+  align-items: center;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+/* setting */
 .book-reader .setting-box {
   position: absolute;
   top: 1rem;
@@ -757,6 +866,7 @@ sidebar-reader {
   min-height: 44px;
   padding-bottom: 6px;
 }
+
 .theme .background-color-circle {
   display: inline-block;
   width: 35px;

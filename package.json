@@ -2,17 +2,26 @@
   "name": "vscode-book-reader",
   "displayName": "book reader",
   "description": "Support reading epub、mobi、azw3、pdf、fk8、fb2、cbz files.",
-  "publisher": "jinhuan",
-  "version": "1.0.0",
-  "icon":"resource/public/logo.png",
+  "publisher": "lindacong",
+  "version": "1.0.1",
+  "icon": "resource/public/logo.png",
   "repository": {
-		"url": "https://github.com/jinhuan138/vscode-book-reader.git",
-		"type": "git"
-	},
+    "url": "https://github.com/jinhuan138/vscode-book-reader.git",
+    "type": "git"
+  },
   "engines": {
     "vscode": "^1.85.2"
   },
-  "keywords": ["reader","epub","mobi","pdf","azw3","fk8","cbz","fb2"],
+  "keywords": [
+    "reader",
+    "epub",
+    "mobi",
+    "pdf",
+    "azw3",
+    "fk8",
+    "cbz",
+    "fb2"
+  ],
   "categories": [
     "Other"
   ],
@@ -109,7 +118,7 @@
     "element-plus": "^2.7.3",
     "mitt": "^3.0.1",
     "vue": "^3.4.26",
-    "vue-book-reader": "^1.0.6",
+    "vue-book-reader": "^1.0.7",
     "vue-easy-lightbox": "^1.19.0",
     "vue-reader": "^1.2.14"
   },
