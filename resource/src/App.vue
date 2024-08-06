@@ -26,8 +26,24 @@
         v-if="type === 'epub'"
         :url="url"
         :getRendition="getRendition"
+        :tocChanged="(val) => (toc = val)"
       />
-      <BookView v-else :url="url" :getRendition="getBookRendition" />
+      <BookView
+        v-else
+        :url="url"
+        :getRendition="getBookRendition"
+        :tocChanged="(val) => (toc = val)"
+      />
+      <el-popover
+        placement="bottom"
+        :popper-style="{ height: '80%' }"
+        :width="300"
+      >
+        <template #reference>
+          <el-icon class="menu-icon" color="#ccc"><Menu /></el-icon>
+        </template>
+        <el-tree :data="toc" @node-click="onNodeClick" class="tree" />
+      </el-popover>
     </template>
     <!-- lightbox -->
     <vue-easy-lightbox
@@ -36,7 +52,7 @@
       :index="indexRef"
       @hide="visibleRef = false"
     ></vue-easy-lightbox>
-     <!-- setting -->
+    <!-- setting -->
     <div class="setting-box" v-if="!isSidebar">
       <!-- setting -->
       <el-icon class="setting-icon" color="#ccc" @click="setting = true">
@@ -66,6 +82,16 @@
               <el-radio-button value="scrolled-doc" border>
                 Scrolled
               </el-radio-button>
+            </el-radio-group>
+          </el-form-item>
+          <el-form-item label="View Spread">
+            <el-radio-group
+              v-model="spread"
+              size="small"
+              style="flex-wrap: nowrap"
+            >
+              <el-radio-button value="auto" border> auto </el-radio-button>
+              <el-radio-button value="none" border> none </el-radio-button>
             </el-radio-group>
           </el-form-item>
           <el-form-item label="Text Color">
@@ -280,7 +306,10 @@
 import { VueReader as EpubReader, EpubView } from 'vue-reader'
 import { VueReader as BookReader, BookView } from 'vue-book-reader'
 import VueEasyLightbox from 'vue-easy-lightbox'
-import { Search } from '@element-plus/icons-vue'
+import Lightbox from 'photoswipe/lightbox'
+import 'photoswipe/style.css'
+import { Search, Menu } from '@element-plus/icons-vue'
+
 import {
   ref,
   reactive,
@@ -307,6 +336,11 @@ onBeforeMount(() => {
   if (stored && url.value && type.value !== 'epub') {
     location.value = stored
   }
+  const lightbox = new Lightbox({
+    children: 'a',
+    pswpModule: () => import('photoswipe'),
+  })
+  lightbox.init()
 })
 
 window.addEventListener('message', ({ data }) => {
@@ -370,7 +404,7 @@ const getRendition = (val) => {
   rendition = val
   book = rendition.book
   bookKey = book.key()
-  //image
+  //image,annotation
   rendition.themes.default({
     img: {
       cursor: 'pointer',
@@ -392,11 +426,28 @@ const getRendition = (val) => {
       })
       imgsRef.value.push(img.src || img.getAttribute('xlink:href'))
     })
+    if (isSidebar.value) {
+      const annotation = Array.from(document.querySelectorAll('a'))
+      if (annotation.length) {
+        const halfLength = Math.floor(annotation.length / 2)
+        annotation.slice(0, halfLength).forEach((el) => {
+          if (el.href) {
+            const id = el.href.split('#')[1]
+            const target = annotation.slice(halfLength).find((a) => a.id === id)
+            if (target && target.parentNode) {
+              el.title = target.parentNode.textContent
+            }
+          }
+        })
+      }
+    }
   })
   //updateStyles
   rendition.on('relocated', () => {
     rendition.hooks.content.register(() => updateStyle(theme))
   })
+  rendition.spread(defaultSpread)
+  rendition.flow(defaultFlow === 'paginated' ? 'paginated' : 'scrolled')
   rendition.on('displayError', () => {
     console.err('error rendering book')
     url.value = ''
@@ -499,13 +550,21 @@ const search = () => {
     console.log(rendition)
   }
 }
-const onNodeClick = (item) => rendition.display(item.cfi || item.href)
+const onNodeClick = (item) => {
+  if (type.value === 'epub') {
+    rendition.display(item.cfi || item.href)
+  }else{
+    rendition.goTo(item.href)
+  }
+}
 //theme
 const setting = ref(false)
-const flow = ref('paginated')
+const defaultFlow = localStorage.getItem('flow') || 'paginated'
+const flow = ref(defaultFlow)
 const displayType = ['location', 'bar']
 const progressDisplay = ref('location')
 watch(flow, (value) => {
+  localStorage.setItem('flow', value)
   if (type.value === 'epub') {
     rendition.flow(value)
   } else {
@@ -513,6 +572,15 @@ watch(flow, (value) => {
       'flow',
       value === 'paginated' ? 'paginated' : 'scrolled',
     )
+  }
+})
+const defaultSpread = localStorage.getItem('spread') || 'auto'
+const spread = ref(defaultSpread)
+watch(spread, (value) => {
+  localStorage.setItem('spread', value)
+  if (type.value === 'epub') {
+    rendition.spread(value)
+  } else {
   }
 })
 const textList = [
@@ -565,22 +633,31 @@ const getCSS = ({
 }) => {
   return [
     `
-p {
+p,a {
   font-family: ${font || '!invalid-hack'};
   font-size:  ${fontSize}%;
   color: ${textColor};
 }
 
-body * {
+body {
   font-family: ${font || '!invalid-hack'} !important;
   color: ${textColor} !important;
   background-color: ${backgroundColor} !important;
 }
+
 html,body {
   line-height: ${lineSpacing} !important;
   font-size: ${fontSize}% !important;
   color: ${textColor} !important;
   background-color: ${backgroundColor} !important;
+  padding: 0 !important;
+  column-width: auto !important;
+  height: auto !important;
+  width: auto !important;
+}
+svg, img {
+  background-color: transparent !important;
+  mix-blend-mode: multiply;
 }
 `,
   ]
@@ -596,21 +673,30 @@ const updateStyle = (theme) => {
       content: JSON.stringify({ key: bookKey, theme }),
     })
   const rules = {
-    p: {
-      'font-family': font !== '' ? `${font} !important` : '!invalid-hack',
-      'font-size': fontSize !== '' ? `${fontSize} !important` : '!invalid-hack',
-      color: textColor,
-    },
     body: {
       'font-family': font !== '' ? `${font} !important` : '!invalid-hack',
       color: textColor,
       'background-color': backgroundColor,
     },
-    '*': {
-      'line-height': `${lineSpacing} !important`,
+    p: {
+      'font-family': font !== '' ? `${font} !important` : '!invalid-hack',
       'font-size':
         fontSize !== '' ? `${fontSize}% !important` : '!invalid-hack',
       color: textColor,
+      'background-color': backgroundColor,
+    },
+    a: {
+      color: 'inherit !important',
+      'text-decoration': 'none !important',
+      '-webkit-text-fill-color': 'inherit !important',
+    },
+    'a:link': {
+      color: `#1e83d2 !important`,
+      'text-decoration': 'none !important',
+      '-webkit-text-fill-color': `#1e83d2 !important`,
+    },
+    'a:link:hover': {
+      background: 'rgba(0, 0, 0, 0.1) !important',
     },
   }
   if (type.value === 'epub') {
@@ -704,6 +790,13 @@ const locationChange = (detail) => {
     const percent = Math.floor(fraction * 100)
     sliderValue.value = percent
     const innerText = range.commonAncestorContainer.innerText
+    // const { body } = range.commonAncestorContainer
+    imgsRef.value = []
+    // const imgs = [
+    //   ...body.querySelectorAll('img'),
+    //   ...body.querySelectorAll('image'),
+    // ]
+    // console.log(range.commonAncestorContainer)
     if (innerText) {
       text = innerText
         .toString()
@@ -772,6 +865,17 @@ const information = ref(null)
 
 //sidebarViewer
 const isSidebar = ref(false)
+//request error
+const originalOpen = XMLHttpRequest.prototype.open
+const onError = (e) => {
+  url.value = ''
+}
+XMLHttpRequest.prototype.open = function (method, requestUrl) {
+  if (requestUrl === url.value) {
+    this.addEventListener('error', onError)
+  }
+  originalOpen.apply(this, arguments)
+}
 </script>
 <style>
 .book-reader,
@@ -781,8 +885,13 @@ sidebar-reader {
 }
 
 .book-reader .reader {
-  inset: 50px 0 20px;
+  inset: 50px 0 32px;
 }
+
+.book-reader .reader .epub-container {
+  overflow-x: hidden !important;
+}
+
 .sidebar-reader .reader {
   inset: 0 !important;
   top: 0 !important;
@@ -794,6 +903,7 @@ sidebar-reader {
 .book-reader .arrow {
   display: none;
 }
+
 /* footer */
 .book-reader .footer,
 .sidebar-reader .footer {
@@ -820,6 +930,7 @@ sidebar-reader {
   white-space: nowrap;
   text-overflow: ellipsis;
 }
+
 /* setting */
 .book-reader .setting-box {
   position: absolute;
@@ -880,5 +991,29 @@ sidebar-reader {
   box-sizing: border-box;
   position: relative;
   box-shadow: 0px 0px 2px rgba(0, 0, 0, 0.18);
+}
+/* sidebar */
+.menu-icon {
+  cursor: pointer;
+  z-index: 5;
+  top: 5px;
+  left: 5px;
+}
+.menu-icon:hover {
+  color: #409efc;
+}
+.tree {
+  max-height: 100%;
+  max-width: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  word-wrap: wrap;
+}
+.tree .el-tree-node__content {
+  min-height: var(--el-tree-node-content-height);
+  height: auto;
+}
+.tree .el-tree-node__content .el-tree-node__label {
+  white-space: normal;
 }
 </style>
