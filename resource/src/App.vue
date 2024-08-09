@@ -44,6 +44,10 @@
         </template>
         <el-tree :data="toc" @node-click="onNodeClick" class="tree" />
       </el-popover>
+      <!-- process -->
+      <div class="sidebar-process" :style="{ color: theme.textColor }">
+        {{ sliderValue + '%' }}
+      </div>
     </template>
     <!-- lightbox -->
     <vue-easy-lightbox
@@ -352,17 +356,17 @@ window.addEventListener('message', ({ data }) => {
       isSidebar.value = data.content === 'sidebar'
     } else if (data.type === 'style') {
       const { key, theme: newTheme } = JSON.parse(data.content)
-      if (key === bookKey) {
-        Object.keys(newTheme).forEach((key) => {
-          theme[key] = newTheme[key]
-        })
-      }
+      // if (key === bookKey) {
+      Object.keys(newTheme).forEach((key) => {
+        theme[key] = newTheme[key]
+      })
+      // }
     }
   }
 })
 
 //Import file
-const url = ref('')
+const url = ref('/files/啼笑因缘.azw3')
 const location = ref('')
 const type = ref('')
 const fileType = (path) => {
@@ -477,13 +481,13 @@ const getRendition = (val) => {
       })
       rendition.on('relocated', (location) => {
         const percent = book.locations.percentageFromCfi(location.start.cfi)
-        const percentage = Math.floor(percent * 100)
+        const percentage = (percent * 100).toFixed(2)
         sliderValue.value = percentage
       })
       if (stored) {
         location.value = stored
         const percent = book.locations.percentageFromCfi(stored)
-        const percentage = Math.floor(percent * 100)
+        const percentage = (percent * 100).toFixed(2)
         sliderValue.value = percentage
       }
     })
@@ -553,7 +557,7 @@ const search = () => {
 const onNodeClick = (item) => {
   if (type.value === 'epub') {
     rendition.display(item.cfi || item.href)
-  }else{
+  } else {
     rendition.goTo(item.href)
   }
 }
@@ -787,7 +791,7 @@ const locationChange = (detail) => {
     }
   } else {
     const { fraction, range, tocItem } = detail
-    const percent = Math.floor(fraction * 100)
+    const percent = (fraction * 100).toFixed(2)
     sliderValue.value = percent
     const innerText = range.commonAncestorContainer.innerText
     // const { body } = range.commonAncestorContainer
@@ -864,7 +868,7 @@ const info = ref(false)
 const information = ref(null)
 
 //sidebarViewer
-const isSidebar = ref(false)
+const isSidebar = ref(true)
 //request error
 const originalOpen = XMLHttpRequest.prototype.open
 const onError = (e) => {
@@ -1015,5 +1019,11 @@ sidebar-reader {
 }
 .tree .el-tree-node__content .el-tree-node__label {
   white-space: normal;
+}
+
+.sidebar-process {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
 }
 </style>
