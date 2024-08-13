@@ -43,7 +43,12 @@
         <template #reference>
           <el-icon class="menu-icon" color="#ccc"><Menu /></el-icon>
         </template>
-        <el-tree :data="toc" @node-click="onNodeClick" class="tree" />
+        <el-tree
+          :data="toc"
+          :props="{ children: 'subitems' }"
+          @node-click="onNodeClick"
+          class="tree"
+        />
       </el-popover>
       <!-- process -->
       <div class="sidebar-process" :style="{ color: theme.textColor }">
@@ -67,7 +72,7 @@
         v-model="setting"
         title="setting"
         :with-header="false"
-        :size="isVscode ? 460 :420"
+        :size="isVscode ? 460 : 420"
       >
         <el-form
           :model="theme"
@@ -329,7 +334,7 @@ import {
 const vscode =
   typeof acquireVsCodeApi != 'undefined' ? acquireVsCodeApi() : null
 vscode && vscode.postMessage({ type: 'init' })
-const isVscode =ref(  typeof acquireVsCodeApi != 'undefined' ? true :false)
+const isVscode = ref(typeof acquireVsCodeApi != 'undefined' ? true : false)
 
 onBeforeMount(() => {
   if (vscode) {
@@ -368,7 +373,8 @@ window.addEventListener('message', ({ data }) => {
 })
 
 //Import file
-const url = ref('')
+const defaultBook = '/files/啼笑因缘.epub'
+const url = ref(import.meta.env.MODE === 'development' ? defaultBook : '')
 const location = ref('')
 const type = ref('')
 const fileType = (path) => {
@@ -639,7 +645,7 @@ const getCSS = ({
 }) => {
   return [
     `
-p,a {
+p,a,h1,h2,h3 {
   font-family: ${font || '!invalid-hack'};
   font-size:  ${fontSize}%;
   color: ${textColor};
@@ -684,13 +690,6 @@ const updateStyle = (theme) => {
       color: textColor,
       'background-color': backgroundColor,
     },
-    p: {
-      'font-family': font !== '' ? `${font} !important` : '!invalid-hack',
-      'font-size':
-        fontSize !== '' ? `${fontSize}% !important` : '!invalid-hack',
-      color: textColor,
-      'background-color': backgroundColor,
-    },
     a: {
       color: 'inherit !important',
       'text-decoration': 'none !important',
@@ -705,6 +704,15 @@ const updateStyle = (theme) => {
       background: 'rgba(0, 0, 0, 0.1) !important',
     },
   }
+  ;['p', 'h1', 'h2', 'h3'].forEach((i) => {
+    rules[i] = {
+      'font-family': font !== '' ? `${font} !important` : '!invalid-hack',
+      'font-size':
+        fontSize !== '' ? `${fontSize}% !important` : '!invalid-hack',
+      color: textColor,
+      'background-color': backgroundColor,
+    }
+  })
   if (type.value === 'epub') {
     if (!rendition) return
     rendition.getContents().forEach((content) => {
