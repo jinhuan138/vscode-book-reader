@@ -33,6 +33,7 @@
         :url="url"
         :getRendition="getBookRendition"
         :tocChanged="(val) => (toc = val)"
+        @update:location="locationChange"
       />
       <el-popover
         placement="bottom"
@@ -66,7 +67,7 @@
         v-model="setting"
         title="setting"
         :with-header="false"
-        :size="420"
+        :size="isVscode ? 460 :420"
       >
         <el-form
           :model="theme"
@@ -197,7 +198,7 @@
               v-model="progressDisplay"
             >
               <el-option
-                v-for="(item, index) in displayType"
+                v-for="item in displayType"
                 :key="item"
                 :label="item"
                 :value="item"
@@ -328,6 +329,7 @@ import {
 const vscode =
   typeof acquireVsCodeApi != 'undefined' ? acquireVsCodeApi() : null
 vscode && vscode.postMessage({ type: 'init' })
+const isVscode =ref(  typeof acquireVsCodeApi != 'undefined' ? true :false)
 
 onBeforeMount(() => {
   if (vscode) {
@@ -366,7 +368,7 @@ window.addEventListener('message', ({ data }) => {
 })
 
 //Import file
-const url = ref('/files/啼笑因缘.azw3')
+const url = ref('')
 const location = ref('')
 const type = ref('')
 const fileType = (path) => {
@@ -477,7 +479,7 @@ const getRendition = (val) => {
         const currentPage = book.locations.percentageFromCfi(
           currentLocation.start.cfi,
         )
-        sliderValue.value = currentPage
+        sliderValue.value = currentPage.toFixed(2)
       })
       rendition.on('relocated', (location) => {
         const percent = book.locations.percentageFromCfi(location.start.cfi)
@@ -868,7 +870,7 @@ const info = ref(false)
 const information = ref(null)
 
 //sidebarViewer
-const isSidebar = ref(true)
+const isSidebar = ref(false)
 //request error
 const originalOpen = XMLHttpRequest.prototype.open
 const onError = (e) => {
@@ -1025,5 +1027,7 @@ sidebar-reader {
   position: absolute;
   bottom: 5px;
   right: 5px;
+  font-size: 14px;
+  font-weight: bolder;
 }
 </style>
