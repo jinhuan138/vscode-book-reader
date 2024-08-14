@@ -20,6 +20,9 @@ export class SidebarViewerProvider implements vscode.WebviewViewProvider {
           type: 'type',
           content: 'sidebar',
         })
+      } else {
+        message.type === 'title'
+        webviewView.title = message.content
       }
     })
     this.emitter.on('open', (url: string) => {
@@ -28,7 +31,7 @@ export class SidebarViewerProvider implements vscode.WebviewViewProvider {
         content: url,
       })
     })
-    this.emitter.on('style', (theme:any) => {
+    this.emitter.on('style', (theme: any) => {
       webview.postMessage({
         type: 'style',
         content: theme,

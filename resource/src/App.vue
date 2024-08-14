@@ -278,7 +278,7 @@
       <div
         v-if="progressDisplay === 'location'"
         class="page"
-        :style="pageStyle"
+        :style="{ color: theme.textColor }"
         :title="page"
       >
         {{ page }}
@@ -476,6 +476,8 @@ const getRendition = (val) => {
       book.loaded.metadata.then(async (metadata) => {
         const cover = await book.coverUrl()
         information.value = { ...metadata, cover }
+        vscode &&
+          vscode.postMessage({ type: 'title', content: metadata?.title || '' })
       })
       return book.locations.generate(1600)
     })
@@ -516,6 +518,8 @@ const getBookRendition = (val) => {
     creator: bookAuthor,
     pubdate: book.metadata.published,
   }
+  vscode &&
+          vscode.postMessage({ type: 'title', content: book.metadata?.title || '' })
   book.getCover?.().then((blob) => {
     information.value.cover = URL.createObjectURL(blob)
   })
@@ -737,11 +741,6 @@ watch(theme, (val) => {
 //page
 const page = ref('')
 const toc = ref([])
-const pageStyle = computed(() => ({
-  color: theme.textColor,
-  fontFamily: theme.font,
-  fontSize: theme.fontSize + '%',
-}))
 const getLabel = (toc, href) => {
   let label = 'n/a'
   toc.some((item) => {
