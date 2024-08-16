@@ -25,8 +25,10 @@
       <EpubView
         v-if="type === 'epub'"
         :url="url"
+        :location="location"
         :getRendition="getRendition"
         :tocChanged="(val) => (toc = val)"
+        @update:location="locationChange"
       />
       <BookView
         v-else
@@ -278,7 +280,7 @@
       <div
         v-if="progressDisplay === 'location'"
         class="page"
-        :style="{ color: theme.textColor }"
+        :style="{ color: theme.textColor , fontSize: isSidebar ? '14px' :'16px' }"
         :title="page"
       >
         {{ page }}
@@ -487,7 +489,7 @@ const getRendition = (val) => {
         const currentPage = book.locations.percentageFromCfi(
           currentLocation.start.cfi,
         )
-        sliderValue.value = currentPage.toFixed(2)
+        sliderValue.value = (currentPage * 100).toFixed(2)
       })
       rendition.on('relocated', (location) => {
         const percent = book.locations.percentageFromCfi(location.start.cfi)
@@ -921,7 +923,7 @@ sidebar-reader {
 .book-reader .footer,
 .sidebar-reader .footer {
   position: absolute;
-  bottom: 1rem;
+  bottom: 5px;
   right: 0;
   left: 0;
   z-index: 22;
