@@ -52,6 +52,9 @@
           class="tree"
         />
       </el-popover>
+      <el-icon class="close-icon" color="#ccc" @click="url = ''"
+        ><Close
+      /></el-icon>
       <!-- process -->
       <div class="sidebar-process" :style="{ color: theme.textColor }">
         {{ sliderValue + '%' }}
@@ -280,7 +283,10 @@
       <div
         v-if="progressDisplay === 'location'"
         class="page"
-        :style="{ color: theme.textColor , fontSize: isSidebar ? '14px' :'16px' }"
+        :style="{
+          color: theme.textColor,
+          fontSize: isSidebar ? '14px' : '16px',
+        }"
         :title="page"
       >
         {{ page }}
@@ -320,17 +326,9 @@ import { VueReader as BookReader, BookView } from 'vue-book-reader'
 import VueEasyLightbox from 'vue-easy-lightbox'
 import Lightbox from 'photoswipe/lightbox'
 import 'photoswipe/style.css'
-import { Search, Menu } from '@element-plus/icons-vue'
+import { Search, Menu, Close } from '@element-plus/icons-vue'
 
-import {
-  ref,
-  reactive,
-  watch,
-  onMounted,
-  onBeforeMount,
-  toRaw,
-  computed,
-} from 'vue'
+import { ref, reactive, watch, onMounted, onBeforeMount, toRaw } from 'vue'
 
 //vscode
 const vscode =
@@ -521,7 +519,7 @@ const getBookRendition = (val) => {
     pubdate: book.metadata.published,
   }
   vscode &&
-          vscode.postMessage({ type: 'title', content: book.metadata?.title || '' })
+    vscode.postMessage({ type: 'title', content: book.metadata?.title || '' })
   book.getCover?.().then((blob) => {
     information.value.cover = URL.createObjectURL(blob)
   })
@@ -894,9 +892,10 @@ XMLHttpRequest.prototype.open = function (method, requestUrl) {
 </script>
 <style>
 .book-reader,
-sidebar-reader {
+.sidebar-reader {
   height: 100vh;
   width: 100%;
+  position: relative;
 }
 
 .book-reader .reader {
@@ -944,6 +943,9 @@ sidebar-reader {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+}
+.sidebar-reader .footer {
+  max-width: calc(100% - 90px);
 }
 
 /* setting */
@@ -1008,13 +1010,21 @@ sidebar-reader {
   box-shadow: 0px 0px 2px rgba(0, 0, 0, 0.18);
 }
 /* sidebar */
-.menu-icon {
+.menu-icon,
+.close-icon {
+  position: absolute;
   cursor: pointer;
   z-index: 5;
   top: 5px;
+}
+.menu-icon {
   left: 5px;
 }
-.menu-icon:hover {
+.close-icon {
+  right: 5px;
+}
+.menu-icon:hover,
+.close-icon:hover {
   color: #409efc;
 }
 .tree {
