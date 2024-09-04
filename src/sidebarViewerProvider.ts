@@ -20,8 +20,7 @@ export class SidebarViewerProvider implements vscode.WebviewViewProvider {
           type: 'type',
           content: 'sidebar',
         })
-      } else {
-        message.type === 'title'
+      } else if (message.type === 'title') {
         webviewView.title = message.content
       }
     })
