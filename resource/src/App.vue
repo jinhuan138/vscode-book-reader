@@ -52,7 +52,7 @@
           class="tree"
         />
       </el-popover>
-      <el-icon class="close-icon" color="#ccc" @click="url = ''"
+      <el-icon class="close-icon" color="#ccc" @click="close"
         ><Close
       /></el-icon>
       <!-- process -->
@@ -373,8 +373,14 @@ window.addEventListener('message', ({ data }) => {
 })
 
 //Import file
+const isSidebar = ref(false)
+
 const defaultBook = '/files/啼笑因缘.epub'
 const url = ref(import.meta.env.MODE === 'development' ? defaultBook : '')
+
+const close = () => {
+  url.value = ''
+}
 const location = ref('')
 const type = ref('')
 const fileType = (path) => {
@@ -611,13 +617,18 @@ const backgroundList = [
   'rgba(233, 216, 188,1)',
   'rgba(197, 231, 207,1)',
 ]
-const theme = reactive({
-  fontSize: 100,
-  font: '',
-  lineSpacing: 1.5,
-  textColor: textList[0],
-  backgroundColor: backgroundList[0],
-})
+const userTheme = localStorage.getItem('theme')
+const theme = reactive(
+  userTheme
+    ? JSON.parse(userTheme)
+    : {
+        fontSize: 100,
+        font: '',
+        lineSpacing: 1.5,
+        textColor: textList[0],
+        backgroundColor: backgroundList[0],
+      },
+)
 const fontFamily = [
   {
     label: 'Arial',
@@ -649,10 +660,18 @@ const getCSS = ({
 }) => {
   return [
     `
-p,a,h1,h2,h3 {
+* {
   font-family: ${font || '!invalid-hack'};
   font-size:  ${fontSize}%;
   color: ${textColor};
+}
+
+a {
+  color: 'inherit !important',
+}
+
+a:link: {
+  color: '#1e83d2 !important',
 }
 
 body {
@@ -707,16 +726,14 @@ const updateStyle = (theme) => {
     'a:link:hover': {
       background: 'rgba(0, 0, 0, 0.1) !important',
     },
-  }
-  ;['p', 'h1', 'h2', 'h3'].forEach((i) => {
-    rules[i] = {
+    '*': {
       'font-family': font !== '' ? `${font} !important` : '!invalid-hack',
       'font-size':
         fontSize !== '' ? `${fontSize}% !important` : '!invalid-hack',
       color: textColor,
       'background-color': backgroundColor,
-    }
-  })
+    },
+  }
   if (type.value === 'epub') {
     if (!rendition) return
     rendition.getContents().forEach((content) => {
@@ -728,7 +745,6 @@ const updateStyle = (theme) => {
     )
   }
 }
-const userTheme = localStorage.getItem('theme')
 if (userTheme) {
   const newTheme = JSON.parse(userTheme)
   Object.keys(newTheme).forEach((key) => {
@@ -876,8 +892,6 @@ onMounted(async () => {
 const info = ref(false)
 const information = ref(null)
 
-//sidebarViewer
-const isSidebar = ref(false)
 //request error
 const originalOpen = XMLHttpRequest.prototype.open
 const onError = (e) => {
