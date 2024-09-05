@@ -66,7 +66,21 @@
       :imgs="imgsRef"
       :index="indexRef"
       @hide="visibleRef = false"
-    ></vue-easy-lightbox>
+    >
+      <template v-slot:close-btn="{ close }">
+        <el-icon @click="downloadImage" class="download-image" :size="24"
+          ><Download
+        /></el-icon>
+        <div
+          role="button"
+          aria-label="close image preview button"
+          class="btn__close"
+          @click="close"
+        >
+          <el-icon><CloseBold /></el-icon>
+        </div>
+      </template>
+    </vue-easy-lightbox>
     <!-- setting -->
     <div class="setting-box" v-if="!isSidebar">
       <!-- setting -->
@@ -324,10 +338,8 @@
 import { VueReader as EpubReader, EpubView } from 'vue-reader'
 import { VueReader as BookReader, BookView } from 'vue-book-reader'
 import VueEasyLightbox from 'vue-easy-lightbox'
-import Lightbox from 'photoswipe/lightbox'
-import 'photoswipe/style.css'
 import { Search, Menu, Close } from '@element-plus/icons-vue'
-
+import localforage from 'localforage'
 import { ref, reactive, watch, onMounted, onBeforeMount, toRaw } from 'vue'
 
 //vscode
@@ -347,11 +359,6 @@ onBeforeMount(() => {
   if (stored && url.value && type.value !== 'epub') {
     location.value = stored
   }
-  const lightbox = new Lightbox({
-    children: 'a',
-    pswpModule: () => import('photoswipe'),
-  })
-  lightbox.init()
 })
 
 window.addEventListener('message', ({ data }) => {
@@ -363,26 +370,41 @@ window.addEventListener('message', ({ data }) => {
       isSidebar.value = data.content === 'sidebar'
     } else if (data.type === 'style') {
       const { key, theme: newTheme } = JSON.parse(data.content)
-      // if (key === bookKey) {
       Object.keys(newTheme).forEach((key) => {
         theme[key] = newTheme[key]
       })
-      // }
     }
   }
 })
 
 //Import file
 const isSidebar = ref(false)
+const type = ref('')
+const bookDB = localforage.createInstance({
+  name: 'bookList',
+})
+watch(
+  isSidebar,
+  async (val) => {
+    if (val) {
+      type.value = await bookDB.getItem('lastBookType')
+      url.value = await bookDB.getItem('lastBook')
+    }
+  },
+  {
+    immediate: true,
+  },
+)
 
-const defaultBook = '/files/啼笑因缘.epub'
+const defaultBook = ''
 const url = ref(import.meta.env.MODE === 'development' ? defaultBook : '')
 
 const close = () => {
   url.value = ''
+  bookDB.removeItem('lastBookType')
+  bookDB.removeItem('lastBook')
 }
 const location = ref('')
-const type = ref('')
 const fileType = (path) => {
   const type = path.split('.')
   return type[type.length - 1] || ''
@@ -395,11 +417,18 @@ const onchange = (e) => {
   if (type.value === 'epub') {
     if (window.FileReader) {
       var reader = new FileReader()
-      reader.onloadend = () => (url.value = reader.result)
+      reader.onloadend = () => {
+        url.value = reader.result
+        isSidebar.value && bookDB.setItem('lastBook', url.value)
+      }
       reader.readAsArrayBuffer(file)
     }
   } else {
     url.value = file
+    isSidebar.value && bookDB.setItem('lastBook', url.value)
+  }
+  if (isSidebar.value) {
+    bookDB.setItem('lastBookType', type.value)
   }
 }
 watch(
@@ -432,6 +461,7 @@ const getRendition = (val) => {
     },
   })
   rendition.hooks.content.register(({ document }) => {
+    updateStyle(theme)
     imgsRef.value = []
     const imgs = [
       ...document.querySelectorAll('img'),
@@ -541,6 +571,16 @@ const change = (val) => {
     sliderValue.value = val
     rendition.goToFraction(parseFloat(val / 100))
   }
+}
+
+const downloadImage = () => {
+  var downloadLink = document.createElement('a')
+  downloadLink.href = imgsRef.value[indexRef.value]
+  downloadLink.download = 'image.jpg'
+  downloadLink.style.display = 'none'
+  document.body.appendChild(downloadLink)
+  downloadLink.click()
+  document.body.removeChild(downloadLink)
 }
 //search
 const searching = ref(false)
@@ -1062,5 +1102,11 @@ XMLHttpRequest.prototype.open = function (method, requestUrl) {
   right: 5px;
   font-size: 14px;
   font-weight: bolder;
+}
+.download-image {
+  position: absolute;
+  cursor: pointer;
+  right: 10px;
+  bottom: 20px;
 }
 </style>
