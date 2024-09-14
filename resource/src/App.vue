@@ -403,6 +403,7 @@ const close = () => {
   url.value = ''
   bookDB.removeItem('lastBookType')
   bookDB.removeItem('lastBook')
+  vscode && vscode.postMessage({ type: 'title', content: '' })
 }
 const location = ref('')
 const fileType = (path) => {
