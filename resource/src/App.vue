@@ -396,7 +396,7 @@ watch(
   },
 )
 
-const defaultBook = ''
+const defaultBook = 'files/西方绘画大师经典佳作 梵高.mobi'
 const url = ref(import.meta.env.MODE === 'development' ? defaultBook : '')
 
 const close = () => {
@@ -560,8 +560,23 @@ const getBookRendition = (val) => {
   book.getCover?.().then((blob) => {
     information.value.cover = URL.createObjectURL(blob)
   })
+  updateStyle(theme)
   rendition.addEventListener('relocate', ({ detail }) => {
     localStorage.setItem(bookKey, detail.cfi)
+     const paginator =  rendition.shadowRoot.querySelector('foliate-paginator')
+     const {doc} =  paginator.getContents()[0]
+    imgsRef.value = []
+    const imgs = [
+      ...doc.querySelectorAll('img'),
+      ...doc.querySelectorAll('image'),
+    ]
+    imgs.forEach((img, index) => {
+      img.addEventListener('click', () => {
+        visibleRef.value = true
+        indexRef.value = index
+      })
+      imgsRef.value.push(img.src || img.getAttribute('xlink:href'))
+    })
   })
 }
 const change = (val) => {
@@ -735,6 +750,9 @@ svg, img {
   background-color: transparent !important;
   mix-blend-mode: multiply;
 }
+img, image {
+  cursor: pointer !important;
+}
 `,
   ]
 }
@@ -860,13 +878,6 @@ const locationChange = (detail) => {
     const percent = (fraction * 100).toFixed(2)
     sliderValue.value = percent
     const innerText = range.commonAncestorContainer.innerText
-    // const { body } = range.commonAncestorContainer
-    imgsRef.value = []
-    // const imgs = [
-    //   ...body.querySelectorAll('img'),
-    //   ...body.querySelectorAll('image'),
-    // ]
-    // console.log(range.commonAncestorContainer)
     if (innerText) {
       text = innerText
         .toString()
