@@ -396,7 +396,7 @@ watch(
   },
 )
 
-const defaultBook = 'files/西方绘画大师经典佳作 梵高.mobi'
+const defaultBook = 'files/啼笑因缘.epub'
 const url = ref(import.meta.env.MODE === 'development' ? defaultBook : '')
 
 const close = () => {
@@ -563,8 +563,8 @@ const getBookRendition = (val) => {
   updateStyle(theme)
   rendition.addEventListener('relocate', ({ detail }) => {
     localStorage.setItem(bookKey, detail.cfi)
-     const paginator =  rendition.shadowRoot.querySelector('foliate-paginator')
-     const {doc} =  paginator.getContents()[0]
+    const paginator = rendition.shadowRoot.querySelector('foliate-paginator')
+    const { doc } = paginator.getContents()[0]
     imgsRef.value = []
     const imgs = [
       ...doc.querySelectorAll('img'),
@@ -769,7 +769,7 @@ const updateStyle = (theme) => {
   const rules = {
     body: {
       'font-family': font !== '' ? `${font} !important` : '!invalid-hack',
-      color: textColor,
+      color: `${textColor} !important`,
       'background-color': backgroundColor,
     },
     a: {
@@ -789,7 +789,7 @@ const updateStyle = (theme) => {
       'font-family': font !== '' ? `${font} !important` : '!invalid-hack',
       'font-size':
         fontSize !== '' ? `${fontSize}% !important` : '!invalid-hack',
-      color: textColor,
+        color: `${textColor} !important`,
       'background-color': backgroundColor,
     },
   }
