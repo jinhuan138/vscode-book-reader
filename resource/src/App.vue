@@ -555,8 +555,16 @@ const getBookRendition = (val) => {
     creator: bookAuthor,
     pubdate: book.metadata.published,
   }
+  const bookName = book.metadata?.title
+    ? book.metadata?.title
+    : typeof url.value === 'string'
+      ? decodeURIComponent(url.value.substring(url.value.lastIndexOf('/') + 1, url.value.lastIndexOf('.'))) 
+      : ''
   vscode &&
-    vscode.postMessage({ type: 'title', content: book.metadata?.title || '' })
+    vscode.postMessage({
+      type: 'title',
+      content: bookName,
+    })
   book.getCover?.().then((blob) => {
     information.value.cover = URL.createObjectURL(blob)
   })
@@ -564,7 +572,8 @@ const getBookRendition = (val) => {
   rendition.addEventListener('relocate', ({ detail }) => {
     localStorage.setItem(bookKey, detail.cfi)
     const paginator = rendition.shadowRoot.querySelector('foliate-paginator')
-    const { doc } = paginator.getContents()[0]
+    const doc = paginator?.getContents()[0].doc
+    if (!doc) return
     imgsRef.value = []
     const imgs = [
       ...doc.querySelectorAll('img'),
@@ -789,7 +798,7 @@ const updateStyle = (theme) => {
       'font-family': font !== '' ? `${font} !important` : '!invalid-hack',
       'font-size':
         fontSize !== '' ? `${fontSize}% !important` : '!invalid-hack',
-        color: `${textColor} !important`,
+      color: `${textColor} !important`,
       'background-color': backgroundColor,
     },
   }
@@ -799,9 +808,10 @@ const updateStyle = (theme) => {
       content.addStylesheetRules(rules)
     })
   } else {
-    rendition?.renderer.setStyles(
-      getCSS({ font, fontSize, lineSpacing, textColor, backgroundColor }),
-    )
+    rendition?.renderer?.setStyles &&
+      rendition.renderer.setStyles(
+        getCSS({ font, fontSize, lineSpacing, textColor, backgroundColor }),
+      )
   }
 }
 if (userTheme) {
@@ -877,7 +887,7 @@ const locationChange = (detail) => {
     const { fraction, range, tocItem } = detail
     const percent = (fraction * 100).toFixed(2)
     sliderValue.value = percent
-    const innerText = range.commonAncestorContainer.innerText
+    const innerText = range?.commonAncestorContainer?.innerText
     if (innerText) {
       text = innerText
         .toString()
