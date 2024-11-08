@@ -1,6 +1,8 @@
 import * as vscode from 'vscode'
 import { readFileSync } from 'fs'
+import { join } from 'path'
 import { Util } from './until'
+import { homedir } from "os";
 
 export class SidebarViewerProvider implements vscode.WebviewViewProvider {
   private extensionPath: string
@@ -22,6 +24,12 @@ export class SidebarViewerProvider implements vscode.WebviewViewProvider {
         })
       } else if (message.type === 'title') {
         webviewView.title = message.content
+      } else if (message.type === 'download') {
+        const filePath = vscode.Uri.file(join(homedir(), '.bookReader', Date.now() + '.jpg'))
+        await vscode.workspace.fs.writeFile(filePath, message.content)
+        vscode.commands.executeCommand('vscode.open', filePath, {
+          forceNewWindow: true
+        })
       }
     })
     this.emitter.on('open', (url: string) => {

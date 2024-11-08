@@ -558,7 +558,12 @@ const getBookRendition = (val) => {
   const bookName = book.metadata?.title
     ? book.metadata?.title
     : typeof url.value === 'string'
-      ? decodeURIComponent(url.value.substring(url.value.lastIndexOf('/') + 1, url.value.lastIndexOf('.'))) 
+      ? decodeURIComponent(
+          url.value.substring(
+            url.value.lastIndexOf('/') + 1,
+            url.value.lastIndexOf('.'),
+          ),
+        )
       : ''
   vscode &&
     vscode.postMessage({
@@ -598,14 +603,45 @@ const change = (val) => {
   }
 }
 
+const imageUrlToUint8Array = async (url) => {
+  try {
+    const response = await fetch(url)
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    const blob = await response.blob()
+    const fileReader = new FileReader()
+    return new Promise((resolve, reject) => {
+      fileReader.onloadend = (e) => {
+        resolve(new Uint8Array(e.target.result))
+      }
+      fileReader.onerror = (err) => {
+        reject(err)
+      }
+      fileReader.readAsArrayBuffer(blob)
+    })
+  } catch (error) {
+    console.error('Error converting image URL to Uint8Array:', error)
+    throw error
+  }
+}
 const downloadImage = () => {
-  var downloadLink = document.createElement('a')
-  downloadLink.href = imgsRef.value[indexRef.value]
-  downloadLink.download = 'image.jpg'
-  downloadLink.style.display = 'none'
-  document.body.appendChild(downloadLink)
-  downloadLink.click()
-  document.body.removeChild(downloadLink)
+  if (vscode) {
+    imageUrlToUint8Array(imgsRef.value[indexRef.value]).then((data) => {
+      vscode.postMessage({
+        type: 'download',
+        content: data,
+      })
+    })
+  } else {
+    var downloadLink = document.createElement('a')
+    downloadLink.href = imgsRef.value[indexRef.value]
+    downloadLink.download = Date.now() + '.jpg'
+    downloadLink.style.display = 'none'
+    document.body.appendChild(downloadLink)
+    downloadLink.click()
+    document.body.removeChild(downloadLink)
+  }
 }
 //search
 const searching = ref(false)
