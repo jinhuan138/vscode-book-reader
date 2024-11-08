@@ -66,6 +66,7 @@
       :imgs="imgsRef"
       :index="indexRef"
       @hide="visibleRef = false"
+      @on-index-change="(oldIndex, newIndex) => (indexRef = newIndex)"
     >
       <template v-slot:close-btn="{ close }">
         <el-icon @click="downloadImage" class="download-image" :size="24"
@@ -396,7 +397,7 @@ watch(
   },
 )
 
-const defaultBook = 'files/啼笑因缘.epub'
+const defaultBook = 'files/玫瑰圣经.epub'
 const url = ref(import.meta.env.MODE === 'development' ? defaultBook : '')
 
 const close = () => {
