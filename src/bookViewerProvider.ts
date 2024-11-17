@@ -32,22 +32,26 @@ export class BookViewerProvider implements vscode.CustomReadonlyEditorProvider {
       localResourceRoots: [vscode.Uri.file(this.extensionPath), folderPath],
     }
     webview.onDidReceiveMessage(async (message) => {
-      if (message.type === 'init') {
-        webview.postMessage({
-          type: 'open',
-          content: webview.asWebviewUri(uri).toString(),
-        })
-        this.emitter.emit('open', webview.asWebviewUri(uri).toString())
-      } else if (message.type === 'style') {
-        this.emitter.emit('style', message.content)
-      } else if (message.type === 'download') {
-        const filePath = vscode.Uri.file(
-          join(homedir(), '.bookReader', Date.now() + '.jpg'),
-        )
-        await vscode.workspace.fs.writeFile(filePath, message.content)
-        vscode.commands.executeCommand('vscode.open', filePath, {
-          forceNewWindow: true,
-        })
+      switch (message.type) {
+        case 'init':
+          webview.postMessage({
+            type: 'open',
+            content: webview.asWebviewUri(uri).toString(),
+          })
+          this.emitter.emit('open', webview.asWebviewUri(uri).toString())
+          break
+        case 'style':
+          this.emitter.emit('style', message.content)
+          break
+        case 'download':
+          const filePath = vscode.Uri.file(
+            join(homedir(), '.bookReader', Date.now() + '.jpg'),
+          )
+          await vscode.workspace.fs.writeFile(filePath, message.content)
+          vscode.commands.executeCommand('vscode.open', filePath, {
+            forceNewWindow: true,
+          })
+          break
       }
     })
     webview.html = Util.buildPath(
