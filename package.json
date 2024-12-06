@@ -126,5 +126,6 @@
   "vsce": {
     "dependencies": false,
     "useYarn": false
-  }
+  },
+  "packageManager": "pnpm@9.6.0"
 }
