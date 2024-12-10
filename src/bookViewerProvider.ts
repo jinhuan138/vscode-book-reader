@@ -43,6 +43,9 @@ export class BookViewerProvider implements vscode.CustomReadonlyEditorProvider {
         case 'style':
           this.emitter.emit('style', message.content)
           break
+        case 'flow':
+          this.emitter.emit('flow', message.content)
+          break
         case 'download':
           const filePath = vscode.Uri.file(
             join(homedir(), '.bookReader', Date.now() + '.jpg'),
