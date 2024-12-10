@@ -43,7 +43,9 @@
         :width="300"
       >
         <template #reference>
-          <el-icon class="menu-icon" color="#ccc"><Menu /></el-icon>
+          <el-icon class="menu-icon" color="#ccc">
+            <Menu />
+          </el-icon>
         </template>
         <el-tree
           :data="toc"
@@ -52,9 +54,9 @@
           class="tree"
         />
       </el-popover>
-      <el-icon class="close-icon" color="#ccc" @click="close"
-        ><Close
-      /></el-icon>
+      <el-icon class="close-icon" color="#ccc" @click="close">
+        <Close />
+      </el-icon>
       <!-- process -->
       <div class="sidebar-process" :style="{ color: theme.textColor }">
         {{ sliderValue + '%' }}
@@ -69,16 +71,18 @@
       @on-index-change="(oldIndex, newIndex) => (indexRef = newIndex)"
     >
       <template v-slot:close-btn="{ close }">
-        <el-icon @click="downloadImage" class="download-image" :size="24"
-          ><Download
-        /></el-icon>
+        <el-icon @click="downloadImage" class="download-image" :size="24">
+          <Download />
+        </el-icon>
         <div
           role="button"
           aria-label="close image preview button"
           class="btn__close"
           @click="close"
         >
-          <el-icon><CloseBold /></el-icon>
+          <el-icon>
+            <CloseBold />
+          </el-icon>
         </div>
       </template>
     </vue-easy-lightbox>
@@ -385,15 +389,8 @@ window.addEventListener('message', ({ data }) => {
         })
         break
       case 'flow':
-        localStorage.setItem('flow', data.content)
-        if (type.value === 'epub') {
-          rendition.flow(data.content)
-        } else {
-          rendition?.renderer.setAttribute(
-            'flow',
-            data.content === 'paginated' ? 'paginated' : 'scrolled',
-          )
-        }
+        localStorage.setItem('flow')
+        setFlow(data.content)
         break
     }
   }
@@ -518,7 +515,7 @@ const getRendition = (val) => {
     rendition.hooks.content.register(() => updateStyle(theme))
   })
   rendition.spread(defaultSpread)
-  rendition.flow(defaultFlow)
+  setFlow(defaultFlow)
   rendition.on('displayError', () => {
     console.err('error rendering book')
     url.value = ''
@@ -597,10 +594,7 @@ const getBookRendition = (val) => {
   })
   //theme
   updateStyle(theme)
-  rendition?.renderer.setAttribute(
-    'flow',
-    defaultFlow === 'paginated' ? 'paginated' : 'scrolled',
-  )
+  setFlow(defaultFlow)
   rendition.addEventListener('relocate', ({ detail }) => {
     localStorage.setItem(bookKey, detail.cfi)
     const paginator = rendition.shadowRoot.querySelector('foliate-paginator')
@@ -720,15 +714,18 @@ watch(flow, (value) => {
       type: 'flow',
       content: value,
     })
+  setFlow(value)
+})
+const setFlow = (flow) => {
   if (type.value === 'epub') {
-    rendition.flow(value)
+    rendition.flow(flow)
   } else {
     rendition?.renderer.setAttribute(
       'flow',
-      value === 'paginated' ? 'paginated' : 'scrolled',
+      flow === 'paginated' ? 'paginated' : 'scrolled',
     )
   }
-})
+}
 const defaultSpread = localStorage.getItem('spread') || 'auto'
 const spread = ref(defaultSpread)
 watch(spread, (value) => {
@@ -1088,6 +1085,7 @@ XMLHttpRequest.prototype.open = function (method, requestUrl) {
   white-space: nowrap;
   text-overflow: ellipsis;
 }
+
 .sidebar-reader .footer {
   max-width: calc(100% - 90px);
 }
@@ -1153,6 +1151,7 @@ XMLHttpRequest.prototype.open = function (method, requestUrl) {
   position: relative;
   box-shadow: 0px 0px 2px rgba(0, 0, 0, 0.18);
 }
+
 /* sidebar */
 .menu-icon,
 .close-icon {
@@ -1161,16 +1160,20 @@ XMLHttpRequest.prototype.open = function (method, requestUrl) {
   z-index: 5;
   top: 5px;
 }
+
 .menu-icon {
   left: 5px;
 }
+
 .close-icon {
   right: 5px;
 }
+
 .menu-icon:hover,
 .close-icon:hover {
   color: #409efc;
 }
+
 .tree {
   max-height: 100%;
   max-width: 100%;
@@ -1178,10 +1181,12 @@ XMLHttpRequest.prototype.open = function (method, requestUrl) {
   overflow-x: hidden;
   word-wrap: wrap;
 }
+
 .tree .el-tree-node__content {
   min-height: var(--el-tree-node-content-height);
   height: auto;
 }
+
 .tree .el-tree-node__content .el-tree-node__label {
   white-space: normal;
 }
@@ -1193,6 +1198,7 @@ XMLHttpRequest.prototype.open = function (method, requestUrl) {
   font-size: 14px;
   font-weight: bolder;
 }
+
 .download-image {
   position: absolute;
   cursor: pointer;
