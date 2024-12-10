@@ -370,16 +370,31 @@ onBeforeMount(() => {
 
 window.addEventListener('message', ({ data }) => {
   if (data) {
-    if (data.type === 'open') {
-      url.value = data.content
-      type.value = fileType(data.content)
-    } else if (data.type === 'type') {
-      isSidebar.value = data.content === 'sidebar'
-    } else if (data.type === 'style') {
-      const { key, theme: newTheme } = JSON.parse(data.content)
-      Object.keys(newTheme).forEach((key) => {
-        theme[key] = newTheme[key]
-      })
+    switch (data.type) {
+      case 'open':
+        url.value = data.content
+        type.value = fileType(data.content)
+        break
+      case 'type':
+        isSidebar.value = data.content === 'sidebar'
+        break
+      case 'style':
+        const { key, theme: newTheme } = JSON.parse(data.content)
+        Object.keys(newTheme).forEach((key) => {
+          theme[key] = newTheme[key]
+        })
+        break
+      case 'flow':
+        localStorage.setItem('flow', data.content)
+        if (type.value === 'epub') {
+          rendition.flow(data.content)
+        } else {
+          rendition?.renderer.setAttribute(
+            'flow',
+            data.content === 'paginated' ? 'paginated' : 'scrolled',
+          )
+        }
+        break
     }
   }
 })
@@ -503,7 +518,7 @@ const getRendition = (val) => {
     rendition.hooks.content.register(() => updateStyle(theme))
   })
   rendition.spread(defaultSpread)
-  rendition.flow(defaultFlow === 'paginated' ? 'paginated' : 'scrolled')
+  rendition.flow(defaultFlow)
   rendition.on('displayError', () => {
     console.err('error rendering book')
     url.value = ''
@@ -580,7 +595,12 @@ const getBookRendition = (val) => {
   book.getCover?.().then((blob) => {
     information.value.cover = URL.createObjectURL(blob)
   })
+  //theme
   updateStyle(theme)
+  rendition?.renderer.setAttribute(
+    'flow',
+    defaultFlow === 'paginated' ? 'paginated' : 'scrolled',
+  )
   rendition.addEventListener('relocate', ({ detail }) => {
     localStorage.setItem(bookKey, detail.cfi)
     const paginator = rendition.shadowRoot.querySelector('foliate-paginator')
@@ -695,6 +715,11 @@ const displayType = ['location', 'bar']
 const progressDisplay = ref('location')
 watch(flow, (value) => {
   localStorage.setItem('flow', value)
+  vscode &&
+    vscode.postMessage({
+      type: 'flow',
+      content: value,
+    })
   if (type.value === 'epub') {
     rendition.flow(value)
   } else {
