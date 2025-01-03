@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { viteSingleFile } from 'vite-plugin-singlefile'
+import path from 'path'
 
 // https://cn.vitejs.dev/
 export default defineConfig(({ command }) => ({
@@ -10,5 +11,10 @@ export default defineConfig(({ command }) => ({
   },
   root: './resource',
   base: './resource',
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './resource/src')
+    }
+  },
   publicDir: command === 'serve' ? 'public' : false,
 }))

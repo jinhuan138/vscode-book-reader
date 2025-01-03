@@ -27,3 +27,83 @@ body {
   height: 100%;
   min-height: 100vh;
 }
+
+.book-reader,
+.sidebar-reader {
+  height: 100vh;
+  width: 100%;
+  position: relative;
+}
+
+.book-reader .reader {
+  inset: 50px 0 32px;
+}
+
+.book-reader .reader .epub-container {
+  overflow-x: hidden !important;
+}
+
+.book-reader .arrow {
+  display: none;
+}
+
+/* footer */
+.book-reader .footer,
+.sidebar-reader .footer {
+  position: absolute;
+  bottom: 5px;
+  right: 0;
+  left: 0;
+  z-index: 22;
+  width: 80%;
+  margin: auto;
+}
+
+.book-reader .footer .el-slider__bar,
+.sidebar-reader .footer .el-slider__bar {
+  background-color: #ccc;
+}
+
+.book-reader .footer .page,
+.sidebar-reader .footer .page {
+  width: 100%;
+  text-align: center;
+  align-items: center;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.import {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.import .import-button {
+  margin: 5px auto 0;
+}
+
+.theme .background-color-list {
+  margin: 10px 0px 0px;
+  width: 100%;
+  min-height: 44px;
+  padding-bottom: 6px;
+}
+
+.theme .background-color-circle {
+  display: inline-block;
+  width: 35px;
+  height: 35px;
+  font-size: 20px;
+  border-radius: 50%;
+  opacity: 1;
+  cursor: pointer;
+  margin: 7px;
+  margin-top: 3px;
+  box-sizing: border-box;
+  position: relative;
+  box-shadow: 0px 0px 2px rgba(0, 0, 0, 0.18);
+}
