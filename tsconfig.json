@@ -1,23 +1,17 @@
 {
-	"compilerOptions": {
-		"module": "Node16",
-		"target": "ES2022",
-		"outDir": "dist",
-		"lib": [
-			"ES2022",
-			"dom",
-			"es6"
-		],
-		"sourceMap": true,
-		"rootDir": "src",
-		"strict": true
-	},
-	"exclude": [
-		"node_modules",
-		"/resource/**/*",
-		"vite.config.ts"
-	],
-	"include": [
-		"src/**/*"
-	]
+  "compilerOptions": {
+    "module": "Node16",
+    "target": "ES2022",
+    "outDir": "dist",
+    "lib": ["ES2022", "dom", "es6"],
+    "sourceMap": true,
+    "rootDir": "src",
+    "strict": true,
+    "baseUrl": "./",
+    "paths": {
+      "@/*": ["resource/src/*"]
+    }
+  },
+  "exclude": ["node_modules", "/resource/**/*", "vite.config.ts"],
+  "include": ["src/**/*"]
 }
