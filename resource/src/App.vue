@@ -71,6 +71,7 @@
 //https://www.npmjs.com/package/bing-translate-api
 //https://marketplace.visualstudio.com/manage/publishers/
 import VueEasyLightbox from 'vue-easy-lightbox'
+import localforage from 'localforage'
 import { ref } from 'vue'
 import useStore from '@/hooks/useStore'
 import useTheme from '@/hooks/useTheme'
@@ -88,9 +89,7 @@ console.log(
 )
 const isSidebar = ref(false)
 const theme = useTheme(isSidebar.value)
-const { imgsRef, indexRef, visibleRef, downloadImage } = useImage(
-  isSidebar.value,
-)
+const { imgsRef, indexRef, visibleRef, downloadImage } = useImage()
 
 const { url, type } = useStore()
 
@@ -105,6 +104,7 @@ window.addEventListener('message', ({ data }) => {
         type.value = fileType(data.content)
         break
       case 'type':
+        console.log('isSidebar',data.content)
         isSidebar.value = data.content === 'sidebar'
         break
     }
@@ -112,7 +112,9 @@ window.addEventListener('message', ({ data }) => {
 })
 
 //Import file
-
+const bookDB = localforage.createInstance({
+  name: 'bookList',
+})
 const fileType = (path) => {
   return path.split('.').pop()
 }
