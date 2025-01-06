@@ -28,7 +28,7 @@ const imageUrlToUint8Array = async (url) => {
   }
 }
 
-export default function useImage(isSidebar = false) {
+export default function useImage() {
   const imgsRef = ref<string[]>([])
   const visibleRef = ref<boolean>(false)
   const indexRef = ref<number>(0)
@@ -73,26 +73,6 @@ export default function useImage(isSidebar = false) {
           })
           imgsRef.value.push(img.src || img.getAttribute('xlink:href') as string)
         })
-        if (isSidebar) {
-          const annotation = Array.from(
-            document.querySelectorAll('a'),
-          ) as HTMLAnchorElement[]
-          if (annotation.length) {
-            const halfLength = Math.floor(annotation.length / 2)
-            annotation.slice(0, halfLength).forEach((el) => {
-              if (el.href) {
-                const id = el.href.split('#')[1]
-                const target = annotation
-                  .slice(halfLength)
-                  .find((a: HTMLAnchorElement) => a.id === id)
-                if (target && target.parentNode) {
-                  el.title = target.parentNode.textContent as string
-                  console.log(el.title)
-                }
-              }
-            })
-          }
-        }
       })
     } else {
       instance.addEventListener('relocate', () => {
