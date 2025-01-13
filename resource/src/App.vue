@@ -46,6 +46,7 @@
         v-else-if="progressDisplay === 'bar'"
         v-model="progress"
         :step="0.01"
+        @change="changeProgress"
       ></el-slider>
     </div>
   </div>
@@ -104,7 +105,6 @@ window.addEventListener('message', ({ data }) => {
         type.value = fileType(data.content)
         break
       case 'type':
-        console.log('isSidebar',data.content)
         isSidebar.value = data.content === 'sidebar'
         break
     }
@@ -144,5 +144,5 @@ const onchange = (e) => {
 //footer
 const progressDisplay = ref('location')
 const page = usePage()
-const progress = useProgress()
+const { progress, changeProgress } = useProgress()
 </script>

@@ -42,14 +42,14 @@ export default function useProgress() {
     }
   })
 
-  watch(progress, (val) => {
+  const changeProgress = (val: number) => {
     if (!rendition.value.shadowRoot) {
       const cfi = book.locations.cfiFromPercentage(val / 100)
       rendition.value.display(cfi)
     } else {
       rendition.value.goToFraction(parseFloat(String(val / 100)))
     }
-  })
+  }
 
-  return progress
+  return { progress, changeProgress }
 }
