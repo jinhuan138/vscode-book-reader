@@ -47,7 +47,7 @@ const [rendition, setRendition] = useRendition()
 
 const toc = useToc()
 
-const progress = useProgress()
+const { progress } = useProgress()
 
 //store last book
 const bookDB = localforage.createInstance({

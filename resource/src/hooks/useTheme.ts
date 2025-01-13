@@ -116,7 +116,7 @@ export default function useTheme(isSlider = false) {
       rendition.value.renderer?.setStyles &&
         rendition.value.renderer.setStyles(getCSS(newTheme))
     }
-    if (!isSlider) {
+    if (!isSlider && vscode) {
       vscode.postMessage({
         type: 'style',
         content: JSON.stringify(newTheme),
