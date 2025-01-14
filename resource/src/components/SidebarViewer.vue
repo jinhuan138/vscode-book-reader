@@ -26,8 +26,8 @@
       font: theme.fontSize,
     }"
   >
-    <div class="page" :title="page">
-      {{ page }}
+    <div class="chapter" :title="chapter">
+      {{ chapter }}
     </div>
     <div class="sidebar-process">
       {{ progress + '%' }}
@@ -53,7 +53,7 @@ import useToc from '@/hooks/useToc'
 import useProgress from '@/hooks/useProgress'
 import useFlow from '@/hooks/useFlow'
 import useVscode from '@/hooks/useVscode'
-import usePage from '@/hooks/usePage'
+import useChapter from '@/hooks/useChapter'
 import useAnimation from '@/hooks/useAnimation'
 
 const vscode = useVscode()
@@ -70,7 +70,7 @@ const toc = useToc()
 
 const { progress, changeProgress } = useProgress()
 
-const page = usePage()
+const chapter = useChapter()
 
 //store last book
 const bookDB = localforage.createInstance({
@@ -134,11 +134,11 @@ window.addEventListener('message', ({ data }) => {
 .sidebar-reader .footer:hover .slider {
   opacity: 1;
 }
-.sidebar-reader .footer:hover .page {
+.sidebar-reader .footer:hover .chapter {
   opacity: 0;
 }
 
-.footer .page {
+.footer .chapter {
   width: 100%;
   text-align: center;
   align-items: center;

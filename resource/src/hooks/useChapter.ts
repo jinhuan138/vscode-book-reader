@@ -20,7 +20,7 @@ const getLabel = (toc, href) => {
   })
   return label
 }
-export default function usePage() {
+export default function useChapter() {
   const page = ref('')
   const onRelocate = ({ detail }) => {
     const { tocItem } = detail
