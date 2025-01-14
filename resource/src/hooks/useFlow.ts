@@ -1,4 +1,4 @@
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted, onUnmounted } from 'vue'
 import useVscode from './useVscode'
 import useRendition from './useRendition'
 
@@ -9,6 +9,20 @@ export default function useFlow(isSidebar = false) {
   const defaultFlow: Flow =
     (localStorage.getItem('flow') as Flow | null) || 'paginated'
   const flow = ref<Flow>(defaultFlow)
+
+  const handleSetFlow = (e: KeyboardEvent) => {
+    console.log(e.key,'s')
+    if (e.key === 's') {
+      flow.value = flow.value === 'paginated' ? 'scrolled-doc' : 'paginated'
+    }
+  }
+
+  onMounted(() => {
+    window.addEventListener('keydown', handleSetFlow)
+  })
+  onUnmounted(() => {
+    window.removeEventListener('keydown', handleSetFlow)
+  })
   const setFlow = (flow) => {
     if (!rendition.value.shadowRoot) {
       rendition.value.flow(flow)
@@ -21,19 +35,7 @@ export default function useFlow(isSidebar = false) {
   }
   watch(rendition, (instance) => {
     setFlow(defaultFlow)
-    instance.on('rendered', (e: Event, iframe: any) => {
-      iframe.document.addEventListener(
-        'keyup',
-        (e) => {
-          if (e.key === 's') {
-            flow.value =
-              flow.value === 'paginated' ? 'scrolled-doc' : 'paginated'
-          }
-        },
-        false,
-      )
-    })
-    if (isSidebar) {
+    if (isSidebar && !instance.shadowRoot) {
       instance.hooks.content.register(({ document }) => {
         const annotation = Array.from(
           document.querySelectorAll('a'),

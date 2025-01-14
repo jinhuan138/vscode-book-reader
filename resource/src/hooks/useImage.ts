@@ -1,4 +1,4 @@
-import { ref, watch } from 'vue'
+import { ref, watch, onBeforeUnmount } from 'vue'
 import useVscode from './useVscode'
 import useRendition from './useRendition'
 
@@ -50,6 +50,24 @@ export default function useImage() {
       document.body.removeChild(downloadLink)
     }
   }
+  const onRelocate = () => {
+    const paginator =
+      rendition.value.shadowRoot.querySelector('foliate-paginator')
+    const doc = paginator?.getContents()[0].doc
+    if (!doc) return
+    imgsRef.value = []
+    const imgs = [
+      ...doc.querySelectorAll('img'),
+      ...doc.querySelectorAll('image'),
+    ]
+    imgs.forEach((img, index) => {
+      img.addEventListener('click', () => {
+        visibleRef.value = true
+        indexRef.value = index
+      })
+      imgsRef.value.push(img.src || img.getAttribute('xlink:href'))
+    })
+  }
   watch(rendition, (instance) => {
     if (!instance.shadowRoot) {
       instance.themes.default({
@@ -71,30 +89,21 @@ export default function useImage() {
             visibleRef.value = true
             indexRef.value = index
           })
-          imgsRef.value.push(img.src || img.getAttribute('xlink:href') as string)
+          imgsRef.value.push(
+            img.src || (img.getAttribute('xlink:href') as string),
+          )
         })
       })
     } else {
-      instance.addEventListener('relocate', () => {
-        const paginator = instance.shadowRoot.querySelector('foliate-paginator')
-        const doc = paginator?.getContents()[0].doc
-        if (!doc) return
-        imgsRef.value = []
-        const imgs = [
-          ...doc.querySelectorAll('img'),
-          ...doc.querySelectorAll('image'),
-        ]
-        imgs.forEach((img, index) => {
-          img.addEventListener('click', () => {
-            visibleRef.value = true
-            indexRef.value = index
-          })
-          imgsRef.value.push(img.src || img.getAttribute('xlink:href'))
-        })
-      })
+      instance.addEventListener('relocate', onRelocate)
+    }
+  })
+
+  onBeforeUnmount(() => {
+    if(!rendition.value.shadowRoot){
+      rendition.value.removeEventListener('relocate', onRelocate)
     }
   })
 
   return { visibleRef, indexRef, imgsRef, downloadImage }
 }
-
