@@ -1,4 +1,4 @@
-import { ref, watch } from 'vue'
+import { ref, watch, onBeforeUnmount } from 'vue'
 import useRendition from './useRendition'
 import useToc from './useToc'
 const [rendition] = useRendition()
@@ -22,6 +22,11 @@ const getLabel = (toc, href) => {
 }
 export default function usePage() {
   const page = ref('')
+  const onRelocate = ({ detail }) => {
+    const { tocItem } = detail
+    page.value = tocItem?.label || ''
+  }
+
   watch(rendition, (instance) => {
     if (!instance.shadowRoot) {
       instance.on('locationChanged', () => {
@@ -32,12 +37,14 @@ export default function usePage() {
         }
       })
     } else {
-      instance.addEventListener('relocate', ({ detail }) => {
-        const { tocItem } = detail
-        page.value = tocItem.label || ''
-      })
+      instance.addEventListener('relocate', onRelocate)
     }
   })
 
+  onBeforeUnmount(() => {
+    if(rendition.value.shadowRoot){
+      rendition.value.removeEventListener('relocate', onRelocate)
+    }
+  })
   return page
 }

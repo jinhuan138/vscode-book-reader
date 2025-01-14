@@ -1,7 +1,7 @@
 <template>
   <div v-if="url" :class="[isSidebar ? 'sidebar-reader' : 'book-reader']">
     <!-- viewer -->
-    <book-viewer v-if="!isSidebar" v-model:progressDisplay="progressDisplay" />
+    <book-viewer v-if="!isSidebar" />
     <sidebar-viewer v-else />
     <!-- lightbox -->
     <vue-easy-lightbox
@@ -27,28 +27,7 @@
         </div>
       </template>
     </vue-easy-lightbox>
-    <!-- footer -->
-    <div class="footer">
-      <!-- page -->
-      <div
-        v-if="progressDisplay === 'location'"
-        class="page"
-        :style="{
-          color: theme.textColor,
-          fontSize: isSidebar ? '14px' : '16px',
-        }"
-        :title="page"
-      >
-        {{ page }}
-      </div>
-      <!-- slider -->
-      <el-slider
-        v-else-if="progressDisplay === 'bar'"
-        v-model="progress"
-        :step="0.01"
-        @change="changeProgress"
-      ></el-slider>
-    </div>
+  
   </div>
   <!-- import -->
   <div v-else class="import">
@@ -79,8 +58,6 @@ import useTheme from '@/hooks/useTheme'
 import BookViewer from '@/components/BookViewer.vue'
 import SidebarViewer from '@/components/SidebarViewer.vue'
 import useImage from '@/hooks/useImage'
-import usePage from '@/hooks/usePage'
-import useProgress from '@/hooks/useProgress'
 import useVscode from '@/hooks/useVscode'
 import pkg from '../../package.json'
 console.log(
@@ -140,9 +117,4 @@ const onchange = (e) => {
     bookDB.setItem('lastBookType', type.value)
   }
 }
-
-//footer
-const progressDisplay = ref('location')
-const page = usePage()
-const { progress, changeProgress } = useProgress()
 </script>

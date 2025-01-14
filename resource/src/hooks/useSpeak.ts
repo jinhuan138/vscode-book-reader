@@ -1,4 +1,4 @@
-import { ref, watch, onBeforeMount } from 'vue'
+import { ref, watch, onBeforeMount,onBeforeUnmount } from 'vue'
 import useRendition from './useRendition'
 
 const [rendition] = useRendition()
@@ -42,6 +42,20 @@ export default function useSpeak() {
   ])
   const voiceIndex = ref(0)
   const voices = ref<any[]>([])
+  const onRelocate = ({ detail }) => {
+    const { range } = detail
+    const innerText = range?.commonAncestorContainer?.innerText
+    if (innerText) {
+      text = innerText
+        .toString()
+        .replace(/\s\s/g, '')
+        .replace(/\r/g, '')
+        .replace(/\n/g, '')
+        .replace(/\t/g, '')
+        .replace(/\f/g, '')
+      isReading.value && speak(true)
+    }
+  }
   onBeforeMount(async () => {
     voices.value = await setSpeech()
   })
@@ -88,24 +102,16 @@ export default function useSpeak() {
         isReading.value && speak(true)
       })
     } else {
-      instance.addEventListener('relocate', ({ detail }) => {
-        const { range } = detail
-        const innerText = range?.commonAncestorContainer?.innerText
-        if (innerText) {
-          text = innerText
-            .toString()
-            .replace(/\s\s/g, '')
-            .replace(/\r/g, '')
-            .replace(/\n/g, '')
-            .replace(/\t/g, '')
-            .replace(/\f/g, '')
-          isReading.value && speak(true)
-        }
-      })
+      instance.addEventListener('relocate', onRelocate)
     }
   })
   watch(isReading, (flag) => {
     speak(flag)
+  })
+  onBeforeUnmount(() => {
+    if(!rendition.value.shadowRoot){
+      rendition.value.removeEventListener('relocate', onRelocate)
+    }
   })
   return { isReading, voiceIndex, voices, speed, speedList }
 }

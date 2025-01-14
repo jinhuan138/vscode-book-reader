@@ -18,9 +18,27 @@
   <el-icon class="close-icon" color="#ccc" @click="close">
     <Close />
   </el-icon>
-  <!-- process -->
-  <div class="sidebar-process" :style="{ color: theme.textColor }">
-    {{ progress + '%' }}
+  <!-- footer -->
+  <div
+    class="footer"
+    :style="{
+      color: theme.textColor,
+      font: theme.fontSize,
+    }"
+  >
+    <div class="page" :title="page">
+      {{ page }}
+    </div>
+    <div class="sidebar-process">
+      {{ progress + '%' }}
+    </div>
+    <!-- process -->
+    <el-slider
+      class="slider"
+      v-model="progress"
+      :step="0.01"
+      @change="changeProgress"
+    ></el-slider>
   </div>
 </template>
 <script setup>
@@ -35,6 +53,7 @@ import useToc from '@/hooks/useToc'
 import useProgress from '@/hooks/useProgress'
 import useFlow from '@/hooks/useFlow'
 import useVscode from '@/hooks/useVscode'
+import usePage from '@/hooks/usePage'
 
 const vscode = useVscode()
 
@@ -47,7 +66,9 @@ const [rendition, setRendition] = useRendition()
 
 const toc = useToc()
 
-const { progress } = useProgress()
+const { progress, changeProgress } = useProgress()
+
+const page = usePage()
 
 //store last book
 const bookDB = localforage.createInstance({
@@ -92,7 +113,7 @@ window.addEventListener('message', ({ data }) => {
 })
 </script>
 
-<style>
+<style scoped>
 /* sidebar */
 .sidebar-reader .reader {
   inset: 0 !important;
@@ -103,7 +124,33 @@ window.addEventListener('message', ({ data }) => {
 }
 
 .sidebar-reader .footer {
-  max-width: calc(100% - 90px);
+  width: 100%;
+}
+.sidebar-reader .footer:hover .slider {
+  opacity: 1;
+}
+.sidebar-reader .footer:hover .page {
+  opacity: 0;
+}
+
+.footer .page {
+  width: 100%;
+  text-align: center;
+  align-items: center;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font: 14px;
+  transition: opacity 0.3s;
+  opacity: 1;
+  position: absolute;
+}
+
+.slider {
+  width: 80%;
+  margin: auto;
+  opacity: 0;
+  transition: opacity 0.3s;
 }
 
 .menu-icon,
@@ -148,7 +195,6 @@ window.addEventListener('message', ({ data }) => {
   position: absolute;
   bottom: 5px;
   right: 5px;
-  font-size: 14px;
   font-weight: bolder;
 }
 

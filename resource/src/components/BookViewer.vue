@@ -5,7 +5,12 @@
     :getRendition="initBook"
     :backgroundColor="theme.backgroundColor"
   />
-  <book-reader v-else :url="url" :getRendition="initBook" />
+  <book-reader
+    v-else
+    :url="url"
+    :getRendition="initBook"
+    :backgroundColor="theme.backgroundColor"
+  />
   <!-- setting -->
   <div class="setting-box">
     <!-- setting -->
@@ -209,6 +214,25 @@
       </div>
     </el-drawer>
   </div>
+  <!-- footer -->
+  <div
+    class="footer"
+    :style="{
+      color: theme.textColor,
+      font: theme.fontSize,
+    }"
+  >
+    <div v-if="progressDisplay === 'location'" class="page" :title="page">
+      {{ page }}
+    </div>
+    <!-- slider -->
+    <el-slider
+      v-else-if="progressDisplay === 'bar'"
+      v-model="progress"
+      :step="0.01"
+      @change="changeProgress"
+    ></el-slider>
+  </div>
 </template>
 <script setup>
 import { ref, toRefs } from 'vue'
@@ -224,6 +248,8 @@ import useFlow from '@/hooks/useFlow'
 import useSpread from '@/hooks/useSpread'
 import useStore from '@/hooks/useStore'
 import useVscode from '@/hooks/useVscode'
+import usePage from '@/hooks/usePage'
+import useProgress from '@/hooks/useProgress'
 
 const { url, type } = useStore()
 
@@ -261,8 +287,7 @@ const fontFamily = [
     value: "'Arbutus Slab', serif",
   },
 ]
-const displayType = ['location', 'bar', 'progressDisplay']
-const progressDisplay = defineModel('progressDisplay')
+const displayType = ['location', 'bar']
 const flow = useFlow()
 const spread = useSpread()
 
@@ -293,8 +318,13 @@ const onNodeClick = (item) => {
     rendition.value.goTo?.(item.cfi)
   }
 }
+
+//footer
+const progressDisplay = ref('location')
+const page = usePage()
+const { progress, changeProgress } = useProgress()
 </script>
-<style>
+<style scoped>
 /* setting */
 .book-reader .setting-box {
   position: absolute;
@@ -321,5 +351,29 @@ const onNodeClick = (item) => {
 .navigation-icon {
   cursor: pointer;
   z-index: 5;
+}
+/* footer */
+.footer {
+  position: absolute;
+  bottom: 5px;
+  right: 0;
+  left: 0;
+  z-index: 22;
+  width: 80%;
+  margin: auto;
+}
+
+.footer .el-slider__bar {
+  background-color: #ccc;
+}
+
+.page {
+  width: 100%;
+  text-align: center;
+  align-items: center;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font: 14px;
 }
 </style>

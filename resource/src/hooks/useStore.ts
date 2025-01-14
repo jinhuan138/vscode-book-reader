@@ -1,4 +1,4 @@
-import { ref, watch } from 'vue'
+import { ref, watch, onBeforeUnmount } from 'vue'
 import useRendition from './useRendition'
 const [rendition] = useRendition()
 
@@ -7,6 +7,11 @@ const url = ref(import.meta.env.MODE === 'development' ? defaultBook : '')
 const type = ref('')
 
 export default function useStore() {
+  const  onRelocate =({ detail })=>{
+    const bookKey = url.value
+    localStorage.setItem(bookKey, detail.cfi)
+  }
+
   watch(rendition, (instance) => {
     if (!instance.shadowRoot) {
       const bookKey = instance.book.key()
@@ -17,11 +22,10 @@ export default function useStore() {
     } else {
       const bookKey = url.value
       instance?.goTo(localStorage.getItem(bookKey) || 0)
-      instance.addEventListener('relocate', ({ detail }) => {
-        localStorage.setItem(bookKey, detail.cfi)
-      })
+      instance.addEventListener('relocate', onRelocate)
     }
   })
+
   watch(
     url,
     (val) => {
@@ -31,5 +35,11 @@ export default function useStore() {
     },
     { immediate: true },
   )
+
+  onBeforeUnmount(() => {
+    if(!rendition.value.shadowRoot){
+      rendition.value.removeEventListener('relocate', onRelocate)
+    }
+  })
   return { url, type }
 }
