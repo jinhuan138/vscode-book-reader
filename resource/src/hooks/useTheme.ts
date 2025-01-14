@@ -9,12 +9,13 @@ const theme = reactive(
   userTheme
     ? JSON.parse(userTheme)
     : {
-        fontSize: 100,
-        font: '',
-        lineSpacing: 1.5,
-        textColor: '',
-        backgroundColor: '',
-      },
+      fontSize: 100,
+      font: '',
+      lineSpacing: 1.5,
+      textColor: '',
+      backgroundColor: '',
+      writingMode: 'horizontal-tb',
+    },
 )
 
 const [rendition] = useRendition()
@@ -24,6 +25,7 @@ const getCSS = ({
   lineSpacing,
   textColor,
   backgroundColor,
+  writingMode,
 }) => {
   return [
     `
@@ -43,6 +45,7 @@ const getCSS = ({
   
   body {
     font-family: ${font || '!invalid-hack'} !important;
+    writing-mode:${writingMode || ''} !important;
     color: ${textColor} !important;
     background-color: ${backgroundColor} !important;
   }
@@ -73,6 +76,7 @@ const getRule = ({
   fontSize,
   lineSpacing,
   textColor,
+  writingMode,
   backgroundColor,
 }) => {
   return {
@@ -80,6 +84,7 @@ const getRule = ({
       'font-family': font !== '' ? `${font} !important` : '!invalid-hack',
       color: `${textColor} !important`,
       'background-color': backgroundColor,
+      'writing-mode':writingMode,
     },
     a: {
       color: 'inherit !important',
