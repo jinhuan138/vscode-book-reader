@@ -239,8 +239,11 @@
       font: theme.fontSize,
     }"
   >
-    <div v-if="progressDisplay === 'location'" class="page" :title="page">
-      {{ page }}
+    <div v-if="progressDisplay === 'chapter'" class="chapter" :title="chapter">
+      {{ chapter }}
+    </div>
+    <div v-if="progressDisplay === 'location'" class="chapter">
+      {{ location }}
     </div>
     <!-- slider -->
     <el-slider
@@ -252,7 +255,7 @@
   </div>
 </template>
 <script setup>
-import { ref, toRefs } from 'vue'
+import { ref } from 'vue'
 import { Search, Setting } from '@element-plus/icons-vue'
 import { VueReader as EpubReader } from 'vue-reader'
 import { VueReader as BookReader } from 'vue-book-reader'
@@ -265,9 +268,10 @@ import useFlow from '@/hooks/useFlow'
 import useSpread from '@/hooks/useSpread'
 import useStore from '@/hooks/useStore'
 import useVscode from '@/hooks/useVscode'
-import usePage from '@/hooks/usePage'
+import useChapter from '@/hooks/useChapter'
 import useProgress from '@/hooks/useProgress'
 import useAnimation from '@/hooks/useAnimation'
+import useLocation from '@/hooks/useLocation'
 
 const { url, type } = useStore()
 
@@ -305,7 +309,7 @@ const fontFamily = [
     value: "'Arbutus Slab', serif",
   },
 ]
-const displayType = ['location', 'bar']
+const displayType = ['location', 'bar', 'chapter']
 const flow = useFlow()
 const spread = useSpread()
 const animation = useAnimation()
@@ -339,8 +343,9 @@ const onNodeClick = (item) => {
 }
 
 //footer
-const progressDisplay = ref('location')
-const page = usePage()
+const progressDisplay = ref('chapter')
+const chapter = useChapter()
+const location = useLocation()
 const { progress, changeProgress } = useProgress()
 </script>
 <style scoped>
@@ -386,7 +391,7 @@ const { progress, changeProgress } = useProgress()
   background-color: #ccc;
 }
 
-.page {
+.chapter {
   width: 100%;
   text-align: center;
   align-items: center;
