@@ -37,6 +37,20 @@
             </el-radio-button>
           </el-radio-group>
         </el-form-item>
+        <el-form-item label="WritingMode">
+          <el-radio-group
+            v-model="theme.writingMode"
+            size="small"
+            style="flex-wrap: nowrap"
+          >
+            <el-radio-button value="horizontal-tb" border>
+              horizontal
+            </el-radio-button>
+            <el-radio-button value="vertical-rl" border>
+              vertical
+            </el-radio-button>
+          </el-radio-group>
+        </el-form-item>
         <el-form-item label="View Spread">
           <el-radio-group
             v-model="spread"
