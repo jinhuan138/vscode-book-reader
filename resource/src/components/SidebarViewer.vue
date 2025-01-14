@@ -54,6 +54,7 @@ import useProgress from '@/hooks/useProgress'
 import useFlow from '@/hooks/useFlow'
 import useVscode from '@/hooks/useVscode'
 import usePage from '@/hooks/usePage'
+import useAnimation from '@/hooks/useAnimation'
 
 const vscode = useVscode()
 
@@ -61,6 +62,7 @@ const { url, type } = useStore()
 
 const theme = useTheme(true)
 const flow = useFlow(true)
+const animation = useAnimation(true)
 
 const [rendition, setRendition] = useRendition()
 
@@ -107,6 +109,9 @@ window.addEventListener('message', ({ data }) => {
         break
       case 'flow':
         flow.value = data.content
+        break
+      case 'animation':
+        animation.value = data.content
         break
     }
   }

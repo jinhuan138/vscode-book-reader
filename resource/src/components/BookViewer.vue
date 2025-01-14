@@ -37,6 +37,9 @@
             </el-radio-button>
           </el-radio-group>
         </el-form-item>
+        <el-form-item label="Paging Animation">
+          <el-switch v-model="animation" />
+        </el-form-item>
         <el-form-item label="WritingMode">
           <el-radio-group
             v-model="theme.writingMode"
@@ -264,6 +267,7 @@ import useStore from '@/hooks/useStore'
 import useVscode from '@/hooks/useVscode'
 import usePage from '@/hooks/usePage'
 import useProgress from '@/hooks/useProgress'
+import useAnimation from '@/hooks/useAnimation'
 
 const { url, type } = useStore()
 
@@ -304,6 +308,7 @@ const fontFamily = [
 const displayType = ['location', 'bar']
 const flow = useFlow()
 const spread = useSpread()
+const animation = useAnimation()
 
 const backgroundList = [
   'rgba(255,255,255,1)',
