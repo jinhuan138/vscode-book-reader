@@ -54,7 +54,6 @@ import VueEasyLightbox from 'vue-easy-lightbox'
 import localforage from 'localforage'
 import { ref } from 'vue'
 import useStore from '@/hooks/useStore'
-import useTheme from '@/hooks/useTheme'
 import BookViewer from '@/components/BookViewer.vue'
 import SidebarViewer from '@/components/SidebarViewer.vue'
 import useImage from '@/hooks/useImage'
@@ -66,7 +65,6 @@ console.log(
   'background: skyblue; padding: 1px; border-radius: 0 3px 3px 0; color: #fff',
 )
 const isSidebar = ref(false)
-const theme = useTheme(isSidebar.value)
 const { imgsRef, indexRef, visibleRef, downloadImage } = useImage()
 
 const { url, type } = useStore()

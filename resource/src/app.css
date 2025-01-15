@@ -47,33 +47,6 @@ body {
   display: none;
 }
 
-/* footer */
-.book-reader .footer,
-.sidebar-reader .footer {
-  position: absolute;
-  bottom: 5px;
-  right: 0;
-  left: 0;
-  z-index: 22;
-  width: 80%;
-  margin: auto;
-}
-
-.book-reader .footer .el-slider__bar,
-.sidebar-reader .footer .el-slider__bar {
-  background-color: #ccc;
-}
-
-.book-reader .footer .page,
-.sidebar-reader .footer .page {
-  width: 100%;
-  text-align: center;
-  align-items: center;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
 .import {
   width: 100%;
   height: 100%;

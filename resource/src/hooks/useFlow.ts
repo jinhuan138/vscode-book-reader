@@ -11,7 +11,6 @@ export default function useFlow(isSidebar = false) {
   const flow = ref<Flow>(defaultFlow)
 
   const handleSetFlow = (e: KeyboardEvent) => {
-    console.log(e.key,'s')
     if (e.key === 's') {
       flow.value = flow.value === 'paginated' ? 'scrolled-doc' : 'paginated'
     }

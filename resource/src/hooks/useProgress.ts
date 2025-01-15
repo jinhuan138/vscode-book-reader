@@ -1,4 +1,4 @@
-import { ref, watch, onBeforeUnmount, onMounted } from 'vue'
+import { ref, watch, onBeforeUnmount } from 'vue'
 import useRendition from './useRendition'
 const [rendition] = useRendition()
 let book
@@ -14,23 +14,6 @@ export default function useProgress() {
       rendition.value.goToFraction(parseFloat(String(val / 100)))
     }
   }
-
-  const handleGoBack = (event: KeyboardEvent) => {
-    const isCtrlPressed = event.ctrlKey || event.metaKey
-    if (isCtrlPressed && event.key === 'z') {
-      if (rendition.value.shadowRoot) {
-        rendition.value?.history.back()
-      }
-    }
-  }
-
-  onMounted(() => {
-    window.addEventListener('keydown', handleGoBack)
-  })
-
-  onBeforeUnmount(() => {
-    window.removeEventListener('keydown', handleGoBack)
-  })
 
   const onRelocate = ({ detail }) => {
     const { fraction } = detail

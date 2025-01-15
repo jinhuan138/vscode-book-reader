@@ -246,17 +246,22 @@
       {{ location }}
     </div>
     <!-- slider -->
-    <el-slider
-      v-else-if="progressDisplay === 'bar'"
-      v-model="progress"
-      :step="0.01"
-      @change="changeProgress"
-    ></el-slider>
+    <div v-else-if="progressDisplay === 'bar'" class="footer-slider">
+      <el-icon title="back" class="back-icon" @click="handleGoBack"
+        ><Back
+      /></el-icon>
+      <el-slider
+        class="slider"
+        v-model="progress"
+        :step="0.01"
+        @change="changeProgress"
+      ></el-slider>
+    </div>
   </div>
 </template>
 <script setup>
-import { ref } from 'vue'
-import { Search, Setting } from '@element-plus/icons-vue'
+import { ref, watch } from 'vue'
+import { Search, Setting, Back } from '@element-plus/icons-vue'
 import { VueReader as EpubReader } from 'vue-reader'
 import { VueReader as BookReader } from 'vue-book-reader'
 import useRendition from '@/hooks/useRendition'
@@ -309,7 +314,6 @@ const fontFamily = [
     value: "'Arbutus Slab', serif",
   },
 ]
-const displayType = ['location', 'bar', 'chapter']
 const flow = useFlow()
 const spread = useSpread()
 const animation = useAnimation()
@@ -343,10 +347,19 @@ const onNodeClick = (item) => {
 }
 
 //footer
-const progressDisplay = ref('chapter')
+const displayType = ['location', 'bar', 'chapter']
+const progressDisplay = ref(localStorage.getItem('displayType') || 'chapter')
+watch(progressDisplay, (display) => {
+  localStorage.setItem('displayType', display)
+})
 const chapter = useChapter()
 const location = useLocation()
 const { progress, changeProgress } = useProgress()
+const handleGoBack = () => {
+  if (rendition.value.shadowRoot) {
+    rendition.value?.history.back()
+  }
+}
 </script>
 <style scoped>
 /* setting */
@@ -383,7 +396,6 @@ const { progress, changeProgress } = useProgress()
   right: 0;
   left: 0;
   z-index: 22;
-  width: 80%;
   margin: auto;
 }
 
@@ -399,5 +411,19 @@ const { progress, changeProgress } = useProgress()
   white-space: nowrap;
   text-overflow: ellipsis;
   font: 14px;
+}
+.footer-slider {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+.footer-slider .back-icon {
+  cursor: pointer;
+  z-index: 5;
+}
+.footer-slider .slider {
+  width: 80%;
 }
 </style>
