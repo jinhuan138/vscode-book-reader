@@ -26,25 +26,33 @@
       font: theme.fontSize,
     }"
   >
-    <div class="chapter" :title="chapter">
-      {{ chapter }}
-    </div>
-    <div class="sidebar-process">
-      {{ progress + '%' }}
+    <div class="chapter">
+      <span :title="chapter" class="chapter-text">
+        {{ chapter }}
+      </span>
+      <div class="process">
+        {{ progress + '%' }}
+      </div>
     </div>
     <!-- process -->
-    <el-slider
-      class="slider"
-      v-model="progress"
-      :step="0.01"
-      @change="changeProgress"
-    ></el-slider>
+    <div class="footer-slider">
+      <el-icon title="back" class="back-icon" @click="handleGoBack"
+        ><Back
+      /></el-icon>
+      <el-slider
+        class="slider"
+        v-model="progress"
+        :step="0.01"
+        @change="changeProgress"
+      ></el-slider>
+    </div>
   </div>
 </template>
 <script setup>
 import { onMounted } from 'vue'
 import { EpubView } from 'vue-reader'
 import { BookView } from 'vue-book-reader'
+import { Back, Close, Menu } from '@element-plus/icons-vue'
 import useStore from '@/hooks/useStore'
 import localforage from 'localforage'
 import useRendition from '@/hooks/useRendition'
@@ -98,6 +106,12 @@ const onNodeClick = (item) => {
   }
 }
 
+const handleGoBack = () => {
+  if (rendition.value.shadowRoot) {
+    rendition.value?.history.back()
+  }
+}
+
 window.addEventListener('message', ({ data }) => {
   if (data) {
     switch (data.type) {
@@ -129,33 +143,56 @@ window.addEventListener('message', ({ data }) => {
 }
 
 .sidebar-reader .footer {
+  position: absolute;
+  bottom: 5px;
+  right: 0;
+  left: 0;
+  z-index: 22;
+  margin: auto;
   width: 100%;
 }
-.sidebar-reader .footer:hover .slider {
-  opacity: 1;
-}
-.sidebar-reader .footer:hover .chapter {
+.footer .footer-slider {
+  margin: auto;
   opacity: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: opacity 0.3s;
+}
+.footer .footer-slider .slider {
+  width: 80%;
 }
 
 .footer .chapter {
+  position: absolute;
   width: 100%;
-  text-align: center;
+  display: flex;
+  justify-content: center;
   align-items: center;
+  transition: opacity 0.3s;
+  opacity: 1;
+  font-size: 14px;
+}
+.chapter .chapter-text{
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-  font: 14px;
-  transition: opacity 0.3s;
-  opacity: 1;
+  max-width: 70%;
+}
+.footer .process{
   position: absolute;
+  right: 5px;
+  font-weight: bolder;
 }
 
-.slider {
-  width: 80%;
-  margin: auto;
+.sidebar-reader .footer:hover .footer-slider {
+  opacity: 1;
+}
+
+.sidebar-reader .footer:hover .chapter {
   opacity: 0;
-  transition: opacity 0.3s;
 }
 
 .menu-icon,
