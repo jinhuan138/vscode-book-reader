@@ -27,7 +27,6 @@
         </div>
       </template>
     </vue-easy-lightbox>
-  
   </div>
   <!-- import -->
   <div v-else class="import">
@@ -116,3 +115,11 @@ const onchange = (e) => {
   }
 }
 </script>
+<style scoped>
+.download-image {
+  position: absolute;
+  cursor: pointer;
+  right: 10px;
+  bottom: 20px;
+}
+</style>

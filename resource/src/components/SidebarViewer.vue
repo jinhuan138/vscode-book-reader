@@ -36,14 +36,13 @@
     </div>
     <!-- process -->
     <div class="footer-slider">
-      <el-icon title="back" class="back-icon" @click="handleGoBack"
-        ><Back
-      /></el-icon>
+      <el-icon title="back" class="back-icon" @click="goBack"><Back /></el-icon>
       <el-slider
         class="slider"
         v-model="progress"
         :step="0.01"
         @change="changeProgress"
+        size="small"
       ></el-slider>
     </div>
   </div>
@@ -76,7 +75,7 @@ const [rendition, setRendition] = useRendition()
 
 const toc = useToc()
 
-const { progress, changeProgress } = useProgress()
+const { progress, changeProgress, goBack } = useProgress()
 
 const chapter = useChapter()
 
@@ -106,18 +105,12 @@ const onNodeClick = (item) => {
   }
 }
 
-const handleGoBack = () => {
-  if (rendition.value.shadowRoot) {
-    rendition.value?.history.back()
-  }
-}
-
 window.addEventListener('message', ({ data }) => {
   if (data) {
     switch (data.type) {
       case 'style':
         const newTheme = JSON.parse(data.content)
-        Object.keys(theme).forEach((key) => {
+        Object.keys(newTheme).forEach((key) => {
           theme[key] = newTheme[key]
         })
         break
@@ -125,7 +118,7 @@ window.addEventListener('message', ({ data }) => {
         flow.value = data.content
         break
       case 'animation':
-        animation.value = data.content
+        animation.value = JSON.parse(data.content)
         break
     }
   }
@@ -163,10 +156,16 @@ window.addEventListener('message', ({ data }) => {
 }
 .footer .footer-slider .slider {
   width: 80%;
+  height: 26px;
+}
+.footer-slider .back-icon {
+  cursor: pointer;
+  z-index: 5;
 }
 
 .footer .chapter {
   position: absolute;
+  bottom: 0;
   width: 100%;
   display: flex;
   justify-content: center;
@@ -175,13 +174,13 @@ window.addEventListener('message', ({ data }) => {
   opacity: 1;
   font-size: 14px;
 }
-.chapter .chapter-text{
+.chapter .chapter-text {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
   max-width: 70%;
 }
-.footer .process{
+.footer .process {
   position: absolute;
   right: 5px;
   font-weight: bolder;
@@ -238,12 +237,5 @@ window.addEventListener('message', ({ data }) => {
   bottom: 5px;
   right: 5px;
   font-weight: bolder;
-}
-
-.download-image {
-  position: absolute;
-  cursor: pointer;
-  right: 10px;
-  bottom: 20px;
 }
 </style>
