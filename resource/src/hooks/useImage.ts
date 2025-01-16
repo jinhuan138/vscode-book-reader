@@ -100,7 +100,7 @@ export default function useImage() {
   })
 
   onBeforeUnmount(() => {
-    if(!rendition.value.shadowRoot){
+    if(rendition.value.shadowRoot){
       rendition.value.removeEventListener('relocate', onRelocate)
     }
   })

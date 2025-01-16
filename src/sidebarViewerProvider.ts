@@ -50,10 +50,16 @@ export class SidebarViewerProvider implements vscode.WebviewViewProvider {
         content: theme,
       })
     })
-    this.emitter.on('flow', (type: any) => {
+    this.emitter.on('flow', (content: any) => {
       webview.postMessage({
         type: 'flow',
-        content: type,
+        content,
+      })
+    })
+    this.emitter.on('animation', (content: any) => {
+      webview.postMessage({
+        type: 'animation',
+        content,
       })
     })
     webviewView.webview.html = Util.buildPath(

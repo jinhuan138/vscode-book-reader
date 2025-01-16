@@ -17,7 +17,7 @@ export class BookViewerProvider implements vscode.CustomReadonlyEditorProvider {
     uri: vscode.Uri,
     openContext: vscode.CustomDocumentOpenContext,
   ): vscode.CustomDocument | Thenable<vscode.CustomDocument> {
-    return { uri, dispose: (): void => {} }
+    return { uri, dispose: (): void => { } }
   }
 
   public resolveCustomEditor(
@@ -45,6 +45,9 @@ export class BookViewerProvider implements vscode.CustomReadonlyEditorProvider {
           break
         case 'flow':
           this.emitter.emit('flow', message.content)
+          break
+        case 'animation':
+          this.emitter.emit('animation', message.content)
           break
         case 'download':
           const filePath = vscode.Uri.file(

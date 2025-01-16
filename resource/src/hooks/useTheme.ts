@@ -9,13 +9,13 @@ const theme = reactive(
   userTheme
     ? JSON.parse(userTheme)
     : {
-      fontSize: 100,
-      font: '',
-      lineSpacing: 1.5,
-      textColor: '',
-      backgroundColor: '',
-      writingMode: 'horizontal-tb',
-    },
+        fontSize: 100,
+        font: '',
+        lineSpacing: 1.5,
+        textColor: '#000',
+        backgroundColor: '#fff',
+        writingMode: 'horizontal-tb',
+      },
 )
 
 const [rendition] = useRendition()
@@ -84,7 +84,7 @@ const getRule = ({
       'font-family': font !== '' ? `${font} !important` : '!invalid-hack',
       color: `${textColor} !important`,
       'background-color': backgroundColor,
-      'writing-mode':writingMode,
+      'writing-mode': writingMode,
     },
     a: {
       color: 'inherit !important',
@@ -109,8 +109,7 @@ const getRule = ({
   }
 }
 export default function useTheme(isSlider = false) {
-  function updatedTheme(newTheme) {
-    localStorage.setItem('theme', JSON.stringify(newTheme))
+  const updatedTheme = (newTheme) => {
     if (!rendition.value) return
     if (!rendition.value.shadowRoot) {
       rendition.value.getContents().forEach((content) => {
@@ -129,7 +128,11 @@ export default function useTheme(isSlider = false) {
     }
   }
 
-  watch(theme, (val) => updatedTheme(val))
+  watch(theme, (val) => {
+    updatedTheme(val)
+    console.log('update')
+    localStorage.setItem('theme', JSON.stringify(val))
+  })
   watch(rendition, (instance) => {
     const style = toRaw(theme)
     if (!instance.shadowRoot) {

@@ -5,11 +5,13 @@ let book
 
 export default function useProgress() {
   const progress = ref<number>(0)
+  const history = ref<string[]>([])
 
   const changeProgress = (val: number) => {
     if (!rendition.value.shadowRoot) {
       const cfi = book.locations.cfiFromPercentage(val / 100)
       rendition.value.display(cfi)
+      history.value.push(cfi)
     } else {
       rendition.value.goToFraction(parseFloat(String(val / 100)))
     }
@@ -19,6 +21,14 @@ export default function useProgress() {
     const { fraction } = detail
     const percent = Number((fraction * 100).toFixed(2))
     progress.value = percent
+  }
+
+  const goBack = () => {
+    if (!rendition.value.shadowRoot) {
+      if (history.value.length > 0) rendition.value.display(history.value.pop())
+    } else {
+      rendition.value?.history.back()
+    }
   }
 
   watch(rendition, (instance) => {
@@ -55,10 +65,10 @@ export default function useProgress() {
   })
 
   onBeforeUnmount(() => {
-    if (!rendition.value.shadowRoot) {
+    if (rendition.value.shadowRoot) {
       rendition.value.removeEventListener('relocate', onRelocate)
     }
   })
 
-  return { progress, changeProgress }
+  return { progress, changeProgress, goBack }
 }

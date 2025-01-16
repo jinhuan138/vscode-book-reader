@@ -1,11 +1,13 @@
-import { ref, watch} from 'vue'
+import { ref, watch } from 'vue'
 import useVscode from './useVscode'
 import useRendition from './useRendition'
 
 const vscode = useVscode()
 const [rendition] = useRendition()
 export default function useAnimation(isSidebar = false) {
-  const defaultAnimation = JSON.parse(localStorage.getItem('animation') || 'false') 
+  const defaultAnimation = JSON.parse(
+    localStorage.getItem('animation') || 'false',
+  )
   const animation = ref<boolean>(defaultAnimation)
   const setAnimation = (animated) => {
     if (!rendition.value.shadowRoot) {
@@ -30,7 +32,7 @@ export default function useAnimation(isSidebar = false) {
     if (!isSidebar && vscode) {
       vscode.postMessage({
         type: 'animation',
-        content: value,
+        content: String(value),
       })
     }
     localStorage.setItem('animation', String(value))

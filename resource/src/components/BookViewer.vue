@@ -247,7 +247,7 @@
     </div>
     <!-- slider -->
     <div v-else-if="progressDisplay === 'bar'" class="footer-slider">
-      <el-icon title="back" class="back-icon" @click="handleGoBack"
+      <el-icon title="back" class="back-icon" @click="goBack"
         ><Back
       /></el-icon>
       <el-slider
@@ -354,12 +354,7 @@ watch(progressDisplay, (display) => {
 })
 const chapter = useChapter()
 const location = useLocation()
-const { progress, changeProgress } = useProgress()
-const handleGoBack = () => {
-  if (rendition.value.shadowRoot) {
-    rendition.value?.history.back()
-  }
-}
+const { progress, changeProgress, goBack } = useProgress()
 </script>
 <style scoped>
 /* setting */
@@ -425,5 +420,6 @@ const handleGoBack = () => {
 }
 .footer-slider .slider {
   width: 80%;
+  height: 26px;
 }
 </style>
