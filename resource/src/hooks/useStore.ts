@@ -2,7 +2,7 @@ import { ref, watch, onBeforeUnmount } from 'vue'
 import useRendition from './useRendition'
 const [rendition] = useRendition()
 
-const defaultBook = 'files/啼笑因缘.azw3' //啼笑因缘.azw3
+const defaultBook = 'files/啼笑因缘.mobi' //啼笑因缘.azw3
 const url = ref(import.meta.env.MODE === 'development' ? defaultBook : '')
 const type = ref('')
 
@@ -37,7 +37,7 @@ export default function useStore() {
   )
 
   onBeforeUnmount(() => {
-    if(!rendition.value.shadowRoot){
+    if(rendition.value.shadowRoot){
       rendition.value.removeEventListener('relocate', onRelocate)
     }
   })
