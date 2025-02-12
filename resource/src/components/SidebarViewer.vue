@@ -48,7 +48,6 @@
   </div>
 </template>
 <script setup>
-import { onMounted } from 'vue'
 import { EpubView } from 'vue-reader'
 import { BookView } from 'vue-book-reader'
 import { Back, Close, Menu } from '@element-plus/icons-vue'
@@ -92,12 +91,6 @@ const close = () => {
   vscode && vscode.postMessage({ type: 'title', content: '' })
 }
 
-onMounted(async () => {
-  if (!url.value) {
-    type.value = await bookDB.getItem('lastBookType')
-    url.value = await bookDB.getItem('lastBook')
-  }
-})
 
 const onNodeClick = (item) => {
   if (!rendition.value.shadowRoot) {

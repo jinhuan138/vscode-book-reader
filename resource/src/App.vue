@@ -51,7 +51,7 @@
 //https://marketplace.visualstudio.com/manage/publishers/
 import VueEasyLightbox from 'vue-easy-lightbox'
 import localforage from 'localforage'
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import useStore from '@/hooks/useStore'
 import BookViewer from '@/components/BookViewer.vue'
 import SidebarViewer from '@/components/SidebarViewer.vue'
@@ -114,6 +114,12 @@ const onchange = (e) => {
     bookDB.setItem('lastBookType', type.value)
   }
 }
+watch(isSidebar, async (value) => {
+  if (value && !url.value) {
+    type.value = (await bookDB.getItem('lastBookType')) || ''
+    url.value = (await bookDB.getItem('lastBook')) || ''
+  }
+})
 </script>
 <style scoped>
 .download-image {
