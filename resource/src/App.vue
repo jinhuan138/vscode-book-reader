@@ -90,7 +90,7 @@ const bookDB = localforage.createInstance({
   name: 'bookList',
 })
 const fileType = (path) => {
-  return path.split('.').pop()
+  return path.split('.').pop().toLocaleLowerCase()
 }
 const input = ref(null)
 const importFile = () => input.value.click()
