@@ -120,9 +120,9 @@
     "element-plus": "^2.7.3",
     "localforage": "^1.10.0",
     "vue": "^3.4.26",
-    "vue-book-reader": "^1.0.8",
+    "vue-book-reader": "^1.1.4",
     "vue-easy-lightbox": "^1.19.0",
-    "vue-reader": "^1.2.17"
+    "vue-reader": "latest"
   },
   "vsce": {
     "dependencies": false,

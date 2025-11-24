@@ -18,6 +18,6 @@ Support reading epub、mobi、azw3、pdf、fk8、fb2、cbz files in vscode.
 | **🎨Customize Style**        | Adjust font、 colors 、backgroundColor...for a personalized experience. |
 | **⌨️keyboard events**        | Use ⬆️⬇️⬅️➡️ to turn the page                                    |
 | **🔁Scroll/Page View Modes** | Switch between scrolling or paginated reading modes,shortcut key:s |
-| **👀view the image**         | View images in the book                                      |
+| **👀view the image**         | View images and Download in the book                               |
 | **🎤read  book**             | Read  book                                                   |
 

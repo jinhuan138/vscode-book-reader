@@ -5,7 +5,7 @@ import useRendition from './useRendition'
 const vscode = useVscode()
 const [rendition] = useRendition()
 
-const imageUrlToUint8Array = async (url) => {
+const imageUrlToUint8Array = async (url: string) => {
   try {
     const response = await fetch(url)
     if (!response.ok) {
@@ -78,7 +78,7 @@ export default function useImage() {
           cursor: 'pointer',
         },
       })
-      instance.hooks.content.register(({ document }) => {
+      instance.hooks.content.register((content: { document: Document }) => {
         imgsRef.value = []
         const imgs = [
           ...document.querySelectorAll('img'),
@@ -100,7 +100,7 @@ export default function useImage() {
   })
 
   onBeforeUnmount(() => {
-    if(rendition.value.shadowRoot){
+    if (rendition.value.shadowRoot) {
       rendition.value.removeEventListener('relocate', onRelocate)
     }
   })
