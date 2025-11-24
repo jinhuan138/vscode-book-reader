@@ -31,7 +31,11 @@
   <!-- import -->
   <div v-else class="import">
     <div>
-      <el-input placeholder="input book url" clearable />
+      <el-input placeholder="input book url" v-model="inputUrl" clearable>
+        <template #append>
+          <el-button :icon="Search" @click="url = inputUrl" />
+        </template>
+      </el-input>
       <el-button class="import-button" size="large" @click="importFile"
         ><input
           v-show="false"
@@ -51,6 +55,7 @@
 //https://marketplace.visualstudio.com/manage/publishers/
 import VueEasyLightbox from 'vue-easy-lightbox'
 import localforage from 'localforage'
+import { Search } from '@element-plus/icons-vue'
 import { ref, watch } from 'vue'
 import useStore from '@/hooks/useStore'
 import BookViewer from '@/components/BookViewer.vue'
@@ -63,7 +68,8 @@ console.log(
   'background: #35495e; padding: 1px; border-radius: 3px 0 0 3px; color: #fff',
   'background: skyblue; padding: 1px; border-radius: 0 3px 3px 0; color: #fff',
 )
-const isSidebar = ref(false)
+const inputUrl = ref('')
+const isSidebar = ref(true)
 const { imgsRef, indexRef, visibleRef, downloadImage } = useImage()
 
 const { url, type } = useStore()
