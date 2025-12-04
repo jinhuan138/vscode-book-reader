@@ -69,7 +69,7 @@ console.log(
   'background: skyblue; padding: 1px; border-radius: 0 3px 3px 0; color: #fff',
 )
 const inputUrl = ref('')
-const isSidebar = ref(true)
+const isSidebar = ref(false)
 const { imgsRef, indexRef, visibleRef, downloadImage } = useImage()
 
 const { url, type } = useStore()
