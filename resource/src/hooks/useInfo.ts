@@ -28,24 +28,9 @@ export default function useInfo() {
       })
     } else {
       const { book } = instance
-      const { author } = book.metadata
-      const bookAuthor =
-        typeof author === 'string'
-          ? author
-          : (author
-              ?.map((author) =>
-                typeof author === 'string' ? author : author.name,
-              )
-              ?.join(', ') ?? '')
-      information.value = {
-        ...book.metadata,
-        creator: bookAuthor,
-        pubdate: book.metadata.published,
-      }
-
       book.getCover?.().then((blob) => {
-        information.value.cover = URL.createObjectURL(blob)
-      })
+        information.value.cover = URL.createObjectURL(blob);
+      });
       const bookName = book.metadata?.title || ''
       postMessage(bookName)
     }
