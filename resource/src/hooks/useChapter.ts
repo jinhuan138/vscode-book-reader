@@ -42,7 +42,7 @@ export default function useChapter() {
   })
 
   onBeforeUnmount(() => {
-    if(rendition.value.shadowRoot){
+    if (rendition.value.shadowRoot) {
       rendition.value.removeEventListener('relocate', onRelocate)
     }
   })
