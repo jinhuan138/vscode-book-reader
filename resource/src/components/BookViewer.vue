@@ -213,7 +213,11 @@
       <WarningFilled />
     </el-icon>
     <el-drawer v-model="info" title="search" :with-header="false" :size="400">
-      <div v-if="information" class="information">
+      <div
+        v-if="information"
+        class="information"
+        :style="{ backgroundColor: information.color }"
+      >
         <el-image
           :src="information.cover"
           :alt="information.title"
@@ -247,9 +251,7 @@
     </div>
     <!-- slider -->
     <div v-else-if="progressDisplay === 'bar'" class="footer-slider">
-      <el-icon title="back" class="back-icon" @click="goBack"
-        ><Back
-      /></el-icon>
+      <el-icon title="back" class="back-icon" @click="goBack"><Back /></el-icon>
       <el-slider
         class="slider"
         v-model="progress"
