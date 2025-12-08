@@ -116,6 +116,7 @@
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.1",
+    "colorthief": "^2.6.0",
     "element-plus": "^2.7.3",
     "localforage": "^1.10.0",
     "vue": "^3.4.26",
