@@ -8,7 +8,7 @@ export default function useProgress() {
   const history = ref<string[]>([])
 
   const changeProgress = (val: number) => {
-    if (!rendition.value.shadowRoot) {
+    if (!rendition.value.tagName) {
       const cfi = book.locations.cfiFromPercentage(val / 100)
       rendition.value.display(cfi)
       history.value.push(cfi)
@@ -24,7 +24,7 @@ export default function useProgress() {
   }
 
   const goBack = () => {
-    if (!rendition.value.shadowRoot) {
+    if (!rendition.value.tagName) {
       if (history.value.length > 0) rendition.value.display(history.value.pop())
     } else {
       rendition.value?.history.back()
@@ -32,7 +32,7 @@ export default function useProgress() {
   }
 
   watch(rendition, (instance) => {
-    if (!instance!.shadowRoot) {
+    if (!instance!.tagName) {
       book = instance.book
       const stored = localStorage.getItem(book.key())
       const displayed = instance.display(stored || 1)
@@ -65,7 +65,7 @@ export default function useProgress() {
   })
 
   onBeforeUnmount(() => {
-    if (rendition.value.shadowRoot) {
+    if (rendition.value.tagName) {
       rendition.value.removeEventListener('relocate', onRelocate)
     }
   })

@@ -28,7 +28,7 @@ export default function useChapter() {
   }
 
   watch(rendition, (instance) => {
-    if (!instance.shadowRoot) {
+    if (!instance.tagName) {
       instance.on('locationChanged', () => {
         const { displayed, href } = instance.location.start
         if (href !== 'titlepage.xhtml') {
@@ -42,7 +42,7 @@ export default function useChapter() {
   })
 
   onBeforeUnmount(() => {
-    if (rendition.value.shadowRoot) {
+    if (rendition.value.tagName) {
       rendition.value.removeEventListener('relocate', onRelocate)
     }
   })

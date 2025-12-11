@@ -23,7 +23,7 @@ export default function useFlow(isSidebar = false) {
     window.removeEventListener('keydown', handleSetFlow)
   })
   const setFlow = (flow) => {
-    if (!rendition.value.shadowRoot) {
+    if (!rendition.value.tagName) {
       rendition.value.flow(flow)
     } else {
       rendition.value?.renderer.setAttribute(
@@ -34,7 +34,7 @@ export default function useFlow(isSidebar = false) {
   }
   watch(rendition, (instance) => {
     setFlow(defaultFlow)
-    if (isSidebar && !instance.shadowRoot) {
+    if (isSidebar && !instance.tagName) {
       instance.hooks.content.register(({ document }) => {
         const annotation = Array.from(
           document.querySelectorAll('a'),

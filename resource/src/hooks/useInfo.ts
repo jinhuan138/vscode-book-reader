@@ -52,7 +52,7 @@ const postMessage = (title: string) => {
 export default function useInfo() {
   const information = ref<any>(null)
   watch(rendition, (instance) => {
-    if (!instance.shadowRoot) {
+    if (!instance.tagName) {
       const { book } = instance
       book.ready.then(() => {
         book.loaded.metadata.then(async (metadata) => {
@@ -64,6 +64,7 @@ export default function useInfo() {
       })
     } else {
       const { book } = instance
+      information.value = book.metadata
       book.getCover?.().then(async (blob: Blob) => {
         const cover = URL.createObjectURL(blob)
         information.value.cover = cover

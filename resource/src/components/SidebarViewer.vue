@@ -61,6 +61,7 @@ import useFlow from '@/hooks/useFlow'
 import useVscode from '@/hooks/useVscode'
 import useChapter from '@/hooks/useChapter'
 import useAnimation from '@/hooks/useAnimation'
+import useGrayscale from '@/hooks/useGrayscale'
 import useInfo from '@/hooks/useInfo'
 
 const vscode = useVscode()
@@ -70,6 +71,7 @@ const { url, type } = useStore()
 const theme = useTheme(true)
 const flow = useFlow(true)
 const animation = useAnimation(true)
+const grayscale = useGrayscale(true)
 const information = useInfo()
 
 const [rendition, setRendition] = useRendition()
@@ -93,7 +95,7 @@ const close = () => {
 
 
 const onNodeClick = (item) => {
-  if (!rendition.value.shadowRoot) {
+  if (!rendition.value.tagName) {
     rendition.value?.display(item.cfi || item.href)
   } else {
     rendition.value?.goTo(item.href)
@@ -114,6 +116,9 @@ window.addEventListener('message', ({ data }) => {
         break
       case 'animation':
         animation.value = JSON.parse(data.content)
+        break
+     case 'grayscale':
+        grayscale.value = JSON.parse(data.content)
         break
     }
   }

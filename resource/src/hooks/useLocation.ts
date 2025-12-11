@@ -9,7 +9,7 @@ export default function useLocation() {
   }
 
   watch(rendition, (instance) => {
-    if (!instance.shadowRoot) {
+    if (!instance.tagName) {
       instance.on('relocated', (event: any) => {
         location.value = `Loc ${event.start.location}/${instance.book.locations.length()}`
       })
@@ -19,7 +19,7 @@ export default function useLocation() {
   })
 
   onBeforeUnmount(() => {
-    if (rendition.value.shadowRoot) {
+    if (rendition.value.tagName) {
       rendition.value.removeEventListener('relocate', onRelocate)
     }
   })

@@ -6,7 +6,7 @@ const [rendition] = useRendition()
 export default function useToc() {
   const toc = ref([])
   watch(rendition, (instance) => {
-    if (!instance!.shadowRoot!) {
+    if (!instance!.tagName!) {
       instance.book.loaded.navigation.then(({ toc:_toc }) => {
         toc.value = _toc
       })

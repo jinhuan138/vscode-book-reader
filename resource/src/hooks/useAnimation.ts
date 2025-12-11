@@ -10,7 +10,7 @@ export default function useAnimation(isSidebar = false) {
   )
   const animation = ref<boolean>(defaultAnimation)
   const setAnimation = (animated) => {
-    if (!rendition.value.shadowRoot) {
+    if (!rendition.value.tagName) {
       rendition.value.hooks.content.register((contents) => {
         rendition.value.manager.container.style['scroll-behavior'] = animated
           ? 'smooth'

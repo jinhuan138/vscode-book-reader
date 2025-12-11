@@ -4,7 +4,7 @@ import { viteSingleFile } from 'vite-plugin-singlefile'
 import path from 'path'
 
 // https://cn.vitejs.dev/
-export default defineConfig(({ command }) => ({
+export default defineConfig({
   plugins: [vue(), viteSingleFile()],
   server: {
     port: 8025,
@@ -16,5 +16,7 @@ export default defineConfig(({ command }) => ({
       '@': path.resolve(__dirname, './resource/src')
     }
   },
-  publicDir: command === 'serve' ? 'public' : false,
-}))
+  build: {
+    copyPublicDir: false
+  }
+})
