@@ -10,7 +10,7 @@ export default function useSearch() {
   const search = async () => {
     const text = searchText.value
     if (!text) return
-    if (!rendition.value.shadowRoot) {
+    if (!rendition.value.tagName) {
       const { book } = rendition.value
       return Promise.all(
         book.spine.spineItems.map((item) =>

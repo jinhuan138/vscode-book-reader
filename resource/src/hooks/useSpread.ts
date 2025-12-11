@@ -6,7 +6,7 @@ export default function useFlow() {
   const defaultSpread = localStorage.getItem('spread') || 'auto'
   const spread = ref(defaultSpread)
   const setSpread = (value) => {
-    if (!rendition.value.shadowRoot) {
+    if (!rendition.value.tagName) {
       rendition.value.spread(value)
     } else {
     }

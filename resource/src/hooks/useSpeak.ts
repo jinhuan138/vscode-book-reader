@@ -79,7 +79,7 @@ export default function useSpeak() {
     }
     msg.onend = async (event) => {
       if (!isReading.value && !isAudioOn) return
-      if (!rendition.value.shadowRoot) {
+      if (!rendition.value.tagName) {
         rendition.value.next()
       } else {
         rendition.value.renderer.next()
@@ -87,7 +87,7 @@ export default function useSpeak() {
     }
   }
   watch(rendition, (instance) => {
-    if (!instance.shadowRoot) {
+    if (!instance.tagName) {
       instance.on('locationChanged', () => {
         const range = instance.getRange(instance.currentLocation().start.cfi)
         const endRange = instance.getRange(instance.currentLocation().end.cfi)
@@ -109,7 +109,7 @@ export default function useSpeak() {
     speak(flag)
   })
   onBeforeUnmount(() => {
-    if(rendition.value.shadowRoot){
+    if(rendition.value.tagName){
       rendition.value.removeEventListener('relocate', onRelocate)
     }
   })

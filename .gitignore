@@ -1,7 +1,6 @@
 out
 dist
 resource/dist
-resource/public/files
 node_modules
 .vscode-test/
 *.vsix

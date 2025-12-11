@@ -111,7 +111,7 @@ const getRule = ({
 export default function useTheme(isSlider = false) {
   const updatedTheme = (newTheme) => {
     if (!rendition.value) return
-    if (!rendition.value.shadowRoot) {
+    if (!rendition.value.tagName) {
       rendition.value.getContents().forEach((content) => {
         const rule = getRule(newTheme)
         content.addStylesheetRules(rule)
@@ -135,7 +135,7 @@ export default function useTheme(isSlider = false) {
   })
   watch(rendition, (instance) => {
     const style = toRaw(theme)
-    if (!instance.shadowRoot) {
+    if (!instance.tagName) {
       instance.hooks.content.register(() => updatedTheme(style))
       instance.on('relocated', () => {
         instance.hooks.content.register(() => updatedTheme(style))

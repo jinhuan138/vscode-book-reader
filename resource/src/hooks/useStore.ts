@@ -3,7 +3,7 @@ import { ref, watch, onBeforeUnmount } from 'vue'
 import useRendition from './useRendition'
 const [rendition] = useRendition()
 
-const defaultBook = 'files/二十年目睹之怪现状.epub' //啼笑因缘.azw3
+const defaultBook = 'files/啼笑因缘.mobi' //啼笑因缘.azw3
 const url = ref(import.meta.env.MODE === 'development' ? defaultBook : '')
 const type = ref('')
 
@@ -14,8 +14,9 @@ export default function useStore() {
   }
 
   watch(rendition, (instance) => {
-    if (!instance.shadowRoot) {
-      const bookKey = instance.book.key()
+    if (!instance.tagName) {
+      console.log(instance.book)
+      const bookKey = instance.book.key ? instance.book.key() : url.value
       instance.on('relocated', (event: any) => {
         localStorage.setItem(bookKey, event.start.cfi)
       })
@@ -38,7 +39,7 @@ export default function useStore() {
   )
 
   onBeforeUnmount(() => {
-    if (rendition.value.shadowRoot) {
+    if (rendition.value.tagName) {
       rendition.value.removeEventListener('relocate', onRelocate)
     }
   })

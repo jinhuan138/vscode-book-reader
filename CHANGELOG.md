@@ -1,9 +1,7 @@
-# Change Log
+# 更新日志 (Changelog)
 
-All notable changes to the "book-reader" extension will be documented in this file.
+## [1.1.8] - 2025-12-10
 
-Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
+### Features
 
-## [Unreleased]
-
-- Initial release
+- 设置添加灰色模式

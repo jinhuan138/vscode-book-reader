@@ -1,4 +1,4 @@
-import { ref, watch, onBeforeUnmount } from 'vue'
+import { ref, watch } from 'vue'
 import useVscode from './useVscode'
 import useRendition from './useRendition'
 
@@ -50,26 +50,8 @@ export default function useImage() {
       document.body.removeChild(downloadLink)
     }
   }
-  const onRelocate = () => {
-    const paginator =
-      rendition.value.shadowRoot.querySelector('foliate-paginator')
-    const doc = paginator?.getContents()[0].doc
-    if (!doc) return
-    imgsRef.value = []
-    const imgs = [
-      ...doc.querySelectorAll('img'),
-      ...doc.querySelectorAll('image'),
-    ]
-    imgs.forEach((img, index) => {
-      img.addEventListener('click', () => {
-        visibleRef.value = true
-        indexRef.value = index
-      })
-      imgsRef.value.push(img.src || img.getAttribute('xlink:href'))
-    })
-  }
   watch(rendition, (instance) => {
-    if (!instance.shadowRoot) {
+    if (!instance.tagName) {
       instance.themes.default({
         img: {
           cursor: 'pointer',
@@ -95,13 +77,27 @@ export default function useImage() {
         })
       })
     } else {
-      instance.addEventListener('relocate', onRelocate)
-    }
-  })
-
-  onBeforeUnmount(() => {
-    if (rendition.value.shadowRoot) {
-      rendition.value.removeEventListener('relocate', onRelocate)
+      instance.renderer.setStyles([
+        `img, image {
+           cursor: pointer;
+        }`
+      ])
+      const docs = instance.renderer.getContents()
+      docs.forEach(({ doc }) => {
+        imgsRef.value = []
+        const imgs = [
+          ...doc.querySelectorAll('img'),
+          ...doc.querySelectorAll('image'),
+        ]
+        imgs.forEach((img, index) => {
+          img.addEventListener('click', () => {
+            visibleRef.value = true
+            indexRef.value = index
+          })
+          const src = img.getAttribute('src') || img.getAttribute('xlink:href')
+          imgsRef.value.push(src)
+        })
+      })
     }
   })
 
