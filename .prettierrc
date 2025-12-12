@@ -1,13 +1,13 @@
 {
-    "semi": false,
-    "singleQuote": true,
-    "overrides": [
-      {
-        "files": ".prettierrc",
-        "options": {
-          "parser": "json"
-        }
+  "semi": false,
+  "singleQuote": true,
+  "printWidth": 120,
+  "overrides": [
+    {
+      "files": "useDisguise.ts",
+      "options": {
+        "printWidth": 200
       }
-    ]
-  }
-  
+    }
+  ]
+}

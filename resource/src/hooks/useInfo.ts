@@ -16,8 +16,6 @@ const rgbToHex = (r: number, g: number, b: number): string =>
     })
     .join('')
 
-rgbToHex(102, 51, 153) // #663399
-
 const getCoverColor = (src: string): Promise<string> => {
   return new Promise((resolve) => {
     const img = document.createElement('img')

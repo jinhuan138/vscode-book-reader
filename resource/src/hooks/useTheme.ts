@@ -19,14 +19,7 @@ const theme = reactive(
 )
 
 const [rendition] = useRendition()
-const getCSS = ({
-  font,
-  fontSize,
-  lineSpacing,
-  textColor,
-  backgroundColor,
-  writingMode,
-}) => {
+const getCSS = ({ font, fontSize, lineSpacing, textColor, backgroundColor, writingMode }) => {
   return [
     `
   * {
@@ -71,14 +64,7 @@ const getCSS = ({
   ]
 }
 
-const getRule = ({
-  font,
-  fontSize,
-  lineSpacing,
-  textColor,
-  writingMode,
-  backgroundColor,
-}) => {
+const getRule = ({ font, fontSize, lineSpacing, textColor, writingMode, backgroundColor }) => {
   return {
     body: {
       'font-family': font !== '' ? `${font} !important` : '!invalid-hack',
@@ -101,8 +87,7 @@ const getRule = ({
     },
     '*': {
       'font-family': font !== '' ? `${font} !important` : '!invalid-hack',
-      'font-size':
-        fontSize !== '' ? `${fontSize}% !important` : '!invalid-hack',
+      'font-size': fontSize !== '' ? `${fontSize}% !important` : '!invalid-hack',
       color: `${textColor} !important`,
       'background-color': backgroundColor,
     },
@@ -117,8 +102,7 @@ export default function useTheme(isSlider = false) {
         content.addStylesheetRules(rule)
       })
     } else {
-      rendition.value.renderer?.setStyles &&
-        rendition.value.renderer.setStyles(getCSS(newTheme))
+      rendition.value.renderer?.setStyles && rendition.value.renderer.setStyles(getCSS(newTheme))
     }
     if (!isSlider && vscode) {
       vscode.postMessage({

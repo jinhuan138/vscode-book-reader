@@ -14,18 +14,13 @@ export default function useSearch() {
       const { book } = rendition.value
       return Promise.all(
         book.spine.spineItems.map((item) =>
-          item
-            .load(book.load.bind(book))
-            .then(item.find.bind(item, text))
-            .finally(item.unload.bind(item)),
+          item.load(book.load.bind(book)).then(item.find.bind(item, text)).finally(item.unload.bind(item)),
         ),
       )
         .then((results) => results.flat())
         .then((results) => {
           searchResult.value = results.map((result) => {
-            result.label = result.excerpt
-              .trim()
-              .replace(text, `<span style='color: orange;'>${text}</span>`)
+            result.label = result.excerpt.trim().replace(text, `<span style='color: orange;'>${text}</span>`)
             return result
           })
         })

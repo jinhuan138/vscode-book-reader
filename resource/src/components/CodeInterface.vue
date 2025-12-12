@@ -1,0 +1,418 @@
+<template>
+  <Transition>
+    <div id="disguise-code-interface" class="disguise-code-interface" v-show="disguise && !active">
+      <!-- Main content area -->
+      <div class="disguise-main-content">
+        <!-- Line numbers area -->
+        <div id="disguise-line-numbers" class="disguise-line-numbers">
+          <div v-for="i in codeLines.length" class="disguise-line-number" :dataLine="i">
+            {{ i }}
+          </div>
+        </div>
+        <!-- Code content area -->
+        <div class="disguise-code-content vscode-tokens-styles">
+          <div v-for="(row, index) in codeLines" class="disguise-code-line" :dataLine="index + 1">
+            <span :class="c" v-for="{ c, v } in row">{{ v }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </Transition>
+</template>
+<script setup>
+import useDisguise from '@/hooks/useDisguise'
+const { active, disguise, codeLines } = useDisguise()
+// setInterval(() => {
+//   active.value = !active.value
+// }, 1000)
+</script>
+<style scoped>
+.v-enter-active,
+.v-leave-active {
+  transition: opacity 0.3s ease-out;
+}
+
+.v-enter-from,
+.v-leave-to {
+  opacity: 0;
+}
+
+.disguise-code-interface {
+  /* 伪装代码界面主容器 */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--vscode-editor-background, #fff);
+  z-index: 10000;
+  font-family: var(--vscode-editor-font-family, 'Consolas', 'Courier New', monospace);
+  font-size: var(--vscode-editor-font-size, 14px);
+  color: var(--vscode-editor-foreground, #cccccc);
+  overflow: hidden;
+}
+
+/* 主体内容区域 - 使用CSS Grid布局 */
+.disguise-main-content {
+  display: grid;
+  grid-template-columns: 50px 1fr;
+  height: calc(100%);
+  overflow: auto;
+  scroll-behavior: smooth;
+  position: relative;
+  background-color: var(--vscode-editor-background, #fff);
+}
+
+/* 行号区域 - 使用grid布局确保与代码行对齐 */
+.disguise-line-numbers {
+  grid-column: 1;
+  background-color: var(--vscode-editor-background, #fff);
+  padding: 8px 4px 8px 8px;
+  font-size: 13px;
+  color: var(--vscode-editorLineNumber-foreground);
+  text-align: right;
+  line-height: 19px;
+  user-select: none;
+  position: relative;
+  border-right: 1px solid var(--vscode-panel-border);
+  display: flex;
+  flex-direction: column;
+}
+
+/* 代码内容区域 */
+.disguise-code-content {
+  grid-column: 2;
+  padding: 8px 16px;
+  line-height: 19px;
+  font-family: var(--vscode-editor-font-family, 'Consolas', 'Courier New', monospace);
+  font-size: var(--vscode-editor-font-size, 14px);
+  background-color: var(--vscode-editor-background, #fff);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 代码行容器样式 - 使用CSS Grid实现行号与代码的对齐 */
+.disguise-code-line-container {
+  display: contents;
+  /* 让子元素直接参与父级grid布局 */
+}
+
+/* 代码行样式 */
+.disguise-code-line {
+  line-height: 19px;
+  min-height: 19px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  /* 使用CSS计数器和伪元素实现换行时的空行号 */
+}
+
+/* 行号样式 */
+.disguise-line-number {
+  display: flex;
+  align-items: flex-start;
+  height: auto;
+  min-height: 19px;
+  line-height: 19px;
+  padding-top: 0;
+}
+
+/* 纯CSS解决方案：为换行的代码创建对应的空行号空间 */
+.disguise-code-line {
+  /* 当内容换行时，创建相应的视觉空间 */
+  position: relative;
+}
+
+/* 使用CSS grid创建完美的行号对齐 */
+.disguise-main-content {
+  /* 重新定义以支持动态行高 */
+  display: block;
+  height: calc(100%);
+  overflow: auto;
+  scroll-behavior: smooth;
+  position: relative;
+}
+
+.disguise-line-numbers,
+.disguise-code-content {
+  float: left;
+}
+
+.disguise-line-numbers {
+  width: 50px;
+  background-color: var(--vscode-editor-background, #fff);
+  border-right: 1px solid var(--vscode-panel-border, rgba(128, 128, 128, 0.35));
+  padding: 8px 4px 8px 8px;
+  font-size: 13px;
+  color: var(--vscode-editorLineNumber-foreground, #808080);
+  text-align: right;
+  line-height: 19px;
+  user-select: none;
+  box-sizing: border-box;
+}
+
+.disguise-code-content {
+  width: calc(100% - 50px);
+  padding: 8px 16px;
+  line-height: 19px;
+  font-family: var(--vscode-editor-font-family, 'Consolas', 'Courier New', monospace);
+  font-size: var(--vscode-editor-font-size, 14px);
+  background-color: var(--vscode-editor-background, #fff);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+  box-sizing: border-box;
+}
+
+/* 清除浮动 */
+.disguise-main-content::after {
+  content: '';
+  display: table;
+  clear: both;
+}
+
+.disguise-line-number {
+  display: block;
+  height: 19px;
+  line-height: 19px;
+  min-height: 19px;
+  position: relative;
+}
+
+/* 当行号对应换行代码时的空行号样式 */
+.disguise-line-number.wrapped-line {
+  color: transparent;
+}
+
+/* 代码行换行后的行号占位 */
+.disguise-line-number.line-continuation::before {
+  content: '';
+  display: block;
+  width: 100%;
+  height: 19px;
+}
+
+/* VSCode 代码高亮伪装样式 */
+.mtk1 {
+  color: var(--vscode-editor-foreground);
+}
+
+.mtk2 {
+  color: var(--vscode-editor-background, #fff);
+}
+
+.mtk3 {
+  color: var(--vscode-editorIndentGuide-activeBackground, #000080);
+}
+
+.mtk4 {
+  color: var(--vscode-editorLineNumber-activeForeground, #6a9955);
+}
+
+.mtk5 {
+  color: var(--vscode-debugTokenExpression-name, #569cd6);
+}
+
+.mtk6 {
+  color: var(--vscode-debugTokenExpression-number, #b5cea8);
+}
+
+.mtk7 {
+  color: var(--vscode-symbolIcon-colorForeground, #646695);
+}
+
+.mtk8 {
+  color: var(--vscode-editorWarning-foreground, #d7ba7d);
+}
+
+.mtk9 {
+  color: var(--vscode-debugTokenExpression-string, #9cdcfe);
+}
+
+.mtk10 {
+  color: var(--vscode-editorError-foreground, #f44747);
+}
+
+.mtk11 {
+  color: var(--vscode-debugTokenExpression-string, #ce9178);
+}
+
+.mtk12 {
+  color: var(--vscode-symbolIcon-functionForeground, #6796e6);
+}
+
+.mtk13 {
+  color: var(--vscode-editorLineNumber-foreground, #808080);
+}
+
+.mtk14 {
+  color: var(--vscode-editorError-foreground, #d16969);
+}
+
+.mtk15 {
+  color: var(--vscode-symbolIcon-functionForeground, #dcdcaa);
+}
+
+.mtk16 {
+  color: var(--vscode-symbolIcon-classForeground, #4ec9b0);
+}
+
+.mtk17 {
+  color: var(--vscode-symbolIcon-keywordForeground, #c586c0);
+}
+
+.mtk18 {
+  color: var(--vscode-symbolIcon-variableForeground, #4fc1ff);
+}
+
+.mtk19 {
+  color: var(--vscode-editorLineNumber-foreground, #c8c8c8);
+}
+
+.mtk20 {
+  color: var(--vscode-editor-foreground, #ffffff);
+}
+
+.mtk21 {
+  color: var(--vscode-editorWarning-foreground, #cd9731);
+}
+
+.mtk22 {
+  color: var(--vscode-symbolIcon-operatorForeground, #b267e6);
+}
+
+.mtki {
+  font-style: italic;
+}
+
+.mtkb {
+  font-weight: bold;
+}
+
+.mtku {
+  text-decoration: underline;
+  text-underline-position: under;
+}
+
+.mtks {
+  text-decoration: line-through;
+}
+
+.mtks.mtku {
+  text-decoration: underline line-through;
+  text-underline-position: under;
+}
+
+.mtk1 {
+  color: #d4d4d4;
+}
+
+.mtk2 {
+  color: #1e1e1e;
+}
+
+.mtk3 {
+  color: #000080;
+}
+
+.mtk4 {
+  color: #6a9955;
+}
+
+.mtk5 {
+  color: #569cd6;
+}
+
+.mtk6 {
+  color: #b5cea8;
+}
+
+.mtk7 {
+  color: #646695;
+}
+
+.mtk8 {
+  color: #d7ba7d;
+}
+
+.mtk9 {
+  color: #9cdcfe;
+}
+
+.mtk10 {
+  color: #f44747;
+}
+
+.mtk11 {
+  color: #ce9178;
+}
+
+.mtk12 {
+  color: #6796e6;
+}
+
+.mtk13 {
+  color: #808080;
+}
+
+.mtk14 {
+  color: #d16969;
+}
+
+.mtk15 {
+  color: #dcdcaa;
+}
+
+.mtk16 {
+  color: #4ec9b0;
+}
+
+.mtk17 {
+  color: #c586c0;
+}
+
+.mtk18 {
+  color: #4fc1ff;
+}
+
+.mtk19 {
+  color: #c8c8c8;
+}
+
+.mtk20 {
+  color: #ffffff;
+}
+
+.mtk21 {
+  color: #cd9731;
+}
+
+.mtk22 {
+  color: #b267e6;
+}
+
+.mtki {
+  font-style: italic;
+}
+
+.mtkb {
+  font-weight: bold;
+}
+
+.mtku {
+  text-decoration: underline;
+  text-underline-position: under;
+}
+
+.mtks {
+  text-decoration: line-through;
+}
+
+.mtks.mtku {
+  text-decoration: underline line-through;
+  text-underline-position: under;
+}
+</style>

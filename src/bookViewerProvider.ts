@@ -17,7 +17,7 @@ export class BookViewerProvider implements vscode.CustomReadonlyEditorProvider {
     uri: vscode.Uri,
     openContext: vscode.CustomDocumentOpenContext,
   ): vscode.CustomDocument | Thenable<vscode.CustomDocument> {
-    return { uri, dispose: (): void => { } }
+    return { uri, dispose: (): void => {} }
   }
 
   public resolveCustomEditor(
@@ -57,8 +57,17 @@ export class BookViewerProvider implements vscode.CustomReadonlyEditorProvider {
           vscode.commands.executeCommand('vscode.open', filePath, {
             forceNewWindow: true,
           })
+        case 'title':
+          webviewPanel.title = message.content
           break
       }
+    })
+    // 当面板失去焦点的时候，使用智能伪装系统
+    webviewPanel.onDidChangeViewState((e) => {
+      webview.postMessage({
+        type: 'active',
+        content: e.webviewPanel.active,
+      })
     })
     webview.html = Util.buildPath(
       readFileSync(this.extensionPath + '/resource/dist/index.html', 'utf8'),

@@ -15,12 +15,7 @@
         <el-icon @click="downloadImage" class="download-image" :size="24">
           <Download />
         </el-icon>
-        <div
-          role="button"
-          aria-label="close image preview button"
-          class="btn__close"
-          @click="close"
-        >
+        <div role="button" aria-label="close image preview button" class="btn__close" @click="close">
           <el-icon>
             <CloseBold />
           </el-icon>

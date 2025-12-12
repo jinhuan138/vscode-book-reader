@@ -8,12 +8,7 @@
         <Menu />
       </el-icon>
     </template>
-    <el-tree
-      :data="toc"
-      :props="{ children: 'subitems' }"
-      @node-click="onNodeClick"
-      class="tree"
-    />
+    <el-tree :data="toc" :props="{ children: 'subitems' }" @node-click="onNodeClick" class="tree" />
   </el-popover>
   <el-icon class="close-icon" color="#ccc" @click="close">
     <Close />
@@ -37,13 +32,7 @@
     <!-- process -->
     <div class="footer-slider">
       <el-icon title="back" class="back-icon" @click="goBack"><Back /></el-icon>
-      <el-slider
-        class="slider"
-        v-model="progress"
-        :step="0.01"
-        @change="changeProgress"
-        size="small"
-      ></el-slider>
+      <el-slider class="slider" v-model="progress" :step="0.01" @change="changeProgress" size="small"></el-slider>
     </div>
   </div>
 </template>
@@ -93,7 +82,6 @@ const close = () => {
   vscode && vscode.postMessage({ type: 'title', content: '' })
 }
 
-
 const onNodeClick = (item) => {
   if (!rendition.value.tagName) {
     rendition.value?.display(item.cfi || item.href)
@@ -117,7 +105,7 @@ window.addEventListener('message', ({ data }) => {
       case 'animation':
         animation.value = JSON.parse(data.content)
         break
-     case 'grayscale':
+      case 'grayscale':
         grayscale.value = JSON.parse(data.content)
         break
     }

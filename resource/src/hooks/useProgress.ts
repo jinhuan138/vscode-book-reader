@@ -43,9 +43,7 @@ export default function useProgress() {
         .then((locations) => {
           displayed.then(function () {
             var currentLocation = instance.currentLocation()
-            const currentPage = book.locations.percentageFromCfi(
-              currentLocation.start.cfi,
-            )
+            const currentPage = book.locations.percentageFromCfi(currentLocation.start.cfi)
             progress.value = Number((currentPage * 100).toFixed(2))
           })
           instance.on('relocated', (location) => {

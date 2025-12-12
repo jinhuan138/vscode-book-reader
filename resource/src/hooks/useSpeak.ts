@@ -1,4 +1,4 @@
-import { ref, watch, onBeforeMount,onBeforeUnmount } from 'vue'
+import { ref, watch, onBeforeMount, onBeforeUnmount } from 'vue'
 import useRendition from './useRendition'
 
 const [rendition] = useRendition()
@@ -24,22 +24,7 @@ const setSpeech: Promise<any[]> = () => {
 export default function useSpeak() {
   const isReading = ref(false)
   const speed = ref(1)
-  const speedList = ref([
-    '0.1',
-    '0.2',
-    '0.3',
-    '0.4',
-    '0.5',
-    '0.75',
-    '1',
-    '1.25',
-    '1.5',
-    '1.75',
-    '2',
-    '3',
-    '4',
-    '5',
-  ])
+  const speedList = ref(['0.1', '0.2', '0.3', '0.4', '0.5', '0.75', '1', '1.25', '1.5', '1.75', '2', '3', '4', '5'])
   const voiceIndex = ref(0)
   const voices = ref<any[]>([])
   const onRelocate = ({ detail }) => {
@@ -109,7 +94,7 @@ export default function useSpeak() {
     speak(flag)
   })
   onBeforeUnmount(() => {
-    if(rendition.value.tagName){
+    if (rendition.value.tagName) {
       rendition.value.removeEventListener('relocate', onRelocate)
     }
   })

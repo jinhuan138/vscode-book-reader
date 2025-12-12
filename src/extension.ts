@@ -12,14 +12,6 @@ export function activate(context: vscode.ExtensionContext) {
   const option = {
     webviewOptions: { retainContextWhenHidden: true, enableFindWidget: true },
   }
-  vscode.window.registerCustomEditorProvider(
-    'bookReader',
-    new BookViewerProvider(context, emitter),
-    option,
-  )
-  vscode.window.registerWebviewViewProvider(
-    'book-reader-webview',
-    new SidebarViewerProvider(context, emitter),
-    option,
-  )
+  vscode.window.registerCustomEditorProvider('bookReader', new BookViewerProvider(context, emitter), option)
+  vscode.window.registerWebviewViewProvider('book-reader-webview', new SidebarViewerProvider(context, emitter), option)
 }

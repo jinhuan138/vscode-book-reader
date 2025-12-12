@@ -5,16 +5,12 @@ import useRendition from './useRendition'
 const vscode = useVscode()
 const [rendition] = useRendition()
 export default function useAnimation(isSidebar = false) {
-  const defaultAnimation = JSON.parse(
-    localStorage.getItem('animation') || 'false',
-  )
+  const defaultAnimation = JSON.parse(localStorage.getItem('animation') || 'false')
   const animation = ref<boolean>(defaultAnimation)
-  const setAnimation = (animated) => {
+  const setAnimation = (animated: boolean) => {
     if (!rendition.value.tagName) {
-      rendition.value.hooks.content.register((contents) => {
-        rendition.value.manager.container.style['scroll-behavior'] = animated
-          ? 'smooth'
-          : ''
+      rendition.value.hooks.content.register(() => {
+        rendition.value.manager.container.style['scroll-behavior'] = animated ? 'smooth' : ''
       })
     } else {
       if (animated) {

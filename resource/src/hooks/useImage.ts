@@ -62,34 +62,28 @@ export default function useImage() {
       })
       instance.hooks.content.register((content: { document: Document }) => {
         imgsRef.value = []
-        const imgs = [
-          ...document.querySelectorAll('img'),
-          ...document.querySelectorAll('image'),
-        ] as HTMLImageElement[]
+        const imgs = [...document.querySelectorAll('img'), ...document.querySelectorAll('image')] as HTMLImageElement[]
         imgs.forEach((img, index) => {
+          img.title = '点击查看图片'
           img.addEventListener('click', () => {
             visibleRef.value = true
             indexRef.value = index
           })
-          imgsRef.value.push(
-            img.src || (img.getAttribute('xlink:href') as string),
-          )
+          imgsRef.value.push(img.src || (img.getAttribute('xlink:href') as string))
         })
       })
     } else {
       instance.renderer.setStyles([
         `img, image {
            cursor: pointer;
-        }`
+        }`,
       ])
       const docs = instance.renderer.getContents()
       docs.forEach(({ doc }) => {
         imgsRef.value = []
-        const imgs = [
-          ...doc.querySelectorAll('img'),
-          ...doc.querySelectorAll('image'),
-        ]
+        const imgs = [...doc.querySelectorAll('img'), ...doc.querySelectorAll('image')]
         imgs.forEach((img, index) => {
+          img.title = '点击查看图片'
           img.addEventListener('click', () => {
             visibleRef.value = true
             indexRef.value = index

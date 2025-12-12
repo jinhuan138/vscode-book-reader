@@ -1,14 +1,11 @@
 import { ref, watch } from 'vue'
 import useVscode from './useVscode'
 import useRendition from './useRendition'
-
 const vscode = useVscode()
 const [rendition] = useRendition()
 
 export default function useGrayscale(isSidebar = false) {
-  const defaultGrayscale = JSON.parse(
-    localStorage.getItem('grayscale') || 'false',
-  )
+  const defaultGrayscale = JSON.parse(localStorage.getItem('grayscale') || 'false')
   const grayscale = ref<boolean>(defaultGrayscale)
   const setGrayscale = (enabled: boolean) => {
     if (!rendition.value.tagName) {
