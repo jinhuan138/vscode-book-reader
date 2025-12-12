@@ -7,7 +7,7 @@ export default function useToc() {
   const toc = ref([])
   watch(rendition, (instance) => {
     if (!instance!.tagName!) {
-      instance.book.loaded.navigation.then(({ toc:_toc }) => {
+      instance.book.loaded.navigation.then(({ toc: _toc }) => {
         toc.value = _toc
       })
     } else {

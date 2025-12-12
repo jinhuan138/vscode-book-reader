@@ -1,48 +1,39 @@
 <template>
-  <epub-reader
-    v-if="type === 'epub'"
-    :url="url"
-    :getRendition="initBook"
-    :backgroundColor="theme.backgroundColor"
-  />
-  <book-reader
-    v-else
-    :url="url"
-    :getRendition="initBook"
-    :backgroundColor="theme.backgroundColor"
-  />
-  <Setting v-model:progressDisplay="progressDisplay" />
-  <!-- footer -->
-  <div
-    class="footer"
-    :style="{
-      color: theme.textColor,
-      font: theme.fontSize,
-    }"
-  >
-    <div v-if="progressDisplay === 'chapter'" class="chapter" :title="chapter">
-      {{ chapter }}
-    </div>
-    <div v-if="progressDisplay === 'location'" class="chapter">
-      {{ location }}
-    </div>
-    <!-- slider -->
-    <div v-else-if="progressDisplay === 'bar'" class="footer-slider">
-      <el-icon title="back" class="back-icon" @click="goBack"><Back /></el-icon>
-      <el-slider
-        class="slider"
-        v-model="progress"
-        :step="0.01"
-        @change="changeProgress"
-      ></el-slider>
+  <div v-show="showBook" style="height: 100%">
+    <epub-reader v-if="type === 'epub'" :url="url" :getRendition="initBook" :backgroundColor="theme.backgroundColor" />
+    <book-reader v-else :url="url" :getRendition="initBook" :backgroundColor="theme.backgroundColor" />
+    <Setting v-model:progressDisplay="progressDisplay" />
+    <!-- footer -->
+    <div
+      class="footer"
+      :style="{
+        color: theme.textColor,
+        font: theme.fontSize,
+      }"
+    >
+      <div v-if="progressDisplay === 'chapter'" class="chapter" :title="chapter">
+        {{ chapter }}
+      </div>
+      <div v-if="progressDisplay === 'location'" class="chapter">
+        {{ location }}
+      </div>
+      <!-- slider -->
+      <div v-else-if="progressDisplay === 'bar'" class="footer-slider">
+        <el-icon title="back" class="back-icon" @click="goBack">
+          <Back />
+        </el-icon>
+        <el-slider class="slider" v-model="progress" :step="0.01" @change="changeProgress"></el-slider>
+      </div>
     </div>
   </div>
+  <CodeInterface/>
 </template>
 <script setup>
 import { ref, watch } from 'vue'
 import { Back } from '@element-plus/icons-vue'
 import { VueReader as EpubReader } from 'vue-reader'
 import { VueReader as BookReader } from 'vue-book-reader'
+import CodeInterface from './CodeInterface.vue'
 import Setting from './Setting.vue'
 import useRendition from '@/hooks/useRendition'
 import useTheme from '@/hooks/useTheme'
@@ -50,7 +41,9 @@ import useStore from '@/hooks/useStore'
 import useChapter from '@/hooks/useChapter'
 import useProgress from '@/hooks/useProgress'
 import useLocation from '@/hooks/useLocation'
+import useDisguise from '@/hooks/useDisguise'
 
+const { showBook } = useDisguise()
 const { url, type } = useStore()
 
 const theme = useTheme(false)
@@ -92,6 +85,7 @@ const { progress, changeProgress, goBack } = useProgress()
   text-overflow: ellipsis;
   font: 14px;
 }
+
 .footer-slider {
   width: 100%;
   display: flex;
@@ -99,10 +93,12 @@ const { progress, changeProgress, goBack } = useProgress()
   justify-content: center;
   gap: 10px;
 }
+
 .footer-slider .back-icon {
   cursor: pointer;
   z-index: 5;
 }
+
 .footer-slider .slider {
   width: 80%;
   height: 26px;

@@ -5,9 +5,6 @@ function setRendition(instance) {
   rendition.value = instance
 }
 
-export default function useRendition(): [
-  typeof rendition,
-  typeof setRendition,
-] {
+export default function useRendition(): [typeof rendition, typeof setRendition] {
   return [rendition, setRendition]
 }
