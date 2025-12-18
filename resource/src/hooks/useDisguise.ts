@@ -15,12 +15,20 @@ const title = computed(() => {
 })
 
 window.addEventListener('message', ({ data }) => {
-  if (!disguise.value) return
+  if (!disguise.value) {
+    return
+  }
   if (data && data.type === 'active') {
     active.value = data.content
   }
 })
-
+document.body.onkeydown = function (event: KeyboardEvent) {
+  // 禁用空格键的默认滚动行为
+  if (event.key === ' ' || event.code === 'Space') {
+    active.value = !active.value
+    event.preventDefault()
+  }
+}
 export default function useDisguise() {
   watch(disguise, (enabled) => {
     if (!enabled) {

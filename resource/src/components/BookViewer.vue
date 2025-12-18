@@ -1,16 +1,10 @@
 <template>
-  <div v-show="showBook" style="height: 100%">
-    <epub-reader v-if="type === 'epub'" :url="url" :getRendition="initBook" :backgroundColor="theme.backgroundColor" />
-    <book-reader v-else :url="url" :getRendition="initBook" :backgroundColor="theme.backgroundColor" />
-    <Setting v-model:progressDisplay="progressDisplay" />
+  <div v-show="showBook" style="height: 100%" :style="style">
+    <epub-reader v-if="type === 'epub'" :url="url" :getRendition="initBook" />
+    <book-reader v-else :url="url" :getRendition="initBook" />
+    <panel />
     <!-- footer -->
-    <div
-      class="footer"
-      :style="{
-        color: theme.textColor,
-        font: theme.fontSize,
-      }"
-    >
+    <div class="footer">
       <div v-if="progressDisplay === 'chapter'" class="chapter" :title="chapter">
         {{ chapter }}
       </div>
@@ -26,15 +20,15 @@
       </div>
     </div>
   </div>
-  <CodeInterface/>
+  <CodeInterface />
 </template>
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { Back } from '@element-plus/icons-vue'
 import { VueReader as EpubReader } from 'vue-reader'
 import { VueReader as BookReader } from 'vue-book-reader'
-import CodeInterface from './CodeInterface.vue'
-import Setting from './Setting.vue'
+import CodeInterface from './CodeInterface/Index.vue'
+import panel from './panel/Index.vue'
 import useRendition from '@/hooks/useRendition'
 import useTheme from '@/hooks/useTheme'
 import useStore from '@/hooks/useStore'
@@ -42,28 +36,56 @@ import useChapter from '@/hooks/useChapter'
 import useProgress from '@/hooks/useProgress'
 import useLocation from '@/hooks/useLocation'
 import useDisguise from '@/hooks/useDisguise'
+import useProcessDisplay from '@/hooks/useProcessDisplay'
 
 const { showBook } = useDisguise()
 const { url, type } = useStore()
 
-const theme = useTheme(false)
+const { theme } = useTheme(false)
 const [rendition, setRendition] = useRendition()
 const initBook = (rendition) => {
   setRendition(rendition)
 }
 
-//footer
-const progressDisplay = ref(localStorage.getItem('displayType') || 'chapter')
-watch(progressDisplay, (display) => {
-  localStorage.setItem('displayType', display)
+const style = computed(() => {
+  return {
+    '--book-text-color': theme.textColor,
+    '--book-background-color': theme.backgroundColor,
+    '--book-font-size': `${theme.fontSize}%`,
+  }
 })
+
+//footer
+const { progressDisplay } = useProcessDisplay()
 const chapter = useChapter()
 const location = useLocation()
 const { progress, changeProgress, goBack } = useProgress()
 </script>
 <style scoped>
+/* book reader */
+:deep(.readerArea) {
+  background: var(--book-background-color) !important;
+}
+
+:deep(.readerArea .titleArea) {
+  font-size: var(--book-font-size) !important;
+  color: var(--book-text-color) !important;
+}
+
+:deep(.tocArea) {
+  font-size: var(--book-font-size) !important;
+  color: var(--book-text-color) !important;
+  background: var(--book-background-color) !important;
+}
+
+:deep(.tocAreaButton) {
+  font-size: var(--book-font-size) !important;
+  color: var(--book-text-color) !important;
+}
+
 /* footer */
 .footer {
+  color: var(--book-text-color) !important;
   position: absolute;
   bottom: 5px;
   right: 0;

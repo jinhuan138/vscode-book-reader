@@ -2,30 +2,65 @@ import { reactive, watch, toRaw } from 'vue'
 import useRendition from './useRendition'
 import useVscode from './useVscode'
 
-const vscode = useVscode()
+const defaultTheme = {
+  fontSize: 100,
+  font: '',
+  lineHeight: 1.5,
+  textColor: 'var(--vscode-editor-foreground,rgba(0,0,0,1))',
+  backgroundColor: 'var(--vscode-editor-background,rgba(255,255,255,1))',
+  writingMode: 'horizontal-tb',
+  textAlign: 'left',
+  opacity: 1,
+}
+const backgroundList = [
+  'var(--vscode-editor-background,rgba(255,255,255,1))',
+  'rgba(44,47,49,1)',
+  'rgba(233, 216, 188,1)',
+  'rgba(197, 231, 207,1)',
+]
 
+const textList = [
+  'var(--vscode-editor-foreground,rgba(0,0,0,1))',
+  'rgba(255,255,255,1)',
+  'rgba(89, 68, 41,1)',
+  'rgba(54, 80, 62,1)',
+]
+const fontFamilyList = [
+  {
+    label: 'Arial',
+    value: "'Arial', Arimo, Liberation Sans, sans-serif",
+  },
+  {
+    label: 'Lato',
+    value: "'Lato', sans-serif",
+  },
+  {
+    label: 'Georgia',
+    value: "'Georgia', Liberation Serif, serif",
+  },
+  {
+    label: 'Times New Roman',
+    value: "Times New Roman', Tinos, Liberation Serif, Times, serif",
+  },
+  {
+    label: 'Arbutus Slab',
+    value: "'Arbutus Slab', serif",
+  },
+]
+const textAlignList = ['left', 'center', 'right', 'justify']
+const vscode = useVscode()
 const userTheme = localStorage.getItem('theme')
-const theme = reactive(
-  userTheme
-    ? JSON.parse(userTheme)
-    : {
-        fontSize: 100,
-        font: '',
-        lineSpacing: 1.5,
-        textColor: '#000',
-        backgroundColor: '#fff',
-        writingMode: 'horizontal-tb',
-      },
-)
+const theme = reactive(userTheme ? JSON.parse(userTheme) : defaultTheme)
 
 const [rendition] = useRendition()
-const getCSS = ({ font, fontSize, lineSpacing, textColor, backgroundColor, writingMode }) => {
+const getCSS = ({ font, fontSize, textColor, backgroundColor, writingMode, textAlign, lineHeight, opacity }) => {
   return [
     `
   * {
     font-family: ${font || '!invalid-hack'};
     font-size:  ${fontSize}%;
     color: ${textColor};
+    opacity: ${opacity};
   }
   
   a {
@@ -44,10 +79,11 @@ const getCSS = ({ font, fontSize, lineSpacing, textColor, backgroundColor, writi
   }
   
   html,body {
-    line-height: ${lineSpacing} !important;
+    line-height: ${lineHeight} !important;
     font-size: ${fontSize}% !important;
     color: ${textColor} !important;
     background-color: ${backgroundColor} !important;
+    text-align: ${textAlign} !important;
     padding: 0 !important;
     column-width: auto !important;
     height: auto !important;
@@ -64,13 +100,15 @@ const getCSS = ({ font, fontSize, lineSpacing, textColor, backgroundColor, writi
   ]
 }
 
-const getRule = ({ font, fontSize, lineSpacing, textColor, writingMode, backgroundColor }) => {
+const getRule = ({ font, fontSize, textColor, writingMode, backgroundColor, textAlign, lineHeight, opacity }) => {
   return {
     body: {
       'font-family': font !== '' ? `${font} !important` : '!invalid-hack',
       color: `${textColor} !important`,
       'background-color': backgroundColor,
       'writing-mode': writingMode,
+      'text-align': `${textAlign} !important`,
+      'line-height': `${lineHeight} !important`,
     },
     a: {
       color: 'inherit !important',
@@ -90,6 +128,7 @@ const getRule = ({ font, fontSize, lineSpacing, textColor, writingMode, backgrou
       'font-size': fontSize !== '' ? `${fontSize}% !important` : '!invalid-hack',
       color: `${textColor} !important`,
       'background-color': backgroundColor,
+      opacity: opacity,
     },
   }
 }
@@ -112,9 +151,15 @@ export default function useTheme(isSlider = false) {
     }
   }
 
+  const restore = () => {
+    Object.keys(defaultTheme).forEach((key) => {
+      // @ts-ignore
+      theme[key] = defaultTheme[key]
+    })
+  }
   watch(theme, (val) => {
     updatedTheme(val)
-    console.log('update')
+    console.log('update theme')
     localStorage.setItem('theme', JSON.stringify(val))
   })
   watch(rendition, (instance) => {
@@ -128,5 +173,5 @@ export default function useTheme(isSlider = false) {
       updatedTheme(style)
     }
   })
-  return theme
+  return { theme, restore, textList, backgroundList, fontFamilyList, textAlignList }
 }
