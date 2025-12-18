@@ -57,7 +57,7 @@ const vscode = useVscode()
 
 const { url, type } = useStore()
 
-const theme = useTheme(true)
+const { theme } = useTheme(true)
 const flow = useFlow(true)
 const animation = useAnimation(true)
 const grayscale = useGrayscale(true)

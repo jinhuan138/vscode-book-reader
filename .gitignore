@@ -4,3 +4,4 @@ resource/dist
 node_modules
 .vscode-test/
 *.vsix
+stats.html
