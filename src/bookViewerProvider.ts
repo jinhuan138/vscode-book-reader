@@ -1,7 +1,6 @@
 import * as vscode from 'vscode'
 import { readFileSync } from 'fs'
 import { resolve, join } from 'path'
-import { Util } from './until'
 import { homedir } from 'os'
 
 export class BookViewerProvider implements vscode.CustomReadonlyEditorProvider {
@@ -15,7 +14,6 @@ export class BookViewerProvider implements vscode.CustomReadonlyEditorProvider {
 
   public openCustomDocument(
     uri: vscode.Uri,
-    openContext: vscode.CustomDocumentOpenContext,
   ): vscode.CustomDocument | Thenable<vscode.CustomDocument> {
     return { uri, dispose: (): void => {} }
   }
@@ -50,9 +48,7 @@ export class BookViewerProvider implements vscode.CustomReadonlyEditorProvider {
           this.emitter.emit('animation', message.content)
           break
         case 'download':
-          const filePath = vscode.Uri.file(
-            join(homedir(), '.bookReader', Date.now() + '.jpg'),
-          )
+          const filePath = vscode.Uri.file(join(homedir(), '.bookReader', Date.now() + '.jpg'))
           await vscode.workspace.fs.writeFile(filePath, message.content)
           vscode.commands.executeCommand('vscode.open', filePath, {
             forceNewWindow: true,
@@ -69,10 +65,6 @@ export class BookViewerProvider implements vscode.CustomReadonlyEditorProvider {
         content: e.webviewPanel.active,
       })
     })
-    webview.html = Util.buildPath(
-      readFileSync(this.extensionPath + '/resource/dist/index.html', 'utf8'),
-      webview,
-      this.extensionPath + '/resource/dist',
-    )
+    webview.html = readFileSync(this.extensionPath + '/resource/dist/index.html', 'utf8')
   }
 }

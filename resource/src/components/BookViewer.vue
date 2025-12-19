@@ -23,7 +23,7 @@
   <CodeInterface />
 </template>
 <script setup>
-import { ref, watch, computed } from 'vue'
+import { computed } from 'vue'
 import { Back } from '@element-plus/icons-vue'
 import { VueReader as EpubReader } from 'vue-reader'
 import { VueReader as BookReader } from 'vue-book-reader'
@@ -36,19 +36,20 @@ import useChapter from '@/hooks/useChapter'
 import useProgress from '@/hooks/useProgress'
 import useLocation from '@/hooks/useLocation'
 import useDisguise from '@/hooks/useDisguise'
+import useGrayscale from '@/hooks/useGrayscale'
 import useProcessDisplay from '@/hooks/useProcessDisplay'
 
-const { showBook } = useDisguise()
 const { url, type } = useStore()
-
+const { showBook } = useDisguise()
 const { theme } = useTheme(false)
 const [rendition, setRendition] = useRendition()
 const initBook = (rendition) => {
   setRendition(rendition)
 }
-
+const grayscale = useGrayscale()
 const style = computed(() => {
   return {
+    '--book-filter': grayscale.value ? 'grayscale(100%)' : 'none',
     '--book-text-color': theme.textColor,
     '--book-background-color': theme.backgroundColor,
     '--book-font-size': `${theme.fontSize}%`,
@@ -65,6 +66,7 @@ const { progress, changeProgress, goBack } = useProgress()
 /* book reader */
 :deep(.readerArea) {
   background: var(--book-background-color) !important;
+  filter: var(--book-filter) !important;
 }
 
 :deep(.readerArea .titleArea) {

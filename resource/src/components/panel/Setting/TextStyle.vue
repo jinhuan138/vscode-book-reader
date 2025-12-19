@@ -37,7 +37,7 @@
       ></el-input-number>
     </el-form-item>
     <el-form-item label="Opacity">
-      <el-slider v-model="theme.opacity" :min="0" :max="1" :step="0.1" />
+      <el-slider v-model="theme.opacity" :format-tooltip="formatOpacity" :min="0" :max="1" :step="0.01" />
     </el-form-item>
     <el-form-item label="Text Align">
       <el-select v-model="theme.textAlign" class="font-select" width="50" size="small">
@@ -59,11 +59,14 @@
     </el-form-item>
   </el-form>
 </template>
-<script setup>
+<script setup lang="ts">
 //textStyle setting
 import useTheme from '@/hooks/useTheme'
 
 const { theme, textList, backgroundList, fontFamilyList, textAlignList, restore } = useTheme(false)
+const formatOpacity = (val: number) => {
+  return val * 100 + '%'
+}
 </script>
 <style scoped>
 .setting-icon {
