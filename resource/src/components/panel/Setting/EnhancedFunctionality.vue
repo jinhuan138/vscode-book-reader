@@ -1,12 +1,12 @@
 <template>
   <el-form label-width="auto" style="max-width: 100%">
     <el-form-item label="Grayscale Mode">
-      <el-tooltip content="Space → Toggle Grayscale Mode" placement="top">
-        <el-switch v-model="grayscale" />
-      </el-tooltip>
+      <el-switch v-model="grayscale" />
     </el-form-item>
     <el-form-item label="Disguise">
-      <el-switch v-model="disguise" />
+      <el-tooltip content="Space → Toggle Disguise" placement="top">
+        <el-switch v-model="disguise" />
+      </el-tooltip>
     </el-form-item>
     <el-form-item label="Text To Speech">
       <el-switch v-model="isReading" />
