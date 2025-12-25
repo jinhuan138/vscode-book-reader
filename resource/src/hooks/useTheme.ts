@@ -4,7 +4,7 @@ import useVscode from './useVscode'
 
 const defaultTheme = {
   fontSize: 100,
-  font: '',
+  fontFamily: '',
   lineHeight: 1.5,
   textColor: 'var(--vscode-editor-foreground,rgba(0,0,0,1))',
   backgroundColor: 'var(--vscode-editor-background,rgba(255,255,255,1))',
@@ -26,6 +26,10 @@ const textList = [
   'rgba(54, 80, 62,1)',
 ]
 const fontFamilyList = [
+  {
+    label: 'default',
+    value: "",
+  },
   {
     label: 'Arial',
     value: "'Arial', Arimo, Liberation Sans, sans-serif",
@@ -53,11 +57,11 @@ const userTheme = localStorage.getItem('theme')
 const theme = reactive(userTheme ? JSON.parse(userTheme) : defaultTheme)
 
 const [rendition] = useRendition()
-const getCSS = ({ font, fontSize, textColor, backgroundColor, writingMode, textAlign, lineHeight, opacity }) => {
+const getCSS = ({ fontFamily, fontSize, textColor, backgroundColor, writingMode, textAlign, lineHeight, opacity }) => {
   return [
     `
   * {
-    font-family: ${font || '!invalid-hack'};
+    font-family: ${fontFamily || '!invalid-hack'};
     font-size:  ${fontSize}%;
     color: ${textColor};
     opacity: ${opacity};
@@ -72,7 +76,7 @@ const getCSS = ({ font, fontSize, textColor, backgroundColor, writingMode, textA
   }
   
   body {
-    font-family: ${font || '!invalid-hack'} !important;
+    font-family: ${fontFamily || '!invalid-hack'} !important;
     writing-mode:${writingMode || ''} !important;
     color: ${textColor} !important;
     background-color: ${backgroundColor} !important;
@@ -100,10 +104,10 @@ const getCSS = ({ font, fontSize, textColor, backgroundColor, writingMode, textA
   ]
 }
 
-const getRule = ({ font, fontSize, textColor, writingMode, backgroundColor, textAlign, lineHeight, opacity }) => {
+const getRule = ({ fontFamily, fontSize, textColor, writingMode, backgroundColor, textAlign, lineHeight, opacity }) => {
   return {
     body: {
-      'font-family': font !== '' ? `${font} !important` : '!invalid-hack',
+      'font-family': fontFamily !== '' ? `${fontFamily} !important` : '!invalid-hack',
       color: `${textColor} !important`,
       'background-color': backgroundColor,
       'writing-mode': writingMode,
@@ -124,7 +128,7 @@ const getRule = ({ font, fontSize, textColor, writingMode, backgroundColor, text
       background: 'rgba(0, 0, 0, 0.1) !important',
     },
     '*': {
-      'font-family': font !== '' ? `${font} !important` : '!invalid-hack',
+      'font-family': fontFamily !== '' ? `${fontFamily} !important` : '!invalid-hack',
       'font-size': fontSize !== '' ? `${fontSize}% !important` : '!invalid-hack',
       color: `${textColor} !important`,
       'background-color': backgroundColor,

@@ -38,6 +38,7 @@ import useLocation from '@/hooks/useLocation'
 import useDisguise from '@/hooks/useDisguise'
 import useGrayscale from '@/hooks/useGrayscale'
 import useProcessDisplay from '@/hooks/useProcessDisplay'
+import useKeyboard from '@/hooks/useKeyboard'
 
 const { url, type } = useStore()
 const { showBook } = useDisguise()
@@ -49,6 +50,10 @@ const initBook = (rendition) => {
 const grayscale = useGrayscale()
 const style = computed(() => {
   return {
+    filter: grayscale.value ? 'grayscale(100%)' : 'none',
+    color: theme.textColor,
+    fontSize: `${theme.fontSize}%`,
+    opacity: theme.opacity,
     '--book-filter': grayscale.value ? 'grayscale(100%)' : 'none',
     '--book-text-color': theme.textColor,
     '--book-background-color': theme.backgroundColor,

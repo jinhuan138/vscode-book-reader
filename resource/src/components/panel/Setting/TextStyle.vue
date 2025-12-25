@@ -47,8 +47,8 @@
     <el-form-item label="Font Size">
       <el-input-number v-model="theme.fontSize" :step="2" :min="10" :max="300" size="small"></el-input-number>
     </el-form-item>
-    <el-form-item label="Font">
-      <el-select v-model="theme.font" class="font-select" width="50" size="small">
+    <el-form-item label="Font Family">
+      <el-select v-model="theme.fontFamily" class="font-select" width="50" size="small">
         <el-option v-for="{ label, value } in fontFamilyList" :key="value" :label="label" :value="value">
           <span :style="{ fontFamily: value }">{{ label }}</span>
         </el-option>
