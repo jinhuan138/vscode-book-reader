@@ -9,7 +9,6 @@ export default function useGrayscale(isSidebar = false) {
   const grayscale = ref<boolean>(defaultGrayscale)
   const setGrayscale = (enabled: boolean) => {
     if (!rendition.value.tagName) {
-      console.log()
       rendition.value.themes.default({
         html: {
           filter: enabled ? 'grayscale(100%)' : 'none',

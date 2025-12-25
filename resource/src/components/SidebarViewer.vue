@@ -1,42 +1,41 @@
 <template>
-  <EpubView v-if="type === 'epub'" :url="url" :getRendition="setRendition" />
-  <BookView v-else :url="url" :getRendition="setRendition" />
-  <!-- menu tree -->
-  <el-popover placement="bottom" :popper-style="{ height: '80%' }" :width="300">
-    <template #reference>
-      <el-icon class="menu-icon" color="#ccc">
-        <Menu />
-      </el-icon>
-    </template>
-    <el-tree :data="toc" :props="{ children: 'subitems' }" @node-click="onNodeClick" class="tree" />
-  </el-popover>
-  <el-icon class="close-icon" color="#ccc" @click="close">
-    <Close />
-  </el-icon>
-  <!-- footer -->
-  <div
-    class="footer"
-    :style="{
-      color: theme.textColor,
-      font: theme.fontSize,
-    }"
-  >
-    <div class="chapter">
-      <span :title="chapter" class="chapter-text">
-        {{ chapter }}
-      </span>
-      <div class="process">
-        {{ progress + '%' }}
+  <div :style="style">
+    <EpubView v-if="type === 'epub'" :url="url" :getRendition="setRendition" />
+    <BookView v-else :url="url" :getRendition="setRendition" />
+    <!-- menu tree -->
+    <el-popover placement="bottom" :popper-style="{ height: '80%' }" :width="300">
+      <template #reference>
+        <el-icon class="menu-icon" color="#ccc">
+          <Menu />
+        </el-icon>
+      </template>
+      <el-tree :data="toc" :props="{ children: 'subitems' }" @node-click="onNodeClick" class="tree" />
+    </el-popover>
+    <el-icon class="close-icon" color="#ccc" @click="close">
+      <Close />
+    </el-icon>
+    <!-- footer -->
+    <div class="footer">
+      <div class="chapter">
+        <span :title="chapter" class="chapter-text">
+          {{ chapter }}
+        </span>
+        <div class="process">
+          {{ progress + '%' }}
+        </div>
       </div>
-    </div>
-    <!-- process -->
-    <div class="footer-slider">
-      <el-icon title="back" class="back-icon" @click="goBack"><Back /></el-icon>
-      <el-slider class="slider" v-model="progress" :step="0.01" @change="changeProgress" size="small"></el-slider>
+      <!-- process -->
+      <div class="footer-slider">
+        <el-icon title="back" class="back-icon" @click="goBack">
+          <Back />
+        </el-icon>
+        <el-slider class="slider" v-model="progress" :step="0.01" @change="changeProgress" size="small"></el-slider>
+      </div>
     </div>
   </div>
 </template>
 <script setup>
+import { computed } from 'vue'
 import { EpubView } from 'vue-reader'
 import { BookView } from 'vue-book-reader'
 import { Back, Close, Menu } from '@element-plus/icons-vue'
@@ -52,6 +51,7 @@ import useChapter from '@/hooks/useChapter'
 import useAnimation from '@/hooks/useAnimation'
 import useGrayscale from '@/hooks/useGrayscale'
 import useInfo from '@/hooks/useInfo'
+import useKeyboard from '@/hooks/useKeyboard'
 
 const vscode = useVscode()
 
@@ -89,7 +89,14 @@ const onNodeClick = (item) => {
     rendition.value?.goTo(item.href)
   }
 }
-
+const style = computed(() => {
+  return {
+    filter: grayscale.value ? 'grayscale(100%)' : 'none',
+    color: theme.textColor,
+    fontSize: `${theme.fontSize}%`,
+    opacity: theme.opacity,
+  }
+})
 window.addEventListener('message', ({ data }) => {
   if (data) {
     switch (data.type) {
@@ -132,6 +139,7 @@ window.addEventListener('message', ({ data }) => {
   margin: auto;
   width: 100%;
 }
+
 .footer .footer-slider {
   margin: auto;
   opacity: 0;
@@ -142,10 +150,12 @@ window.addEventListener('message', ({ data }) => {
   gap: 10px;
   transition: opacity 0.3s;
 }
+
 .footer .footer-slider .slider {
   width: 80%;
   height: 26px;
 }
+
 .footer-slider .back-icon {
   cursor: pointer;
   z-index: 5;
@@ -162,12 +172,14 @@ window.addEventListener('message', ({ data }) => {
   opacity: 1;
   font-size: 14px;
 }
+
 .chapter .chapter-text {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
   max-width: 70%;
 }
+
 .footer .process {
   position: absolute;
   right: 5px;
