@@ -1,5 +1,5 @@
 <template>
-  <div :style="style">
+  <div v-show="showBook" :style="style">
     <EpubView v-if="type === 'epub'" :url="url" :getRendition="setRendition" />
     <BookView v-else :url="url" :getRendition="setRendition" />
     <!-- menu tree -->
@@ -35,7 +35,7 @@
   </div>
 </template>
 <script setup>
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 import { EpubView } from 'vue-reader'
 import { BookView } from 'vue-book-reader'
 import { Back, Close, Menu } from '@element-plus/icons-vue'
@@ -52,6 +52,7 @@ import useAnimation from '@/hooks/useAnimation'
 import useGrayscale from '@/hooks/useGrayscale'
 import useInfo from '@/hooks/useInfo'
 import useKeyboard from '@/hooks/useKeyboard'
+import useDisguise from '@/hooks/useDisguise'
 
 const vscode = useVscode()
 
@@ -95,6 +96,27 @@ const style = computed(() => {
     color: theme.textColor,
     fontSize: `${theme.fontSize}%`,
     opacity: theme.opacity,
+    width: '100%',
+    height: '100vh',
+    position: 'reactive',
+  }
+})
+
+//Disguise
+const { showBook } = useDisguise()
+const postMessage = (title) => {
+  if (vscode) {
+    vscode.postMessage({
+      type: 'title',
+      content: title,
+    })
+  }
+}
+watch(showBook, (show) => {
+  if (show) {
+    postMessage(information.value.title)
+  } else {
+    postMessage('')
   }
 })
 window.addEventListener('message', ({ data }) => {

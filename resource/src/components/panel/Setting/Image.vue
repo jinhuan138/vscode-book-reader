@@ -16,6 +16,6 @@ import useImage from '@/hooks/useImage'
 const { imageDisplayModeOptions, imageDisplayMode, miniMediaScale } = useImage()
 
 const formatOpacity = (val: number) => {
-  return val * 100 + '%'
+  return Math.trunc(val * 100) + '%'
 }
 </script>

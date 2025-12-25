@@ -26,18 +26,18 @@
         @click="theme.backgroundColor = color"
       ></li>
     </el-form-item>
-    <el-form-item label="Line Spacing">
+    <el-form-item label="Line Height">
       <el-input-number
         v-model="theme.lineHeight"
         :precision="2"
         :step="0.1"
         :min="1"
-        :max="2.0"
+        :max="2.5"
         size="small"
       ></el-input-number>
     </el-form-item>
     <el-form-item label="Opacity">
-      <el-slider v-model="theme.opacity" :format-tooltip="formatOpacity" :min="0" :max="1" :step="0.01" />
+      <el-slider v-model="theme.opacity" :format-tooltip="formatOpacity" :min="0" :max="100" :step="1" />
     </el-form-item>
     <el-form-item label="Text Align">
       <el-select v-model="theme.textAlign" class="font-select" width="50" size="small">
@@ -65,7 +65,7 @@ import useTheme from '@/hooks/useTheme'
 
 const { theme, textList, backgroundList, fontFamilyList, textAlignList, restore } = useTheme(false)
 const formatOpacity = (val: number) => {
-  return val * 100 + '%'
+  return val + '%'
 }
 </script>
 <style scoped>
