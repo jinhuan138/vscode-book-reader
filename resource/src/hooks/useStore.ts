@@ -15,7 +15,6 @@ export default function useStore() {
 
   watch(rendition, (instance) => {
     if (!instance.tagName) {
-      console.log(instance.book)
       const bookKey = instance.book.key ? instance.book.key() : url.value
       instance.on('relocated', (event: any) => {
         localStorage.setItem(bookKey, event.start.cfi)
@@ -39,7 +38,7 @@ export default function useStore() {
   )
 
   onBeforeUnmount(() => {
-    if (rendition.value.tagName) {
+    if (rendition.value?.tagName) {
       rendition.value.removeEventListener('relocate', onRelocate)
     }
   })

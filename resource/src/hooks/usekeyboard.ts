@@ -38,6 +38,10 @@ export default (function useKeyboard() {
         iframe?.iframe?.contentWindow.focus()
         keyListener(iframe.document, flipPage)
       })
+    } else {
+      instance.addEventListener('load', ({ detail: { doc } }) => {
+        keyListener(doc, flipPage)
+      })
     }
   })
 })()

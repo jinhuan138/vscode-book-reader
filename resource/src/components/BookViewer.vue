@@ -2,7 +2,6 @@
   <div v-show="showBook" style="height: 100%" :style="style">
     <epub-reader v-if="type === 'epub'" :url="url" :getRendition="initBook" />
     <book-reader v-else :url="url" :getRendition="initBook" />
-    <panel />
     <!-- footer -->
     <div class="footer">
       <div v-if="progressDisplay === 'chapter'" class="chapter" :title="chapter">
@@ -20,6 +19,7 @@
       </div>
     </div>
   </div>
+  <panel />
   <CodeInterface />
 </template>
 <script setup>
@@ -53,7 +53,7 @@ const style = computed(() => {
     filter: grayscale.value ? 'grayscale(100%)' : 'none',
     color: theme.textColor,
     fontSize: `${theme.fontSize}%`,
-    opacity: theme.opacity,
+    // opacity: theme.opacity,
     '--book-filter': grayscale.value ? 'grayscale(100%)' : 'none',
     '--book-text-color': theme.textColor,
     '--book-background-color': theme.backgroundColor,
@@ -77,12 +77,14 @@ const { progress, changeProgress, goBack } = useProgress()
 :deep(.readerArea .titleArea) {
   font-size: var(--book-font-size) !important;
   color: var(--book-text-color) !important;
+  /* opacity: var(--book-opacity); */
 }
 
 :deep(.tocArea) {
   font-size: var(--book-font-size) !important;
   color: var(--book-text-color) !important;
   background: var(--book-background-color) !important;
+  /* opacity: var(--book-opacity); */
 }
 
 :deep(.tocAreaButton) {
