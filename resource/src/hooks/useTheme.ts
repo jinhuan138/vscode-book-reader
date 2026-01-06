@@ -25,7 +25,7 @@ const textList = [defaultTextColor, 'rgba(255,255,255,1)', 'rgba(89, 68, 41,1)',
 const fontFamilyList = [
   {
     label: 'default',
-    value: '',
+    value: 'invalid-hack',
   },
   {
     label: 'Arial',
@@ -53,7 +53,7 @@ const vscode = useVscode()
 
 const defaultTheme = {
   fontSize: 100,
-  fontFamily: '',
+  fontFamily: 'invalid-hack',
   lineHeight: 1.5,
   textColor: defaultTextColor,
   backgroundColor: defaultBackgroundColor,
@@ -67,13 +67,12 @@ const theme = reactive(userTheme ? JSON.parse(userTheme) : defaultTheme)
 const [rendition] = useRendition()
 const getCSS = ({ fontFamily, fontSize, textColor, backgroundColor, writingMode, textAlign, lineHeight, opacity }) => {
   return [
-    `
+  `
   * {
-    font-family: ${fontFamily || '!invalid-hack'};
+    font-family: ${fontFamily};
     font-size:  ${fontSize}%;
     color: ${textColor};
   }
-  
   a {
     color: 'inherit !important',
   }
@@ -83,7 +82,7 @@ const getCSS = ({ fontFamily, fontSize, textColor, backgroundColor, writingMode,
   }
   
   html,body {
-    font-family: ${fontFamily || '!invalid-hack'} !important;
+    font-family: ${fontFamily} !important;
     writing-mode:${writingMode || ''} !important;
     line-height: ${lineHeight} !important;
     font-size: ${fontSize}% !important;
@@ -126,7 +125,7 @@ const getRule = ({ fontFamily, fontSize, textColor, writingMode, backgroundColor
       background: 'rgba(0, 0, 0, 0.1) !important',
     },
     '*': {
-      'font-family': fontFamily !== '' ? `${fontFamily} !important` : '!invalid-hack',
+      'font-family': fontFamily,
       'font-size': fontSize !== '' ? `${fontSize}% !important` : '!invalid-hack',
       color: `${textColor} !important`,
       'background-color': backgroundColor,

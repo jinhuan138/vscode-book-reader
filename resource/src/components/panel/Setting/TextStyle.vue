@@ -64,7 +64,7 @@
 import useTheme from '@/hooks/useTheme'
 
 const { theme, textList, backgroundList, fontFamilyList, textAlignList, restore } = useTheme(false)
-const formatOpacity = (val: number) => {
+const formatOpacity = (val: number):string => {
   return val + '%'
 }
 </script>

@@ -49,6 +49,7 @@
 //https://www.npmjs.com/package/bing-translate-api
 //https://marketplace.visualstudio.com/manage/publishers/
 import VueEasyLightbox from 'vue-easy-lightbox'
+import * as pdfjsLib from 'pdfjs-dist/build/pdf.min.mjs'
 import localforage from 'localforage'
 import { Search } from '@element-plus/icons-vue'
 import { ref, watch } from 'vue'
@@ -58,6 +59,10 @@ import SidebarViewer from '@/components/SidebarViewer.vue'
 import useImage from '@/hooks/useImage'
 import useVscode from '@/hooks/useVscode'
 import pkg from '../../package.json'
+pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+  'pdfjs-dist/legacy/build/pdf.worker.min.mjs',
+  import.meta.url,
+).toString();
 console.log(
   `%c ${pkg.name} %c v`.concat(pkg.version, ' '),
   'background: #35495e; padding: 1px; border-radius: 3px 0 0 3px; color: #fff',
