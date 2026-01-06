@@ -51,7 +51,7 @@ import useChapter from '@/hooks/useChapter'
 import useAnimation from '@/hooks/useAnimation'
 import useGrayscale from '@/hooks/useGrayscale'
 import useInfo from '@/hooks/useInfo'
-import useKeyboard from '@/hooks/useKeyboard'
+import '@/hooks/useKeyboard'
 import useDisguise from '@/hooks/useDisguise'
 
 const vscode = useVscode()

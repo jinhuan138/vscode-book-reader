@@ -38,7 +38,7 @@ import useLocation from '@/hooks/useLocation'
 import useDisguise from '@/hooks/useDisguise'
 import useGrayscale from '@/hooks/useGrayscale'
 import useProcessDisplay from '@/hooks/useProcessDisplay'
-import useKeyboard from '@/hooks/useKeyboard'
+import '@/hooks/useKeyboard'
 
 const { url, type } = useStore()
 const { showBook } = useDisguise()
