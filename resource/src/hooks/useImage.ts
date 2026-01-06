@@ -50,6 +50,16 @@ export default function useImage() {
       document.body.removeChild(downloadLink)
     }
   }
+  const handleImage = (imageElements: Array<HTMLImageElement>) => {
+    imgsRef.value = imageElements.map((img, index) => {
+      img.title = '点击查看图片'
+      img.addEventListener('click', () => {
+        visibleRef.value = true
+        indexRef.value = index
+      })
+      return img.src || (img.getAttribute('xlink:href') as string)
+    })
+  }
   watch(rendition, (instance) => {
     if (!instance.tagName) {
       instance.themes.default({
@@ -61,36 +71,20 @@ export default function useImage() {
         },
       })
       instance.hooks.content.register((content: { document: Document }) => {
-        imgsRef.value = []
         const imgs = [...document.querySelectorAll('img'), ...document.querySelectorAll('image')] as HTMLImageElement[]
-        imgs.forEach((img, index) => {
-          img.title = '点击查看图片'
-          img.addEventListener('click', () => {
-            visibleRef.value = true
-            indexRef.value = index
-          })
-          imgsRef.value.push(img.src || (img.getAttribute('xlink:href') as string))
-        })
+        console.log(imgs)
+        handleImage(imgs)
       })
     } else {
-      instance.renderer.setStyles([
+      instance.renderer?.setStyles([
         `img, image {
            cursor: pointer;
         }`,
       ])
       const docs = instance.renderer.getContents()
       docs.forEach(({ doc }) => {
-        imgsRef.value = []
         const imgs = [...doc.querySelectorAll('img'), ...doc.querySelectorAll('image')]
-        imgs.forEach((img, index) => {
-          img.title = '点击查看图片'
-          img.addEventListener('click', () => {
-            visibleRef.value = true
-            indexRef.value = index
-          })
-          const src = img.getAttribute('src') || img.getAttribute('xlink:href')
-          imgsRef.value.push(src)
-        })
+        handleImage(imgs)
       })
     }
   })
