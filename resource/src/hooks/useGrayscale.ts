@@ -15,7 +15,7 @@ export default function useGrayscale(isSidebar = false) {
         },
       })
     } else {
-      rendition.value.renderer.setStyles([
+      rendition.value.renderer?.setStyles([
         `html {
            filter: ${enabled ? 'grayscale(100%)' : 'none'};
         }`,
