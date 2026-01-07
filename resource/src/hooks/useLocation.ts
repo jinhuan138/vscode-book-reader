@@ -1,6 +1,5 @@
-import { ref, watch, onBeforeUnmount } from 'vue'
-import useRendition from './useRendition'
-const [rendition] = useRendition()
+import { ref, onBeforeUnmount } from 'vue'
+import { rendition, isEpub, onReady } from './useRendition'
 export default function useLocation() {
   const location = ref('')
   const onRelocate = ({ detail }) => {
@@ -8,18 +7,18 @@ export default function useLocation() {
     location.value = `Loc ${loc.current}/${loc.total}`
   }
 
-  watch(rendition, (instance) => {
-    if (!instance.tagName) {
-      instance.on('relocated', (event: any) => {
-        location.value = `Loc ${event.start.location}/${instance.book.locations.length()}`
+  onReady(() => {
+    if (isEpub()) {
+      rendition.value.on('relocated', (event: any) => {
+        location.value = `Loc ${event.start.location}/${rendition.value.book.locations.length()}`
       })
     } else {
-      instance.addEventListener('relocate', onRelocate)
+      rendition.value.addEventListener('relocate', onRelocate)
     }
   })
 
   onBeforeUnmount(() => {
-    if (rendition.value.tagName) {
+    if (!isEpub()) {
       rendition.value.removeEventListener('relocate', onRelocate)
     }
   })

@@ -1,7 +1,6 @@
 import { ref } from 'vue'
-import useRendition from './useRendition'
+import { rendition, isEpub } from './useRendition'
 
-const [rendition] = useRendition()
 export default function useSearch() {
   const searching = ref(false)
   const searchText = ref('')
@@ -10,7 +9,7 @@ export default function useSearch() {
   const search = async () => {
     const text = searchText.value
     if (!text) return
-    if (!rendition.value.tagName) {
+    if (isEpub()) {
       const { book } = rendition.value
       return Promise.all(
         book.spine.spineItems.map((item) =>

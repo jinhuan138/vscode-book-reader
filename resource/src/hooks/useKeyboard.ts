@@ -1,8 +1,6 @@
-import useRendition from './useRendition'
 import useDisguise from '@/hooks/useDisguise'
-import { watch } from 'vue'
+import { rendition, isEpub, onReady } from './useRendition'
 const { active } = useDisguise()
-const [rendition] = useRendition()
 type Direction = 'next' | 'prev'
 function keyListener(el: HTMLElement, fn: (dire: Direction) => void) {
   el.addEventListener(
@@ -31,15 +29,17 @@ const flipPage = (direction: string) => {
     rendition.value.prev()
   }
 }
-export default (function useKeyboard() {
-  watch(rendition, (instance) => {
-    if (!rendition.value.tagName) {
-      instance.on('rendered', (e: Event, iframe: any) => {
+;(function useKeyboard() {
+  onReady(() => {
+    if (isEpub()) {
+      rendition.value.on('rendered', (e: Event, iframe: any) => {
         iframe?.iframe?.contentWindow.focus()
         keyListener(iframe.document, flipPage)
       })
     } else {
-      instance.addEventListener('load', ({ detail: { doc } }) => {
+      rendition.value.addEventListener('load', (event:any) => {
+        const doc = event.detail.doc
+        rendition.value.renderer.focus()
         keyListener(doc, flipPage)
       })
     }

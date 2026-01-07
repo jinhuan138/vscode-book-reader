@@ -1,10 +1,8 @@
-import { ref, watch } from 'vue'
+import { ref } from 'vue'
 import useVscode from './useVscode'
-import useRendition from './useRendition'
+import { rendition, isEpub, onReady } from './useRendition'
 
 const vscode = useVscode()
-const [rendition] = useRendition()
-
 const imageUrlToUint8Array = async (url: string) => {
   try {
     const response = await fetch(url)
@@ -60,9 +58,10 @@ export default function useImage() {
       return img.src || (img.getAttribute('xlink:href') as string)
     })
   }
-  watch(rendition, (instance) => {
-    if (!instance.tagName) {
-      instance.themes.default({
+
+  onReady(() => {
+    if (isEpub()) {
+      rendition.value.themes.default({
         img: {
           cursor: 'pointer',
         },
@@ -70,21 +69,22 @@ export default function useImage() {
           cursor: 'pointer',
         },
       })
-      instance.hooks.content.register((content: { document: Document }) => {
+      rendition.value.hooks.content.register((content: { document: Document }) => {
         const imgs = [...document.querySelectorAll('img'), ...document.querySelectorAll('image')] as HTMLImageElement[]
-        console.log(imgs)
         handleImage(imgs)
       })
     } else {
-      instance.renderer?.setStyles([
+      rendition.value.addEventListener('load', () => {
+        rendition.value.renderer?.setStyles([
         `img, image {
            cursor: pointer;
         }`,
       ])
-      const docs = instance.renderer.getContents()
+      const docs = rendition.value.renderer.getContents()
       docs.forEach(({ doc }) => {
         const imgs = [...doc.querySelectorAll('img'), ...doc.querySelectorAll('image')]
-        handleImage(imgs)
+          handleImage(imgs)
+        })
       })
     }
   })

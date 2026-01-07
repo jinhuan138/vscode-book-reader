@@ -1,9 +1,8 @@
 import { ref, watch, onMounted, onUnmounted } from 'vue'
 import useVscode from './useVscode'
-import useRendition from './useRendition'
+import { rendition, isEpub, onReady } from './useRendition'
 
 const vscode = useVscode()
-const [rendition] = useRendition()
 type Flow = 'paginated' | 'scrolled-doc'
 export default function useFlow(isSidebar = false) {
   const defaultFlow: Flow = (localStorage.getItem('flow') as Flow | null) || 'paginated'
@@ -21,17 +20,17 @@ export default function useFlow(isSidebar = false) {
   onUnmounted(() => {
     window.removeEventListener('keydown', handleSetFlow)
   })
-  const setFlow = (flow) => {
-    if (!rendition.value.tagName) {
+  const setFlow = (flow: string) => {
+    if (isEpub()) {
       rendition.value.flow(flow)
     } else {
       rendition.value?.renderer.setAttribute('flow', flow === 'paginated' ? 'paginated' : 'scrolled')
     }
   }
-  watch(rendition, (instance) => {
+  onReady(() => {
     setFlow(defaultFlow)
-    if (isSidebar && !instance.tagName) {
-      instance.hooks.content.register(({ document }) => {
+    if (isSidebar && isEpub()) {
+      rendition.value.hooks.content.register(({ document }) => {
         const annotation = Array.from(document.querySelectorAll('a')) as HTMLAnchorElement[]
         if (annotation.length) {
           const halfLength = Math.floor(annotation.length / 2)

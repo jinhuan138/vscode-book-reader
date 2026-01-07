@@ -1,15 +1,13 @@
-import { ref, watch, onBeforeUnmount } from 'vue'
-import useRendition from './useRendition'
-const [rendition] = useRendition()
-let book
+import { ref, onBeforeUnmount } from 'vue'
+import { rendition, isEpub, onReady } from './useRendition'
 
 export default function useProgress() {
   const progress = ref<number>(0)
   const history = ref<string[]>([])
 
   const changeProgress = (val: number) => {
-    if (!rendition.value.tagName) {
-      const cfi = book.locations.cfiFromPercentage(val / 100)
+    if (isEpub()) {
+      const cfi = rendition.value.book.locations.cfiFromPercentage(val / 100)
       rendition.value.display(cfi)
       history.value.push(cfi)
     } else {
@@ -24,29 +22,29 @@ export default function useProgress() {
   }
 
   const goBack = () => {
-    if (!rendition.value.tagName) {
+    if (isEpub()) {
       if (history.value.length > 0) rendition.value.display(history.value.pop())
     } else {
       rendition.value?.history.back()
     }
   }
 
-  watch(rendition, (instance) => {
-    if (!instance!.tagName) {
-      book = instance.book
+  onReady(() => {
+    if (isEpub()) {
+      const book = rendition.value.book
       const stored = localStorage.getItem(book.key())
-      const displayed = instance.display(stored || 1)
+      const displayed = rendition.value.display(stored || 1)
       book.ready
         .then(() => {
           return book.locations.generate(1600)
         })
         .then((locations) => {
           displayed.then(function () {
-            var currentLocation = instance.currentLocation()
+            var currentLocation = rendition.value.currentLocation()
             const currentPage = book.locations.percentageFromCfi(currentLocation.start.cfi)
             progress.value = Number((currentPage * 100).toFixed(2))
           })
-          instance.on('relocated', (location) => {
+          rendition.value.on('relocated', (location) => {
             const percent = book.locations.percentageFromCfi(location.start.cfi)
             const percentage = Number((percent * 100).toFixed(2))
             progress.value = percentage
@@ -58,12 +56,12 @@ export default function useProgress() {
           }
         })
     } else {
-      instance.addEventListener('relocate', onRelocate)
+      rendition.value.addEventListener('relocate', onRelocate)
     }
   })
 
   onBeforeUnmount(() => {
-    if (rendition.value.tagName) {
+    if (!isEpub) {
       rendition.value.removeEventListener('relocate', onRelocate)
     }
   })

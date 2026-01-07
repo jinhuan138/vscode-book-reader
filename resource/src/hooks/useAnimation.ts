@@ -1,14 +1,13 @@
 import { ref, watch } from 'vue'
 import useVscode from './useVscode'
-import useRendition from './useRendition'
+import { rendition, isEpub, onReady } from './useRendition'
 
 const vscode = useVscode()
-const [rendition] = useRendition()
 export default function useAnimation(isSidebar = false) {
   const defaultAnimation = JSON.parse(localStorage.getItem('animation') || 'false')
   const animation = ref<boolean>(defaultAnimation)
   const setAnimation = (animated: boolean) => {
-    if (!rendition.value.tagName) {
+    if (isEpub()) {
       rendition.value.hooks.content.register(() => {
         rendition.value.manager.container.style['scroll-behavior'] = animated ? 'smooth' : ''
       })
@@ -20,9 +19,7 @@ export default function useAnimation(isSidebar = false) {
       }
     }
   }
-  watch(rendition, (instance) => {
-    setAnimation(defaultAnimation)
-  })
+  onReady(() => setAnimation(defaultAnimation))
   watch(animation, (value) => {
     setAnimation(value)
     if (!isSidebar && vscode) {

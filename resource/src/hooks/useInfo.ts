@@ -1,10 +1,9 @@
 import ColorThief from 'colorthief'
-import { ref, watch } from 'vue'
+import { ref } from 'vue'
 import useVscode from './useVscode'
-import useRendition from './useRendition'
+import { rendition, isEpub, onReady } from './useRendition'
 const vscode = useVscode()
 
-const [rendition] = useRendition()
 const colorThief = new ColorThief()
 
 const rgbToHex = (r: number, g: number, b: number): string =>
@@ -49,11 +48,12 @@ const postMessage = (title: string) => {
 
 export default function useInfo() {
   const information = ref<any>(null)
-  watch(rendition, (instance) => {
-    if (!instance.tagName) {
-      const { book } = instance
+
+  onReady(() => {
+    if (isEpub()) {
+      const { book } = rendition.value
       book.ready.then(() => {
-        book.loaded.metadata.then(async (metadata) => {
+        book.loaded.metadata.then(async (metadata: any) => {
           const cover = await book.coverUrl()
           information.value = { ...metadata, cover }
           information.value.color = await getCoverColor(cover)
@@ -61,7 +61,7 @@ export default function useInfo() {
         })
       })
     } else {
-      const { book } = instance
+      const { book } = rendition.value
       information.value = book.metadata
       book.getCover?.().then(async (blob: Blob) => {
         const cover = URL.createObjectURL(blob)
@@ -72,6 +72,5 @@ export default function useInfo() {
       postMessage(bookName)
     }
   })
-
   return information
 }
