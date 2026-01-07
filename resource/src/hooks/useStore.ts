@@ -1,9 +1,8 @@
 /// <reference types="vite/client" />
 import { ref, watch, onBeforeUnmount } from 'vue'
-import useRendition from './useRendition'
-const [rendition] = useRendition()
+import { rendition, isEpub, onReady } from './useRendition'
 
-const defaultBook = 'files/啼笑因缘.mobi' //啼笑因缘.azw3
+const defaultBook = 'files/梵高手稿（典藏修订版）.azw3' //啼笑因缘.azw3
 const url = ref(import.meta.env.MODE === 'development' ? defaultBook : '')
 const type = ref('')
 
@@ -12,18 +11,17 @@ export default function useStore() {
     const bookKey = url.value
     localStorage.setItem(bookKey, event.detail.cfi)
   }
-
-  watch(rendition, (instance) => {
-    if (!instance.tagName) {
-      const bookKey = instance.book.key ? instance.book.key() : url.value
-      instance.on('relocated', (event: any) => {
+  onReady(() => {
+    if (isEpub()) {
+      const bookKey = rendition.value.book.key ? rendition.value.book.key() : url.value
+      rendition.value.on('relocated', (event: any) => {
         localStorage.setItem(bookKey, event.start.cfi)
       })
-      instance.display(localStorage.getItem(bookKey) || 0)
+      rendition.value.display(localStorage.getItem(bookKey) || 0)
     } else {
       const bookKey = url.value
-      instance?.goTo(localStorage.getItem(bookKey) || 0)
-      instance.addEventListener('relocate', onRelocate)
+      rendition.value?.goTo(localStorage.getItem(bookKey) || 0)
+      rendition.value.addEventListener('relocate', onRelocate)
     }
   })
 
@@ -38,7 +36,7 @@ export default function useStore() {
   )
 
   onBeforeUnmount(() => {
-    if (rendition.value?.tagName) {
+    if (!isEpub()) {
       rendition.value.removeEventListener('relocate', onRelocate)
     }
   })

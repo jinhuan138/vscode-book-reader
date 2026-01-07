@@ -1,17 +1,16 @@
-import { ref, watch } from 'vue'
-import useRendition from './useRendition'
-
-const [rendition] = useRendition()
+import { ref } from 'vue'
+import { rendition, isEpub, onReady } from './useRendition'
 
 export default function useToc() {
   const toc = ref([])
-  watch(rendition, (instance) => {
-    if (!instance!.tagName!) {
-      instance.book.loaded.navigation.then(({ toc: _toc }) => {
+
+  onReady(() => {
+    if (isEpub()) {
+      rendition.value.book.loaded.navigation.then(({ toc: _toc }) => {
         toc.value = _toc
       })
     } else {
-      toc.value = instance.book.toc
+      toc.value = rendition.value.book.toc
     }
   })
 

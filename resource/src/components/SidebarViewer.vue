@@ -1,7 +1,7 @@
 <template>
   <div v-show="showBook" :style="style">
-    <EpubView v-if="type === 'epub'" :url="url" :getRendition="setRendition" />
-    <BookView v-else :url="url" :getRendition="setRendition" />
+    <EpubView v-if="type === 'epub'" :url="url" :getRendition="(val) => (rendition = val)" />
+    <BookView v-else :url="url" :getRendition="(val) => (rendition = val)" />
     <!-- menu tree -->
     <el-popover placement="bottom" :popper-style="{ height: '80%' }" :width="300">
       <template #reference>
@@ -41,7 +41,7 @@ import { BookView } from 'vue-book-reader'
 import { Back, Close, Menu } from '@element-plus/icons-vue'
 import useStore from '@/hooks/useStore'
 import localforage from 'localforage'
-import useRendition from '@/hooks/useRendition'
+import { rendition, isEpub } from '@/hooks/useRendition'
 import useTheme from '@/hooks/useTheme'
 import useToc from '@/hooks/useToc'
 import useProgress from '@/hooks/useProgress'
@@ -64,8 +64,6 @@ const animation = useAnimation(true)
 const grayscale = useGrayscale(true)
 const information = useInfo()
 
-const [rendition, setRendition] = useRendition()
-
 const toc = useToc()
 
 const { progress, changeProgress, goBack } = useProgress()
@@ -84,7 +82,7 @@ const close = () => {
 }
 
 const onNodeClick = (item) => {
-  if (!rendition.value.tagName) {
+  if (isEpub()) {
     rendition.value?.display(item.cfi || item.href)
   } else {
     rendition.value?.goTo(item.href)

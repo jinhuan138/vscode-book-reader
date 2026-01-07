@@ -1,7 +1,7 @@
 <template>
   <div v-show="showBook" style="height: 100%" :style="style">
-    <epub-reader v-if="type === 'epub'" :url="url" :getRendition="initBook" />
-    <book-reader v-else :url="url" :getRendition="initBook" />
+    <epub-reader v-if="type === 'epub'" :url="url" :getRendition="(val) => (rendition = val)" />
+    <book-reader v-else :url="url" :getRendition="(val) => (rendition = val)" />
     <!-- footer -->
     <div class="footer">
       <div v-if="progressDisplay === 'chapter'" class="chapter" :title="chapter">
@@ -29,7 +29,7 @@ import { VueReader as EpubReader } from 'vue-reader'
 import { VueReader as BookReader } from 'vue-book-reader'
 import CodeInterface from './CodeInterface/Index.vue'
 import panel from './panel/Index.vue'
-import useRendition from '@/hooks/useRendition'
+import { rendition } from '@/hooks/useRendition'
 import useTheme from '@/hooks/useTheme'
 import useStore from '@/hooks/useStore'
 import useChapter from '@/hooks/useChapter'
@@ -43,10 +43,7 @@ import '@/hooks/useKeyboard'
 const { url, type } = useStore()
 const { showBook } = useDisguise()
 const { theme } = useTheme(false)
-const [rendition, setRendition] = useRendition()
-const initBook = (rendition) => {
-  setRendition(rendition)
-}
+
 const grayscale = useGrayscale()
 const style = computed(() => {
   return {

@@ -1,15 +1,12 @@
-import { ref } from 'vue'
-const rendition = ref<any>(null)
-function setRendition(instance: any) {
-  if (!instance.tagName) {
-    rendition.value = instance
-  } else {
-    instance.addEventListener('load', () => {
-      rendition.value = instance
-    })
-  }
+import { ref, watch } from 'vue'
+export const rendition = ref<any>(null)
+
+export const isEpub = () => !rendition.value?.tagName
+const listeners = new Set<() => void>()
+export function onReady(callback: () => void) {
+  listeners.add(callback)
 }
 
-export default function useRendition(): [typeof rendition, typeof setRendition] {
-  return [rendition, setRendition]
-}
+watch(rendition, () => {
+  listeners.forEach((cb) => cb())
+})

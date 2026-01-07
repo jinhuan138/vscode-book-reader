@@ -1,5 +1,5 @@
 import { reactive, watch, toRaw } from 'vue'
-import useRendition from './useRendition'
+import { rendition, isEpub, onReady } from './useRendition'
 import useVscode from './useVscode'
 
 const hexToRgba = (hex: string, opacity: number) => {
@@ -64,10 +64,9 @@ const defaultTheme = {
 const userTheme = localStorage.getItem('theme')
 const theme = reactive(userTheme ? JSON.parse(userTheme) : defaultTheme)
 
-const [rendition] = useRendition()
 const getCSS = ({ fontFamily, fontSize, textColor, backgroundColor, writingMode, textAlign, lineHeight, opacity }) => {
   return [
-  `
+    `
   * {
     font-family: ${fontFamily};
     font-size:  ${fontSize}%;
@@ -134,15 +133,16 @@ const getRule = ({ fontFamily, fontSize, textColor, writingMode, backgroundColor
   }
 }
 export default function useTheme(isSlider = false) {
-  const updatedTheme = (newTheme) => {
+  const updatedTheme = (newTheme: any) => {
     if (!rendition.value) return
-    if (!rendition.value.tagName) {
+    if (isEpub()) {
       rendition.value.getContents().forEach((content) => {
-        const rule = getRule(newTheme)
-        content.addStylesheetRules(rule)
+        content.addStylesheetRules(getRule(newTheme))
       })
     } else {
-      rendition.value.renderer?.setStyles && rendition.value.renderer.setStyles(getCSS(newTheme))
+      rendition.value.addEventListener('load', () => {
+        rendition.value.renderer?.setStyles && rendition.value.renderer.setStyles(getCSS(newTheme))
+      })
     }
     if (!isSlider && vscode) {
       vscode.postMessage({
@@ -214,16 +214,17 @@ export default function useTheme(isSlider = false) {
       updateThemeOpacity(theme, opacity)
     },
   )
-  watch(rendition, (instance) => {
+  onReady(() => {
     const style = toRaw(theme)
-    if (!instance.tagName) {
-      instance.hooks.content.register(() => updatedTheme(style))
-      instance.on('relocated', () => {
-        instance.hooks.content.register(() => updatedTheme(style))
+    if (isEpub()) {
+      rendition.value.hooks.content.register(() => updatedTheme(style))
+      rendition.value.on('relocated', () => {
+        rendition.value.hooks.content.register(() => updatedTheme(style))
       })
     } else {
       updatedTheme(style)
     }
   })
+
   return { theme, restore, textList, backgroundList, fontFamilyList, textAlignList }
 }

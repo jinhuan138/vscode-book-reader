@@ -124,7 +124,7 @@
     "localforage": "^1.10.0",
     "pdfjs-dist": "^5.4.530",
     "vue": "^3.4.26",
-    "vue-book-reader": "^1.2.0",
+    "vue-book-reader": "^1.2.2",
     "vue-easy-lightbox": "^1.19.0",
     "vue-reader": "^1.3.4"
   },
