@@ -29,12 +29,18 @@ document.body.onkeydown = function (event: KeyboardEvent) {
     event.preventDefault()
   }
 }
-export default function useDisguise() {
+export default function useDisguise(isSidebar = false) {
   watch(disguise, (enabled) => {
     if (!enabled) {
       showBook.value = true
     }
     localStorage.setItem('disguise', String(enabled))
+    if (!isSidebar && vscode) {
+      vscode.postMessage({
+        type: 'disguise',
+        content: enabled,
+      })
+    }
   })
   const codeLines = computed(() => {
     const generator = getCodeGenerator(fileType.value)
@@ -427,36 +433,36 @@ const randomNumber = () => {
  */
 const generateJavaScriptLine = (fileType: string): { c: string; v: string }[] => {
   // prettier-ignore
-  const patterns = 
-  [
-    [{ c: 'mtk5', v: 'const' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v:randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v:randomValue() },  { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk5', v: 'let' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v:randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v:randomValue() },  { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk5', v: 'var' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v:randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v:randomValue() },  { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk5', v: 'function' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v:randomFunctionName() }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v:randomParameters() },  { c: 'mtk1', v: ') {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'return' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v:randomValue() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '}' }],
-    [{ c: 'mtk5', v: 'if' }, { c: 'mtk1', v: ' (' }, { c: 'mtk9', v:randomCondition() }, { c: 'mtk1', v: ') {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v:randomVariableName() }, { c: 'mtk1', v: '.' }, { c: 'mtk15', v:randomMethod() }, { c: 'mtk1', v: '();' }],
-    [{ c: 'mtk1', v: '} ' }, { c: 'mtk5', v: 'else' }, { c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: 'console' }, { c: 'mtk1', v: '.' }, { c: 'mtk15', v: 'log' }, { c: 'mtk1', v: '(' }, { c: 'mtk11', v:randomString() }, { c: 'mtk1', v: ');' }],
-    [{ c: 'mtk4', v: '// ' }, { c: 'mtk4', v:randomComment() }],
-    [{ c: 'mtk5', v: 'import' }, { c: 'mtk1', v: ' { ' }, { c: 'mtk9', v:randomVariableName() }, { c: 'mtk1', v: ' } ' }, { c: 'mtk5', v: 'from' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: randomModuleName() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk5', v: 'export' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'default' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v:randomVariableName() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk5', v: 'const' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v:randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk5', v: 'async' }, { c: 'mtk1', v: ' () =>' }, { c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'try' }, { c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk1', v: '    ' }, { c: 'mtk5', v: 'const' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'result' }, { c: 'mtk1', v: ' = ' }, { c: 'mtk5', v: 'await' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v:randomAsyncCall() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '    ' }, { c: 'mtk5', v: 'return' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'result' }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '  } ' }, { c: 'mtk5', v: 'catch' }, { c: 'mtk1', v: ' (' }, { c: 'mtk9', v: 'error' }, { c: 'mtk1', v: ') {' }],
-    [{ c: 'mtk1', v: '    ' }, { c: 'mtk9', v: 'console' }, { c: 'mtk1', v: '.' }, { c: 'mtk15', v: 'error' }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: 'error' }, { c: 'mtk1', v: ');' }],
-    [{ c: 'mtk1', v: '  }' }],
-    [{ c: 'mtk5', v: 'class' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v:randomClassName() }, { c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk15', v: 'constructor' }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v:randomParameters() }, { c: 'mtk1', v: ') {' }],
-    [{ c: 'mtk1', v: '    ' }, { c: 'mtk5', v: 'this' }, { c: 'mtk1', v: '.' }, { c: 'mtk9', v:randomProperty() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v:randomValue() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '  }' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk15', v:randomMethod() }, { c: 'mtk1', v: '() {' }],
-    [{ c: 'mtk1', v: '    ' }, { c: 'mtk5', v: 'return' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'this' }, { c: 'mtk1', v: '.' }, { c: 'mtk9', v:randomProperty() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '  }' }]
-  ]
+  const patterns =
+    [
+      [{ c: 'mtk5', v: 'const' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk5', v: 'let' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk5', v: 'var' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk5', v: 'function' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomFunctionName() }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomParameters() }, { c: 'mtk1', v: ') {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'return' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '}' }],
+      [{ c: 'mtk5', v: 'if' }, { c: 'mtk1', v: ' (' }, { c: 'mtk9', v: randomCondition() }, { c: 'mtk1', v: ') {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: '.' }, { c: 'mtk15', v: randomMethod() }, { c: 'mtk1', v: '();' }],
+      [{ c: 'mtk1', v: '} ' }, { c: 'mtk5', v: 'else' }, { c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: 'console' }, { c: 'mtk1', v: '.' }, { c: 'mtk15', v: 'log' }, { c: 'mtk1', v: '(' }, { c: 'mtk11', v: randomString() }, { c: 'mtk1', v: ');' }],
+      [{ c: 'mtk4', v: '// ' }, { c: 'mtk4', v: randomComment() }],
+      [{ c: 'mtk5', v: 'import' }, { c: 'mtk1', v: ' { ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' } ' }, { c: 'mtk5', v: 'from' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: randomModuleName() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk5', v: 'export' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'default' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk5', v: 'const' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk5', v: 'async' }, { c: 'mtk1', v: ' () =>' }, { c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'try' }, { c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk1', v: '    ' }, { c: 'mtk5', v: 'const' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'result' }, { c: 'mtk1', v: ' = ' }, { c: 'mtk5', v: 'await' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomAsyncCall() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '    ' }, { c: 'mtk5', v: 'return' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'result' }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '  } ' }, { c: 'mtk5', v: 'catch' }, { c: 'mtk1', v: ' (' }, { c: 'mtk9', v: 'error' }, { c: 'mtk1', v: ') {' }],
+      [{ c: 'mtk1', v: '    ' }, { c: 'mtk9', v: 'console' }, { c: 'mtk1', v: '.' }, { c: 'mtk15', v: 'error' }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: 'error' }, { c: 'mtk1', v: ');' }],
+      [{ c: 'mtk1', v: '  }' }],
+      [{ c: 'mtk5', v: 'class' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomClassName() }, { c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk15', v: 'constructor' }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomParameters() }, { c: 'mtk1', v: ') {' }],
+      [{ c: 'mtk1', v: '    ' }, { c: 'mtk5', v: 'this' }, { c: 'mtk1', v: '.' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '  }' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk15', v: randomMethod() }, { c: 'mtk1', v: '() {' }],
+      [{ c: 'mtk1', v: '    ' }, { c: 'mtk5', v: 'return' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'this' }, { c: 'mtk1', v: '.' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '  }' }]
+    ]
   return getNextPattern(fileType, patterns)
 }
 
@@ -465,29 +471,29 @@ const generateJavaScriptLine = (fileType: string): { c: string; v: string }[] =>
  */
 const generateTypeScriptDefLine = (fileType: string): { c: string; v: string }[] => {
   // prettier-ignore
-  const patterns = 
-  [
-    [{ c: 'mtk4', v: '// ' }, { c: 'mtk4', v: randomComment() }],
-    [{ c: 'mtk5', v: 'declare' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'module' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: `'${randomModuleName()}'` }, { c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'export' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'interface' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomInterfaceName() }, { c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk1', v: '    ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ': ' }, { c: 'mtk16', v: randomType() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '    ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: '?: ' }, { c: 'mtk16', v: randomType() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '    ' }, { c: 'mtk15', v: randomMethod() }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomParameters() }, { c: 'mtk1', v: '): ' }, { c: 'mtk16', v: randomType() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '  }' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'export' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'type' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomTypeName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk16', v: randomType() }, { c: 'mtk1', v: ' | ' }, { c: 'mtk16', v: randomType() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'export' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'function' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomFunctionName() }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomParameters() }, { c: 'mtk1', v: '): ' }, { c: 'mtk16', v: randomType() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'export' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'const' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ': ' }, { c: 'mtk16', v: randomType() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '}' }],
-    [{ c: 'mtk5', v: 'declare' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'global' }, { c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'namespace' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomModuleName() }, { c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk1', v: '    ' }, { c: 'mtk5', v: 'interface' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomInterfaceName() }, { c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk1', v: '      ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ': ' }, { c: 'mtk16', v: randomType() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '    }' }],
-    [{ c: 'mtk1', v: '  }' }],
-    [{ c: 'mtk1', v: '}' }],
-    [{ c: 'mtk5', v: 'export' }, { c: 'mtk1', v: ' = ' }, { c: 'mtk9', v: randomModuleName() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk5', v: 'export' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'as' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'namespace' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomModuleName() }, { c: 'mtk1', v: ';' }]
-  ]
+  const patterns =
+    [
+      [{ c: 'mtk4', v: '// ' }, { c: 'mtk4', v: randomComment() }],
+      [{ c: 'mtk5', v: 'declare' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'module' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: `'${randomModuleName()}'` }, { c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'export' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'interface' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomInterfaceName() }, { c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk1', v: '    ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ': ' }, { c: 'mtk16', v: randomType() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '    ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: '?: ' }, { c: 'mtk16', v: randomType() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '    ' }, { c: 'mtk15', v: randomMethod() }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomParameters() }, { c: 'mtk1', v: '): ' }, { c: 'mtk16', v: randomType() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '  }' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'export' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'type' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomTypeName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk16', v: randomType() }, { c: 'mtk1', v: ' | ' }, { c: 'mtk16', v: randomType() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'export' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'function' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomFunctionName() }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomParameters() }, { c: 'mtk1', v: '): ' }, { c: 'mtk16', v: randomType() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'export' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'const' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ': ' }, { c: 'mtk16', v: randomType() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '}' }],
+      [{ c: 'mtk5', v: 'declare' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'global' }, { c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'namespace' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomModuleName() }, { c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk1', v: '    ' }, { c: 'mtk5', v: 'interface' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomInterfaceName() }, { c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk1', v: '      ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ': ' }, { c: 'mtk16', v: randomType() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '    }' }],
+      [{ c: 'mtk1', v: '  }' }],
+      [{ c: 'mtk1', v: '}' }],
+      [{ c: 'mtk5', v: 'export' }, { c: 'mtk1', v: ' = ' }, { c: 'mtk9', v: randomModuleName() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk5', v: 'export' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'as' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'namespace' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomModuleName() }, { c: 'mtk1', v: ';' }]
+    ]
   return getNextPattern(fileType, patterns)
 }
 
@@ -496,34 +502,34 @@ const generateTypeScriptDefLine = (fileType: string): { c: string; v: string }[]
  */
 const generateCSharpLine = (fileType: string): { c: string; v: string }[] => {
   // prettier-ignore
-  const patterns = 
-  [
-    [{ c: 'mtk5', v: 'using' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'System' }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk5', v: 'using' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'System.Collections.Generic' }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk5', v: 'using' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'System.Linq' }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk5', v: 'namespace' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomModuleName() }, { c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'public' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'class' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomClassName() }, { c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk1', v: '    ' }, { c: 'mtk5', v: 'private' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomCSharpType() }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' { get; set; }' }],
-    [{ c: 'mtk1', v: '    ' }, { c: 'mtk5', v: 'public' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomClassName() }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomCSharpParameters() }, { c: 'mtk1', v: ') {' }],
-    [{ c: 'mtk1', v: '      ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '    }' }],
-    [{ c: 'mtk1', v: '    ' }, { c: 'mtk5', v: 'public' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomCSharpType() }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomMethod() }, { c: 'mtk1', v: '() {' }],
-    [{ c: 'mtk1', v: '      ' }, { c: 'mtk5', v: 'return' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '    }' }],
-    [{ c: 'mtk1', v: '    ' }, { c: 'mtk5', v: 'public' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'void' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomMethod() }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomCSharpParameters() }, { c: 'mtk1', v: ') {' }],
-    [{ c: 'mtk1', v: '      ' }, { c: 'mtk5', v: 'this' }, { c: 'mtk1', v: '.' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '    }' }],
-    [{ c: 'mtk1', v: '  }' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk4', v: '// ' }, { c: 'mtk4', v: randomComment() }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'if' }, { c: 'mtk1', v: ' (' }, { c: 'mtk9', v: randomCondition() }, { c: 'mtk1', v: ') {' }],
-    [{ c: 'mtk1', v: '    ' }, { c: 'mtk9', v: 'Console' }, { c: 'mtk1', v: '.' }, { c: 'mtk15', v: 'WriteLine' }, { c: 'mtk1', v: '(' }, { c: 'mtk11', v: randomString() }, { c: 'mtk1', v: ');' }],
-    [{ c: 'mtk1', v: '  } ' }, { c: 'mtk5', v: 'else' }, { c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk1', v: '    ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: '.' }, { c: 'mtk15', v: randomMethod() }, { c: 'mtk1', v: '();' }],
-    [{ c: 'mtk1', v: '  }' }],
-    [{ c: 'mtk1', v: '}' }],
-    [{ c: 'mtk5', v: 'var' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk5', v: 'new' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomClassName() }, { c: 'mtk1', v: '();' }],
-    [{ c: 'mtk16', v: 'List' }, { c: 'mtk1', v: '<' }, { c: 'mtk16', v: randomCSharpType() }, { c: 'mtk1', v: '> ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk5', v: 'new' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: 'List' }, { c: 'mtk1', v: '<' }, { c: 'mtk16', v: randomCSharpType() }, { c: 'mtk1', v: '>();' }]
-  ]
+  const patterns =
+    [
+      [{ c: 'mtk5', v: 'using' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'System' }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk5', v: 'using' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'System.Collections.Generic' }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk5', v: 'using' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'System.Linq' }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk5', v: 'namespace' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomModuleName() }, { c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'public' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'class' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomClassName() }, { c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk1', v: '    ' }, { c: 'mtk5', v: 'private' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomCSharpType() }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' { get; set; }' }],
+      [{ c: 'mtk1', v: '    ' }, { c: 'mtk5', v: 'public' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomClassName() }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomCSharpParameters() }, { c: 'mtk1', v: ') {' }],
+      [{ c: 'mtk1', v: '      ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '    }' }],
+      [{ c: 'mtk1', v: '    ' }, { c: 'mtk5', v: 'public' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomCSharpType() }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomMethod() }, { c: 'mtk1', v: '() {' }],
+      [{ c: 'mtk1', v: '      ' }, { c: 'mtk5', v: 'return' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '    }' }],
+      [{ c: 'mtk1', v: '    ' }, { c: 'mtk5', v: 'public' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'void' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomMethod() }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomCSharpParameters() }, { c: 'mtk1', v: ') {' }],
+      [{ c: 'mtk1', v: '      ' }, { c: 'mtk5', v: 'this' }, { c: 'mtk1', v: '.' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '    }' }],
+      [{ c: 'mtk1', v: '  }' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk4', v: '// ' }, { c: 'mtk4', v: randomComment() }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'if' }, { c: 'mtk1', v: ' (' }, { c: 'mtk9', v: randomCondition() }, { c: 'mtk1', v: ') {' }],
+      [{ c: 'mtk1', v: '    ' }, { c: 'mtk9', v: 'Console' }, { c: 'mtk1', v: '.' }, { c: 'mtk15', v: 'WriteLine' }, { c: 'mtk1', v: '(' }, { c: 'mtk11', v: randomString() }, { c: 'mtk1', v: ');' }],
+      [{ c: 'mtk1', v: '  } ' }, { c: 'mtk5', v: 'else' }, { c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk1', v: '    ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: '.' }, { c: 'mtk15', v: randomMethod() }, { c: 'mtk1', v: '();' }],
+      [{ c: 'mtk1', v: '  }' }],
+      [{ c: 'mtk1', v: '}' }],
+      [{ c: 'mtk5', v: 'var' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk5', v: 'new' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomClassName() }, { c: 'mtk1', v: '();' }],
+      [{ c: 'mtk16', v: 'List' }, { c: 'mtk1', v: '<' }, { c: 'mtk16', v: randomCSharpType() }, { c: 'mtk1', v: '> ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk5', v: 'new' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: 'List' }, { c: 'mtk1', v: '<' }, { c: 'mtk16', v: randomCSharpType() }, { c: 'mtk1', v: '>();' }]
+    ]
   return getNextPattern(fileType, patterns)
 }
 
@@ -532,29 +538,29 @@ const generateCSharpLine = (fileType: string): { c: string; v: string }[] => {
  */
 const generateCHeaderLine = (fileType: string): { c: string; v: string }[] => {
   // prettier-ignore
-  const patterns = 
-  [
-    [{ c: 'mtk17', v: '#include' }, { c: 'mtk1', v: ' <' }, { c: 'mtk11', v: randomHeaderName() }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk17', v: '#include' }, { c: 'mtk1', v: ' "' }, { c: 'mtk11', v: `${randomFileName()}.h"` }, { c: 'mtk1', v: '"' }],
-    [{ c: 'mtk17', v: '#define' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' ' }, { c: 'mtk10', v: randomNumber() }],
-    [{ c: 'mtk4', v: '/* ' }, { c: 'mtk4', v: randomComment() }, { c: 'mtk4', v: ' */' }],
-    [{ c: 'mtk5', v: 'typedef' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'struct' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk16', v: randomCppType() }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk16', v: randomCppType() }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '} ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk5', v: 'typedef' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomCppType() }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk5', v: 'extern' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomCppType() }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk16', v: randomCppType() }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomFunctionName() }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomCppParameters() }, { c: 'mtk1', v: ');' }],
-    [{ c: 'mtk5', v: 'void' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomFunctionName() }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomCppParameters() }, { c: 'mtk1', v: ');' }],
-    [{ c: 'mtk17', v: '#ifdef' }, { c: 'mtk1', v: ' ' }, { c: 'mtk17', v: '__cplusplus' }],
-    [{ c: 'mtk5', v: 'extern' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: '"C"' }, { c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk17', v: '#endif' }],
-    [{ c: 'mtk5', v: 'enum' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomEnumValue() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk10', v: randomNumber() }, { c: 'mtk1', v: ',' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomEnumValue() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk10', v: randomNumber() }],
-    [{ c: 'mtk1', v: '};' }],
-    [{ c: 'mtk17', v: '#endif' }]
-  ]
+  const patterns =
+    [
+      [{ c: 'mtk17', v: '#include' }, { c: 'mtk1', v: ' <' }, { c: 'mtk11', v: randomHeaderName() }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk17', v: '#include' }, { c: 'mtk1', v: ' "' }, { c: 'mtk11', v: `${randomFileName()}.h"` }, { c: 'mtk1', v: '"' }],
+      [{ c: 'mtk17', v: '#define' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' ' }, { c: 'mtk10', v: randomNumber() }],
+      [{ c: 'mtk4', v: '/* ' }, { c: 'mtk4', v: randomComment() }, { c: 'mtk4', v: ' */' }],
+      [{ c: 'mtk5', v: 'typedef' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'struct' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk16', v: randomCppType() }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk16', v: randomCppType() }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '} ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk5', v: 'typedef' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomCppType() }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk5', v: 'extern' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomCppType() }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk16', v: randomCppType() }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomFunctionName() }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomCppParameters() }, { c: 'mtk1', v: ');' }],
+      [{ c: 'mtk5', v: 'void' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomFunctionName() }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomCppParameters() }, { c: 'mtk1', v: ');' }],
+      [{ c: 'mtk17', v: '#ifdef' }, { c: 'mtk1', v: ' ' }, { c: 'mtk17', v: '__cplusplus' }],
+      [{ c: 'mtk5', v: 'extern' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: '"C"' }, { c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk17', v: '#endif' }],
+      [{ c: 'mtk5', v: 'enum' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomEnumValue() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk10', v: randomNumber() }, { c: 'mtk1', v: ',' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomEnumValue() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk10', v: randomNumber() }],
+      [{ c: 'mtk1', v: '};' }],
+      [{ c: 'mtk17', v: '#endif' }]
+    ]
   return getNextPattern(fileType, patterns)
 }
 
@@ -563,31 +569,31 @@ const generateCHeaderLine = (fileType: string): { c: string; v: string }[] => {
  */
 const generateCppHeaderLine = (fileType: string): { c: string; v: string }[] => {
   // prettier-ignore
-  const patterns = 
-  [
-    [{ c: 'mtk17', v: '#pragma' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'once' }],
-    [{ c: 'mtk17', v: '#include' }, { c: 'mtk1', v: ' <' }, { c: 'mtk11', v: randomHeaderName() }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk17', v: '#include' }, { c: 'mtk1', v: ' "' }, { c: 'mtk11', v: `${randomFileName()}.h"` }, { c: 'mtk1', v: '"' }],
-    [{ c: 'mtk4', v: '/// ' }, { c: 'mtk4', v: randomComment() }],
-    [{ c: 'mtk5', v: 'namespace' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomModuleName() }, { c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk5', v: 'class' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomClassName() }, { c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk5', v: 'public' }, { c: 'mtk1', v: ':' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk16', v: randomClassName() }, { c: 'mtk1', v: '() = ' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'default' }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'virtual' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: '~' }, { c: 'mtk16', v: randomClassName() }, { c: 'mtk1', v: '() = ' }, { c: 'mtk1', v: ' ' }, { c: 'mt5', v: 'default' }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk16', v: randomCppType() }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomMethod() }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomCppParameters() }, { c: 'mtk1', v: ') ' }, { c: 'mt5', v: 'const' }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk16', v: randomCppType() }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomMethod() }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomCppParameters() }, { c: 'mtk1', v: ');' }],
-    [{ c: 'mtk5', v: 'protected' }, { c: 'mtk1', v: ':' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk16', v: randomCppType() }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk5', v: 'private' }, { c: 'mtk1', v: ':' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'void' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomMethod() }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomCppParameters() }, { c: 'mtk1', v: ');' }],
-    [{ c: 'mtk1', v: '};' }],
-    [{ c: 'mtk5', v: 'template' }, { c: 'mtk1', v: ' <' }, { c: 'mtk5', v: 'typename' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: 'T' }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk5', v: 'class' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomClassName() }, { c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'explicit' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomClassName() }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomCppParameters() }, { c: 'mtk1', v: ');' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk16', v: 'T' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomMethod() }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomCppParameters() }, { c: 'mtk1', v: ');' }],
-    [{ c: 'mtk1', v: '};' }],
-    [{ c: 'mtk1', v: '} // ' }, { c: 'mtk9', v: 'namespace ' }, { c: 'mtk9', v: randomModuleName() }]
-  ]
+  const patterns =
+    [
+      [{ c: 'mtk17', v: '#pragma' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'once' }],
+      [{ c: 'mtk17', v: '#include' }, { c: 'mtk1', v: ' <' }, { c: 'mtk11', v: randomHeaderName() }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk17', v: '#include' }, { c: 'mtk1', v: ' "' }, { c: 'mtk11', v: `${randomFileName()}.h"` }, { c: 'mtk1', v: '"' }],
+      [{ c: 'mtk4', v: '/// ' }, { c: 'mtk4', v: randomComment() }],
+      [{ c: 'mtk5', v: 'namespace' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomModuleName() }, { c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk5', v: 'class' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomClassName() }, { c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk5', v: 'public' }, { c: 'mtk1', v: ':' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk16', v: randomClassName() }, { c: 'mtk1', v: '() = ' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'default' }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'virtual' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: '~' }, { c: 'mtk16', v: randomClassName() }, { c: 'mtk1', v: '() = ' }, { c: 'mtk1', v: ' ' }, { c: 'mt5', v: 'default' }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk16', v: randomCppType() }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomMethod() }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomCppParameters() }, { c: 'mtk1', v: ') ' }, { c: 'mt5', v: 'const' }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk16', v: randomCppType() }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomMethod() }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomCppParameters() }, { c: 'mtk1', v: ');' }],
+      [{ c: 'mtk5', v: 'protected' }, { c: 'mtk1', v: ':' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk16', v: randomCppType() }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk5', v: 'private' }, { c: 'mtk1', v: ':' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'void' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomMethod() }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomCppParameters() }, { c: 'mtk1', v: ');' }],
+      [{ c: 'mtk1', v: '};' }],
+      [{ c: 'mtk5', v: 'template' }, { c: 'mtk1', v: ' <' }, { c: 'mtk5', v: 'typename' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: 'T' }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk5', v: 'class' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomClassName() }, { c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'explicit' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomClassName() }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomCppParameters() }, { c: 'mtk1', v: ');' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk16', v: 'T' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomMethod() }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomCppParameters() }, { c: 'mtk1', v: ');' }],
+      [{ c: 'mtk1', v: '};' }],
+      [{ c: 'mtk1', v: '} // ' }, { c: 'mtk9', v: 'namespace ' }, { c: 'mtk9', v: randomModuleName() }]
+    ]
   return getNextPattern(fileType, patterns)
 }
 
@@ -596,39 +602,39 @@ const generateCppHeaderLine = (fileType: string): { c: string; v: string }[] => 
  */
 const generateScssLine = (fileType: string): { c: string; v: string }[] => {
   // prettier-ignore
-  const patterns = 
-  [
-    [{ c: 'mtk12', v: '$' }, { c: 'mtk13', v: randomVariableName() }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomCssValue() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk5', v: '@mixin' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomFunctionName() }, { c: 'mtk1', v: ' (' }, { c: 'mtk9', v: randomParameters() }, { c: 'mtk1', v: ') {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk14', v: randomCssProperty() }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomCssValue() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '}' }],
-    [{ c: 'mtk12', v: '.' }, { c: 'mtk13', v: randomCssClass() }, { c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk14', v: randomCssProperty() }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomCssValue() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk12', v: '&' }, { c: 'mtk12', v: ':hover' }, { c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk1', v: '    ' }, { c: 'mtk14', v: randomCssProperty() }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomCssValue() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '  }' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: '@include' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomFunctionName() }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomParameters() }, { c: 'mtk1', v: ');' }],
-    [{ c: 'mtk1', v: '}' }],
-    [{ c: 'mtk12', v: '.' }, { c: 'mtk13', v: randomCssClass() }, { c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk12', v: '.' }, { c: 'mtk13', v: randomCssClass() }, { c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk1', v: '    ' }, { c: 'mtk14', v: randomCssProperty() }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomCssValue() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '  }' }],
-    [{ c: 'mtk1', v: '}' }],
-    [{ c: 'mtk5', v: '@function' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomFunctionName() }, { c: 'mtk1', v: ' (' }, { c: 'mtk9', v: randomParameters() }, { c: 'mtk1', v: ') {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mt5', v: '@return' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: randomCssValue() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '}' }],
-    [{ c: 'mtk5', v: '@each' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'in' }, { c: 'mtk1', v: ' (' }, { c: 'mtk11', v: randomCssValue() }, { c: 'mtk1', v: ', ' }, { c: 'mtk11', v: randomCssValue() }, { c: 'mtk1', v: ') {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk12', v: '.' }, { c: 'mtk13', v: randomCssClass() }, { c: 'mtk1', v: '-' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk1', v: '    ' }, { c: 'mtk14', v: randomCssProperty() }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomCssValue() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '  }' }],
-    [{ c: 'mtk1', v: '}' }],
-    [{ c: 'mtk5', v: '@if' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomCondition() }, { c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk14', v: randomCssProperty() }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomCssValue() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '} ' }, { c: 'mtk5', v: '@else' }, { c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk14', v: randomCssProperty() }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomCssValue() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '}' }],
-    [{ c: 'mtk4', v: '/* ' }, { c: 'mtk4', v: randomComment() }, { c: 'mtk4', v: ' */' }]
-  ]
+  const patterns =
+    [
+      [{ c: 'mtk12', v: '$' }, { c: 'mtk13', v: randomVariableName() }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomCssValue() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk5', v: '@mixin' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomFunctionName() }, { c: 'mtk1', v: ' (' }, { c: 'mtk9', v: randomParameters() }, { c: 'mtk1', v: ') {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk14', v: randomCssProperty() }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomCssValue() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '}' }],
+      [{ c: 'mtk12', v: '.' }, { c: 'mtk13', v: randomCssClass() }, { c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk14', v: randomCssProperty() }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomCssValue() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk12', v: '&' }, { c: 'mtk12', v: ':hover' }, { c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk1', v: '    ' }, { c: 'mtk14', v: randomCssProperty() }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomCssValue() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '  }' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: '@include' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomFunctionName() }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomParameters() }, { c: 'mtk1', v: ');' }],
+      [{ c: 'mtk1', v: '}' }],
+      [{ c: 'mtk12', v: '.' }, { c: 'mtk13', v: randomCssClass() }, { c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk12', v: '.' }, { c: 'mtk13', v: randomCssClass() }, { c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk1', v: '    ' }, { c: 'mtk14', v: randomCssProperty() }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomCssValue() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '  }' }],
+      [{ c: 'mtk1', v: '}' }],
+      [{ c: 'mtk5', v: '@function' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomFunctionName() }, { c: 'mtk1', v: ' (' }, { c: 'mtk9', v: randomParameters() }, { c: 'mtk1', v: ') {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mt5', v: '@return' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: randomCssValue() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '}' }],
+      [{ c: 'mtk5', v: '@each' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'in' }, { c: 'mtk1', v: ' (' }, { c: 'mtk11', v: randomCssValue() }, { c: 'mtk1', v: ', ' }, { c: 'mtk11', v: randomCssValue() }, { c: 'mtk1', v: ') {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk12', v: '.' }, { c: 'mtk13', v: randomCssClass() }, { c: 'mtk1', v: '-' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk1', v: '    ' }, { c: 'mtk14', v: randomCssProperty() }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomCssValue() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '  }' }],
+      [{ c: 'mtk1', v: '}' }],
+      [{ c: 'mtk5', v: '@if' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomCondition() }, { c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk14', v: randomCssProperty() }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomCssValue() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '} ' }, { c: 'mtk5', v: '@else' }, { c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk14', v: randomCssProperty() }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomCssValue() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '}' }],
+      [{ c: 'mtk4', v: '/* ' }, { c: 'mtk4', v: randomComment() }, { c: 'mtk4', v: ' */' }]
+    ]
   return getNextPattern(fileType, patterns)
 }
 
@@ -637,38 +643,38 @@ const generateScssLine = (fileType: string): { c: string; v: string }[] => {
  */
 const generateLessLine = (fileType: string): { c: string; v: string }[] => {
   // prettier-ignore
-  const patterns = 
-  [
-    [{ c: 'mtk12', v: '@' }, { c: 'mtk13', v: randomVariableName() }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomCssValue() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk12', v: '.' }, { c: 'mtk13', v: randomCssClass() }, { c: 'mtk1', v: ' (' }, { c: 'mtk9', v: randomParameters() }, { c: 'mtk1', v: ') {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk14', v: randomCssProperty() }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomCssValue() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '}' }],
-    [{ c: 'mtk12', v: '.' }, { c: 'mtk13', v: randomCssClass() }, { c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk14', v: randomCssProperty() }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomCssValue() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk14', v: randomCssProperty() }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomCssValue() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk12', v: '&' }, { c: 'mtk12', v: ':hover' }, { c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk1', v: '    ' }, { c: 'mtk14', v: randomCssProperty() }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomCssValue() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '  }' }],
-    [{ c: 'mtk1', v: '}' }],
-    [{ c: 'mtk12', v: '.' }, { c: 'mtk13', v: randomCssClass() }, { c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk12', v: '.' }, { c: 'mtk13', v: randomCssClass() }, { c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk1', v: '    ' }, { c: 'mtk14', v: randomCssProperty() }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomCssValue() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '  }' }],
-    [{ c: 'mtk1', v: '}' }],
-    [{ c: 'mtk5', v: '@import' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: `'${randomFileName()}.less'` }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk12', v: '#gradient' }, { c: 'mtk1', v: ' (' }, { c: 'mt9', v: '@color' }, { c: 'mtk1', v: ') {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk14', v: 'background' }, { c: 'mtk1', v: ': ' }, { c: 'mt9', v: '@color' }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '}' }],
-    [{ c: 'mtk12', v: '.' }, { c: 'mtk13', v: randomCssClass() }, { c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk14', v: 'background' }, { c: 'mtk1', v: ': ' }, { c: 'mtk12', v: '#gradient' }, { c: 'mtk1', v: '(' }, { c: 'mtk11', v: randomCssValue() }, { c: 'mtk1', v: ');' }],
-    [{ c: 'mtk1', v: '}' }],
-    [{ c: 'mtk5', v: '@media' }, { c: 'mtk1', v: ' ' }, { c: 'mt5', v: 'screen' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'and' }, { c: 'mtk1', v: ' (' }, { c: 'mtk14', v: 'max-width' }, { c: 'mtk1', v: ': ' }, { c: 'mtk10', v: `${randomNumber()}px` }, { c: 'mtk1', v: ') {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk12', v: '.' }, { c: 'mtk13', v: randomCssClass() }, { c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk1', v: '    ' }, { c: 'mtk14', v: randomCssProperty() }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomCssValue() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '  }' }],
-    [{ c: 'mtk1', v: '}' }],
-    [{ c: 'mtk4', v: '/* ' }, { c: 'mtk4', v: randomComment() }, { c: 'mtk4', v: ' */' }]
-  ]
+  const patterns =
+    [
+      [{ c: 'mtk12', v: '@' }, { c: 'mtk13', v: randomVariableName() }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomCssValue() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk12', v: '.' }, { c: 'mtk13', v: randomCssClass() }, { c: 'mtk1', v: ' (' }, { c: 'mtk9', v: randomParameters() }, { c: 'mtk1', v: ') {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk14', v: randomCssProperty() }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomCssValue() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '}' }],
+      [{ c: 'mtk12', v: '.' }, { c: 'mtk13', v: randomCssClass() }, { c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk14', v: randomCssProperty() }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomCssValue() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk14', v: randomCssProperty() }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomCssValue() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk12', v: '&' }, { c: 'mtk12', v: ':hover' }, { c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk1', v: '    ' }, { c: 'mtk14', v: randomCssProperty() }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomCssValue() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '  }' }],
+      [{ c: 'mtk1', v: '}' }],
+      [{ c: 'mtk12', v: '.' }, { c: 'mtk13', v: randomCssClass() }, { c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk12', v: '.' }, { c: 'mtk13', v: randomCssClass() }, { c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk1', v: '    ' }, { c: 'mtk14', v: randomCssProperty() }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomCssValue() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '  }' }],
+      [{ c: 'mtk1', v: '}' }],
+      [{ c: 'mtk5', v: '@import' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: `'${randomFileName()}.less'` }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk12', v: '#gradient' }, { c: 'mtk1', v: ' (' }, { c: 'mt9', v: '@color' }, { c: 'mtk1', v: ') {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk14', v: 'background' }, { c: 'mtk1', v: ': ' }, { c: 'mt9', v: '@color' }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '}' }],
+      [{ c: 'mtk12', v: '.' }, { c: 'mtk13', v: randomCssClass() }, { c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk14', v: 'background' }, { c: 'mtk1', v: ': ' }, { c: 'mtk12', v: '#gradient' }, { c: 'mtk1', v: '(' }, { c: 'mtk11', v: randomCssValue() }, { c: 'mtk1', v: ');' }],
+      [{ c: 'mtk1', v: '}' }],
+      [{ c: 'mtk5', v: '@media' }, { c: 'mtk1', v: ' ' }, { c: 'mt5', v: 'screen' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'and' }, { c: 'mtk1', v: ' (' }, { c: 'mtk14', v: 'max-width' }, { c: 'mtk1', v: ': ' }, { c: 'mtk10', v: `${randomNumber()}px` }, { c: 'mtk1', v: ') {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk12', v: '.' }, { c: 'mtk13', v: randomCssClass() }, { c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk1', v: '    ' }, { c: 'mtk14', v: randomCssProperty() }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomCssValue() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '  }' }],
+      [{ c: 'mtk1', v: '}' }],
+      [{ c: 'mtk4', v: '/* ' }, { c: 'mtk4', v: randomComment() }, { c: 'mtk4', v: ' */' }]
+    ]
   return getNextPattern(fileType, patterns)
 }
 
@@ -677,37 +683,37 @@ const generateLessLine = (fileType: string): { c: string; v: string }[] => {
  */
 const generateHtmlLine = (fileType: string): { c: string; v: string }[] => {
   // prettier-ignore
-  const patterns = 
-  [
-    [{ c: 'mtk1', v: '<!' }, { c: 'mtk18', v: 'DOCTYPE' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'html' }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk1', v: '<' }, { c: 'mtk18', v: 'html' }, { c: 'mtk1', v: ' ' }, { c: 'mtk19', v: 'lang' }, { c: 'mtk1', v: '=' }, { c: 'mtk11', v: '"en"' }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk1', v: '<' }, { c: 'mtk18', v: 'head' }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk1', v: '  <' }, { c: 'mtk18', v: 'meta' }, { c: 'mtk1', v: ' ' }, { c: 'mtk19', v: 'charset' }, { c: 'mtk1', v: '=' }, { c: 'mtk11', v: '"UTF-8"' }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk1', v: '  <' }, { c: 'mtk18', v: 'meta' }, { c: 'mtk1', v: ' ' }, { c: 'mtk19', v: 'name' }, { c: 'mtk1', v: '=' }, { c: 'mtk11', v: '"viewport"' }, { c: 'mtk1', v: ' ' }, { c: 'mtk19', v: 'content' }, { c: 'mtk1', v: '=' }, { c: 'mtk11', v: '"width=device-width, initial-scale=1.0"' }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk1', v: '  <' }, { c: 'mtk18', v: 'title' }, { c: 'mtk1', v: '>' }, { c: 'mtk11', v: randomString() }, { c: 'mtk1', v: '</' }, { c: 'mtk18', v: 'title' }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk1', v: '  <' }, { c: 'mtk18', v: 'link' }, { c: 'mtk1', v: ' ' }, { c: 'mtk19', v: 'rel' }, { c: 'mtk1', v: '=' }, { c: 'mtk11', v: '"stylesheet"' }, { c: 'mtk1', v: ' ' }, { c: 'mtk19', v: 'href' }, { c: 'mtk1', v: '=' }, { c: 'mtk11', v: `"${randomFileName()}.css"` }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk1', v: '</' }, { c: 'mtk18', v: 'head' }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk1', v: '<' }, { c: 'mtk18', v: 'body' }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk1', v: '  <' }, { c: 'mtk18', v: 'header' }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk1', v: '    <' }, { c: 'mtk18', v: 'nav' }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk1', v: '      <' }, { c: 'mtk18', v: 'ul' }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk1', v: '        <' }, { c: 'mtk18', v: 'li' }, { c: 'mtk1', v: '>' }, { c: 'mtk11', v: randomString() }, { c: 'mtk1', v: '</' }, { c: 'mtk18', v: 'li' }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk1', v: '      </' }, { c: 'mtk18', v: 'ul' }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk1', v: '    </' }, { c: 'mtk18', v: 'nav' }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk1', v: '  </' }, { c: 'mtk18', v: 'header' }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk1', v: '  <' }, { c: 'mtk18', v: 'main' }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk1', v: '    <' }, { c: 'mtk18', v: 'section' }, { c: 'mtk1', v: ' ' }, { c: 'mtk19', v: 'class' }, { c: 'mtk1', v: '=' }, { c: 'mtk11', v: `"${randomCssClass()}"` }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk1', v: '      <' }, { c: 'mtk18', v: 'h1' }, { c: 'mtk1', v: '>' }, { c: 'mtk11', v: randomString() }, { c: 'mtk1', v: '</' }, { c: 'mtk18', v: 'h1' }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk1', v: '      <' }, { c: 'mtk18', v: 'p' }, { c: 'mtk1', v: '>' }, { c: 'mtk11', v: randomString() }, { c: 'mtk1', v: '</' }, { c: 'mtk18', v: 'p' }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk1', v: '    </' }, { c: 'mtk18', v: 'section' }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk1', v: '  </' }, { c: 'mtk18', v: 'main' }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk1', v: '  <' }, { c: 'mtk18', v: 'footer' }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk1', v: '    <' }, { c: 'mtk18', v: 'p' }, { c: 'mtk1', v: '>&copy; ' }, { c: 'mtk10', v: new Date().getFullYear() }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: randomString() }, { c: 'mtk1', v: '</' }, { c: 'mtk18', v: 'p' }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk1', v: '  </' }, { c: 'mtk18', v: 'footer' }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk1', v: '</' }, { c: 'mtk18', v: 'body' }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk1', v: '</' }, { c: 'mtk18', v: 'html' }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk4', v: '<!-- ' }, { c: 'mtk4', v: randomComment() }, { c: 'mtk4', v: ' -->' }]
-  ]
+  const patterns =
+    [
+      [{ c: 'mtk1', v: '<!' }, { c: 'mtk18', v: 'DOCTYPE' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'html' }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk1', v: '<' }, { c: 'mtk18', v: 'html' }, { c: 'mtk1', v: ' ' }, { c: 'mtk19', v: 'lang' }, { c: 'mtk1', v: '=' }, { c: 'mtk11', v: '"en"' }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk1', v: '<' }, { c: 'mtk18', v: 'head' }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk1', v: '  <' }, { c: 'mtk18', v: 'meta' }, { c: 'mtk1', v: ' ' }, { c: 'mtk19', v: 'charset' }, { c: 'mtk1', v: '=' }, { c: 'mtk11', v: '"UTF-8"' }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk1', v: '  <' }, { c: 'mtk18', v: 'meta' }, { c: 'mtk1', v: ' ' }, { c: 'mtk19', v: 'name' }, { c: 'mtk1', v: '=' }, { c: 'mtk11', v: '"viewport"' }, { c: 'mtk1', v: ' ' }, { c: 'mtk19', v: 'content' }, { c: 'mtk1', v: '=' }, { c: 'mtk11', v: '"width=device-width, initial-scale=1.0"' }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk1', v: '  <' }, { c: 'mtk18', v: 'title' }, { c: 'mtk1', v: '>' }, { c: 'mtk11', v: randomString() }, { c: 'mtk1', v: '</' }, { c: 'mtk18', v: 'title' }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk1', v: '  <' }, { c: 'mtk18', v: 'link' }, { c: 'mtk1', v: ' ' }, { c: 'mtk19', v: 'rel' }, { c: 'mtk1', v: '=' }, { c: 'mtk11', v: '"stylesheet"' }, { c: 'mtk1', v: ' ' }, { c: 'mtk19', v: 'href' }, { c: 'mtk1', v: '=' }, { c: 'mtk11', v: `"${randomFileName()}.css"` }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk1', v: '</' }, { c: 'mtk18', v: 'head' }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk1', v: '<' }, { c: 'mtk18', v: 'body' }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk1', v: '  <' }, { c: 'mtk18', v: 'header' }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk1', v: '    <' }, { c: 'mtk18', v: 'nav' }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk1', v: '      <' }, { c: 'mtk18', v: 'ul' }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk1', v: '        <' }, { c: 'mtk18', v: 'li' }, { c: 'mtk1', v: '>' }, { c: 'mtk11', v: randomString() }, { c: 'mtk1', v: '</' }, { c: 'mtk18', v: 'li' }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk1', v: '      </' }, { c: 'mtk18', v: 'ul' }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk1', v: '    </' }, { c: 'mtk18', v: 'nav' }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk1', v: '  </' }, { c: 'mtk18', v: 'header' }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk1', v: '  <' }, { c: 'mtk18', v: 'main' }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk1', v: '    <' }, { c: 'mtk18', v: 'section' }, { c: 'mtk1', v: ' ' }, { c: 'mtk19', v: 'class' }, { c: 'mtk1', v: '=' }, { c: 'mtk11', v: `"${randomCssClass()}"` }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk1', v: '      <' }, { c: 'mtk18', v: 'h1' }, { c: 'mtk1', v: '>' }, { c: 'mtk11', v: randomString() }, { c: 'mtk1', v: '</' }, { c: 'mtk18', v: 'h1' }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk1', v: '      <' }, { c: 'mtk18', v: 'p' }, { c: 'mtk1', v: '>' }, { c: 'mtk11', v: randomString() }, { c: 'mtk1', v: '</' }, { c: 'mtk18', v: 'p' }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk1', v: '    </' }, { c: 'mtk18', v: 'section' }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk1', v: '  </' }, { c: 'mtk18', v: 'main' }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk1', v: '  <' }, { c: 'mtk18', v: 'footer' }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk1', v: '    <' }, { c: 'mtk18', v: 'p' }, { c: 'mtk1', v: '>&copy; ' }, { c: 'mtk10', v: new Date().getFullYear() }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: randomString() }, { c: 'mtk1', v: '</' }, { c: 'mtk18', v: 'p' }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk1', v: '  </' }, { c: 'mtk18', v: 'footer' }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk1', v: '</' }, { c: 'mtk18', v: 'body' }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk1', v: '</' }, { c: 'mtk18', v: 'html' }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk4', v: '<!-- ' }, { c: 'mtk4', v: randomComment() }, { c: 'mtk4', v: ' -->' }]
+    ]
   return getNextPattern(fileType, patterns)
 }
 
@@ -716,28 +722,28 @@ const generateHtmlLine = (fileType: string): { c: string; v: string }[] => {
  */
 const generateJsonLine = (fileType: string): { c: string; v: string }[] => {
   // prettier-ignore
-  const patterns = 
-  [
-    [{ c: 'mtk1', v: '{' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: `"${randomProperty()}"` }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomJsonValue() }, { c: 'mtk1', v: ',' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: `"${randomProperty()}"` }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomJsonValue() }, { c: 'mtk1', v: ',' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: `"${randomProperty()}"` }, { c: 'mtk1', v: ': [' }, { c: 'mtk11', v: randomJsonValue() }, { c: 'mtk1', v: ', ' }, { c: 'mtk11', v: randomJsonValue() }, { c: 'mtk1', v: '],' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: `"${randomProperty()}"` }, { c: 'mtk1', v: ': {' }],
-    [{ c: 'mtk1', v: '    ' }, { c: 'mtk9', v: `"${randomProperty()}"` }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomJsonValue() }],
-    [{ c: 'mtk1', v: '  }' }],
-    [{ c: 'mtk1', v: '}' }],
-    [{ c: 'mtk1', v: '[' }],
-    [{ c: 'mtk1', v: '  {' }],
-    [{ c: 'mtk1', v: '    ' }, { c: 'mtk9', v: `"${randomProperty()}"` }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomJsonValue() }, { c: 'mtk1', v: ',' }],
-    [{ c: 'mtk1', v: '    ' }, { c: 'mtk9', v: `"${randomProperty()}"` }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomJsonValue() }],
-    [{ c: 'mtk1', v: '  },' }],
-    [{ c: 'mtk1', v: '  {' }],
-    [{ c: 'mtk1', v: '    ' }, { c: 'mtk9', v: `"${randomProperty()}"` }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomJsonValue() }, { c: 'mtk1', v: ',' }],
-    [{ c: 'mtk1', v: '    ' }, { c: 'mtk9', v: `"${randomProperty()}"` }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomJsonValue() }],
-    [{ c: 'mtk1', v: '  }' }],
-    [{ c: 'mtk1', v: ']' }],
-    [{ c: 'mtk4', v: '//' }, { c: 'mtk4', v: ' ' }, { c: 'mtk4', v: randomComment() }]
-  ]
+  const patterns =
+    [
+      [{ c: 'mtk1', v: '{' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: `"${randomProperty()}"` }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomJsonValue() }, { c: 'mtk1', v: ',' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: `"${randomProperty()}"` }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomJsonValue() }, { c: 'mtk1', v: ',' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: `"${randomProperty()}"` }, { c: 'mtk1', v: ': [' }, { c: 'mtk11', v: randomJsonValue() }, { c: 'mtk1', v: ', ' }, { c: 'mtk11', v: randomJsonValue() }, { c: 'mtk1', v: '],' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: `"${randomProperty()}"` }, { c: 'mtk1', v: ': {' }],
+      [{ c: 'mtk1', v: '    ' }, { c: 'mtk9', v: `"${randomProperty()}"` }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomJsonValue() }],
+      [{ c: 'mtk1', v: '  }' }],
+      [{ c: 'mtk1', v: '}' }],
+      [{ c: 'mtk1', v: '[' }],
+      [{ c: 'mtk1', v: '  {' }],
+      [{ c: 'mtk1', v: '    ' }, { c: 'mtk9', v: `"${randomProperty()}"` }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomJsonValue() }, { c: 'mtk1', v: ',' }],
+      [{ c: 'mtk1', v: '    ' }, { c: 'mtk9', v: `"${randomProperty()}"` }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomJsonValue() }],
+      [{ c: 'mtk1', v: '  },' }],
+      [{ c: 'mtk1', v: '  {' }],
+      [{ c: 'mtk1', v: '    ' }, { c: 'mtk9', v: `"${randomProperty()}"` }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomJsonValue() }, { c: 'mtk1', v: ',' }],
+      [{ c: 'mtk1', v: '    ' }, { c: 'mtk9', v: `"${randomProperty()}"` }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomJsonValue() }],
+      [{ c: 'mtk1', v: '  }' }],
+      [{ c: 'mtk1', v: ']' }],
+      [{ c: 'mtk4', v: '//' }, { c: 'mtk4', v: ' ' }, { c: 'mtk4', v: randomComment() }]
+    ]
   return getNextPattern(fileType, patterns)
 }
 
@@ -746,27 +752,27 @@ const generateJsonLine = (fileType: string): { c: string; v: string }[] => {
  */
 const generateXmlLine = (fileType: string): { c: string; v: string }[] => {
   // prettier-ignore
-  const patterns = 
-  [
-    [{ c: 'mtk1', v: '<?xml' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'version' }, { c: 'mtk1', v: '=' }, { c: 'mtk11', v: '"1.0"' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'encoding' }, { c: 'mtk1', v: '=' }, { c: 'mtk11', v: '"UTF-8"' }, { c: 'mtk1', v: '?>' }],
-    [{ c: 'mtk1', v: '<' }, { c: 'mtk5', v: 'root' }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk1', v: '  <' }, { c: 'mtk5', v: randomVariableName() }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'id' }, { c: 'mtk1', v: '=' }, { c: 'mtk11', v: `"${randomNumber()}"` }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk1', v: '    <' }, { c: 'mtk5', v: randomProperty() }, { c: 'mtk1', v: '>' }, { c: 'mtk11', v: randomString() }, { c: 'mtk1', v: '</' }, { c: 'mtk5', v: randomProperty() }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk1', v: '    <' }, { c: 'mtk5', v: randomProperty() }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'type' }, { c: 'mtk1', v: '=' }, { c: 'mtk11', v: '"text"' }, { c: 'mtk1', v: ' />' }],
-    [{ c: 'mtk1', v: '    <' }, { c: 'mtk5', v: randomProperty() }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk1', v: '      <' }, { c: 'mtk5', v: randomVariableName() }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'name' }, { c: 'mtk1', v: '=' }, { c: 'mtk11', v: `"${randomVariableName()}"` }, { c: 'mtk1', v: ' />' }],
-    [{ c: 'mtk1', v: '      <' }, { c: 'mtk5', v: randomVariableName() }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'name' }, { c: 'mtk1', v: '=' }, { c: 'mtk11', v: `"${randomVariableName()}"` }, { c: 'mtk1', v: ' />' }],
-    [{ c: 'mtk1', v: '    </' }, { c: 'mtk5', v: randomProperty() }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk1', v: '    <!-- ' }, { c: 'mtk4', v: randomComment() }, { c: 'mtk1', v: ' -->' }],
-    [{ c: 'mtk1', v: '    <![CDATA[' }, { c: 'mtk11', v: randomString() }, { c: 'mtk1', v: ']]>' }],
-    [{ c: 'mtk1', v: '  </' }, { c: 'mtk5', v: randomVariableName() }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk1', v: '  <' }, { c: 'mtk5', v: randomVariableName() }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'id' }, { c: 'mtk1', v: '=' }, { c: 'mtk11', v: `"${randomNumber()}"` }, { c: 'mtk1', v: ' />' }],
-    [{ c: 'mtk1', v: '  <' }, { c: 'mtk5', v: randomVariableName() }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'id' }, { c: 'mtk1', v: '=' }, { c: 'mtk11', v: `"${randomNumber()}"` }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk1', v: '    <' }, { c: 'mtk5', v: randomProperty() }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'attr' }, { c: 'mtk1', v: '=' }, { c: 'mtk11', v: `"${randomValue()}"` }, { c: 'mtk1', v: ' />' }],
-    [{ c: 'mtk1', v: '  </' }, { c: 'mtk5', v: randomVariableName() }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk1', v: '</' }, { c: 'mtk5', v: 'root' }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk4', v: '<!-- ' }, { c: 'mtk4', v: randomComment() }, { c: 'mtk4', v: ' -->' }]
-  ]
+  const patterns =
+    [
+      [{ c: 'mtk1', v: '<?xml' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'version' }, { c: 'mtk1', v: '=' }, { c: 'mtk11', v: '"1.0"' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'encoding' }, { c: 'mtk1', v: '=' }, { c: 'mtk11', v: '"UTF-8"' }, { c: 'mtk1', v: '?>' }],
+      [{ c: 'mtk1', v: '<' }, { c: 'mtk5', v: 'root' }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk1', v: '  <' }, { c: 'mtk5', v: randomVariableName() }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'id' }, { c: 'mtk1', v: '=' }, { c: 'mtk11', v: `"${randomNumber()}"` }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk1', v: '    <' }, { c: 'mtk5', v: randomProperty() }, { c: 'mtk1', v: '>' }, { c: 'mtk11', v: randomString() }, { c: 'mtk1', v: '</' }, { c: 'mtk5', v: randomProperty() }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk1', v: '    <' }, { c: 'mtk5', v: randomProperty() }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'type' }, { c: 'mtk1', v: '=' }, { c: 'mtk11', v: '"text"' }, { c: 'mtk1', v: ' />' }],
+      [{ c: 'mtk1', v: '    <' }, { c: 'mtk5', v: randomProperty() }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk1', v: '      <' }, { c: 'mtk5', v: randomVariableName() }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'name' }, { c: 'mtk1', v: '=' }, { c: 'mtk11', v: `"${randomVariableName()}"` }, { c: 'mtk1', v: ' />' }],
+      [{ c: 'mtk1', v: '      <' }, { c: 'mtk5', v: randomVariableName() }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'name' }, { c: 'mtk1', v: '=' }, { c: 'mtk11', v: `"${randomVariableName()}"` }, { c: 'mtk1', v: ' />' }],
+      [{ c: 'mtk1', v: '    </' }, { c: 'mtk5', v: randomProperty() }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk1', v: '    <!-- ' }, { c: 'mtk4', v: randomComment() }, { c: 'mtk1', v: ' -->' }],
+      [{ c: 'mtk1', v: '    <![CDATA[' }, { c: 'mtk11', v: randomString() }, { c: 'mtk1', v: ']]>' }],
+      [{ c: 'mtk1', v: '  </' }, { c: 'mtk5', v: randomVariableName() }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk1', v: '  <' }, { c: 'mtk5', v: randomVariableName() }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'id' }, { c: 'mtk1', v: '=' }, { c: 'mtk11', v: `"${randomNumber()}"` }, { c: 'mtk1', v: ' />' }],
+      [{ c: 'mtk1', v: '  <' }, { c: 'mtk5', v: randomVariableName() }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'id' }, { c: 'mtk1', v: '=' }, { c: 'mtk11', v: `"${randomNumber()}"` }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk1', v: '    <' }, { c: 'mtk5', v: randomProperty() }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'attr' }, { c: 'mtk1', v: '=' }, { c: 'mtk11', v: `"${randomValue()}"` }, { c: 'mtk1', v: ' />' }],
+      [{ c: 'mtk1', v: '  </' }, { c: 'mtk5', v: randomVariableName() }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk1', v: '</' }, { c: 'mtk5', v: 'root' }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk4', v: '<!-- ' }, { c: 'mtk4', v: randomComment() }, { c: 'mtk4', v: ' -->' }]
+    ]
   return getNextPattern(fileType, patterns)
 }
 
@@ -775,37 +781,37 @@ const generateXmlLine = (fileType: string): { c: string; v: string }[] => {
  */
 const generateVueLine = (fileType: string): { c: string; v: string }[] => {
   // prettier-ignore
-  const patterns = 
-  [
-    [{ c: 'mtk1', v: '<' }, { c: 'mtk5', v: 'template' }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk1', v: '  <' }, { c: 'mtk5', v: 'div' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'class' }, { c: 'mtk1', v: '=' }, { c: 'mtk11', v: `"${randomCssClass()}"` }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk1', v: '    <' }, { c: 'mtk5', v: 'h1' }, { c: 'mtk1', v: '>' }, { c: 'mtk11', v: `{{ ${randomProperty()} }}` }, { c: 'mtk1', v: '</' }, { c: 'mtk5', v: 'h1' }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk1', v: '    <' }, { c: 'mtk5', v: 'button' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: '@click' }, { c: 'mtk1', v: '=' }, { c: 'mtk11', v: `"${randomMethod()}"` }, { c: 'mtk1', v: '>' }, { c: 'mtk11', v: randomComment() }, { c: 'mtk1', v: '</' }, { c: 'mtk5', v: 'button' }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk1', v: '    <' }, { c: 'mtk5', v: 'input' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'v-model' }, { c: 'mtk1', v: '=' }, { c: 'mtk11', v: `"${randomProperty()}"` }, { c: 'mtk1', v: ' />' }],
-    [{ c: 'mtk1', v: '  </' }, { c: 'mtk5', v: 'div' }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk1', v: '</' }, { c: 'mtk5', v: 'template' }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk1', v: '<' }, { c: 'mtk5', v: 'script' }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk5', v: 'import' }, { c: 'mtk1', v: ' { ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' } ' }, { c: 'mtk5', v: 'from' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: `'${randomModuleName()}'` }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk5', v: 'export' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'default' }, { c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: 'name' }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: `'${randomClassName()}'` }, { c: 'mtk1', v: ',' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: 'data' }, { c: 'mtk1', v: '() {' }],
-    [{ c: 'mtk1', v: '    ' }, { c: 'mtk5', v: 'return' }, { c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk1', v: '      ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ',' }],
-    [{ c: 'mtk1', v: '    };' }],
-    [{ c: 'mtk1', v: '  },' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: 'methods' }, { c: 'mtk1', v: ': {' }],
-    [{ c: 'mtk1', v: '    ' }, { c: 'mtk15', v: randomMethod() }, { c: 'mtk1', v: '() {' }],
-    [{ c: 'mtk1', v: '      ' }, { c: 'mtk5', v: 'this' }, { c: 'mtk1', v: '.' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '    }' }],
-    [{ c: 'mtk1', v: '  }' }],
-    [{ c: 'mtk1', v: '};' }],
-    [{ c: 'mtk1', v: '</' }, { c: 'mtk5', v: 'script' }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk1', v: '<' }, { c: 'mtk5', v: 'style' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'scoped' }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk1', v: '.' }, { c: 'mtk16', v: randomCssClass() }, { c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomCssProperty() }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomCssValue() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '}' }],
-    [{ c: 'mtk1', v: '</' }, { c: 'mtk5', v: 'style' }, { c: 'mtk1', v: '>' }]
-  ]
+  const patterns =
+    [
+      [{ c: 'mtk1', v: '<' }, { c: 'mtk5', v: 'template' }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk1', v: '  <' }, { c: 'mtk5', v: 'div' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'class' }, { c: 'mtk1', v: '=' }, { c: 'mtk11', v: `"${randomCssClass()}"` }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk1', v: '    <' }, { c: 'mtk5', v: 'h1' }, { c: 'mtk1', v: '>' }, { c: 'mtk11', v: `{{ ${randomProperty()} }}` }, { c: 'mtk1', v: '</' }, { c: 'mtk5', v: 'h1' }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk1', v: '    <' }, { c: 'mtk5', v: 'button' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: '@click' }, { c: 'mtk1', v: '=' }, { c: 'mtk11', v: `"${randomMethod()}"` }, { c: 'mtk1', v: '>' }, { c: 'mtk11', v: randomComment() }, { c: 'mtk1', v: '</' }, { c: 'mtk5', v: 'button' }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk1', v: '    <' }, { c: 'mtk5', v: 'input' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'v-model' }, { c: 'mtk1', v: '=' }, { c: 'mtk11', v: `"${randomProperty()}"` }, { c: 'mtk1', v: ' />' }],
+      [{ c: 'mtk1', v: '  </' }, { c: 'mtk5', v: 'div' }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk1', v: '</' }, { c: 'mtk5', v: 'template' }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk1', v: '<' }, { c: 'mtk5', v: 'script' }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk5', v: 'import' }, { c: 'mtk1', v: ' { ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' } ' }, { c: 'mtk5', v: 'from' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: `'${randomModuleName()}'` }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk5', v: 'export' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'default' }, { c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: 'name' }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: `'${randomClassName()}'` }, { c: 'mtk1', v: ',' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: 'data' }, { c: 'mtk1', v: '() {' }],
+      [{ c: 'mtk1', v: '    ' }, { c: 'mtk5', v: 'return' }, { c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk1', v: '      ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ',' }],
+      [{ c: 'mtk1', v: '    };' }],
+      [{ c: 'mtk1', v: '  },' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: 'methods' }, { c: 'mtk1', v: ': {' }],
+      [{ c: 'mtk1', v: '    ' }, { c: 'mtk15', v: randomMethod() }, { c: 'mtk1', v: '() {' }],
+      [{ c: 'mtk1', v: '      ' }, { c: 'mtk5', v: 'this' }, { c: 'mtk1', v: '.' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '    }' }],
+      [{ c: 'mtk1', v: '  }' }],
+      [{ c: 'mtk1', v: '};' }],
+      [{ c: 'mtk1', v: '</' }, { c: 'mtk5', v: 'script' }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk1', v: '<' }, { c: 'mtk5', v: 'style' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'scoped' }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk1', v: '.' }, { c: 'mtk16', v: randomCssClass() }, { c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomCssProperty() }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomCssValue() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '}' }],
+      [{ c: 'mtk1', v: '</' }, { c: 'mtk5', v: 'style' }, { c: 'mtk1', v: '>' }]
+    ]
   return getNextPattern(fileType, patterns)
 }
 
@@ -814,32 +820,32 @@ const generateVueLine = (fileType: string): { c: string; v: string }[] => {
  */
 const generateXslLine = (fileType: string): { c: string; v: string }[] => {
   // prettier-ignore
-  const patterns = 
-  [
-    [{ c: 'mtk1', v: '<?xml' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'version' }, { c: 'mtk1', v: '=' }, { c: 'mtk11', v: '"1.0"' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'encoding' }, { c: 'mtk1', v: '=' }, { c: 'mtk11', v: '"UTF-8"' }, { c: 'mtk1', v: '?>' }],
-    [{ c: 'mtk1', v: '<' }, { c: 'mtk5', v: 'xsl:stylesheet' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'version' }, { c: 'mtk1', v: '=' }, { c: 'mtk11', v: '"1.0"' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'xmlns:xsl' }, { c: 'mtk1', v: '=' }, { c: 'mtk11', v: '"http://www.w3.org/1999/XSL/Transform"' }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk1', v: '  <' }, { c: 'mtk5', v: 'xsl:template' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'match' }, { c: 'mtk1', v: '=' }, { c: 'mtk11', v: '"/"' }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk1', v: '    <' }, { c: 'mtk5', v: 'html' }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk1', v: '      <' }, { c: 'mtk5', v: 'head' }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk1', v: '        <' }, { c: 'mtk5', v: 'title' }, { c: 'mtk1', v: '>' }, { c: 'mtk11', v: randomComment() }, { c: 'mtk1', v: '</' }, { c: 'mtk5', v: 'title' }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk1', v: '      </' }, { c: 'mtk5', v: 'head' }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk1', v: '      <' }, { c: 'mtk5', v: 'body' }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk1', v: '        <' }, { c: 'mtk5', v: 'xsl:for-each' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'select' }, { c: 'mtk1', v: '=' }, { c: 'mtk11', v: `"${randomVariableName()}"` }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk1', v: '          <' }, { c: 'mtk5', v: 'div' }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk1', v: '            <' }, { c: 'mtk5', v: 'xsl:value-of' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'select' }, { c: 'mtk1', v: '=' }, { c: 'mtk11', v: `"${randomProperty()}"` }, { c: 'mtk1', v: '/>' }],
-    [{ c: 'mtk1', v: '          </' }, { c: 'mtk5', v: 'div' }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk1', v: '        </' }, { c: 'mtk5', v: 'xsl:for-each' }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk1', v: '      </' }, { c: 'mtk5', v: 'body' }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk1', v: '    </' }, { c: 'mtk5', v: 'html' }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk1', v: '  </' }, { c: 'mtk5', v: 'xsl:template' }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk1', v: '  <' }, { c: 'mtk5', v: 'xsl:template' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'match' }, { c: 'mtk1', v: '=' }, { c: 'mtk11', v: `"${randomVariableName()}"` }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk1', v: '    <' }, { c: 'mtk5', v: 'xsl:if' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'test' }, { c: 'mtk1', v: '=' }, { c: 'mtk11', v: `"${randomProperty()} != ''"` }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk1', v: '      <' }, { c: 'mtk5', v: 'span' }, { c: 'mtk1', v: '><' }, { c: 'mtk5', v: 'xsl:value-of' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'select' }, { c: 'mtk1', v: '=' }, { c: 'mtk11', v: '"."' }, { c: 'mtk1', v: '/></' }, { c: 'mtk5', v: 'span' }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk1', v: '    </' }, { c: 'mtk5', v: 'xsl:if' }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk1', v: '  </' }, { c: 'mtk5', v: 'xsl:template' }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk1', v: '</' }, { c: 'mtk5', v: 'xsl:stylesheet' }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk4', v: '<!-- ' }, { c: 'mtk4', v: randomComment() }, { c: 'mtk4', v: ' -->' }]
-  ]
+  const patterns =
+    [
+      [{ c: 'mtk1', v: '<?xml' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'version' }, { c: 'mtk1', v: '=' }, { c: 'mtk11', v: '"1.0"' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'encoding' }, { c: 'mtk1', v: '=' }, { c: 'mtk11', v: '"UTF-8"' }, { c: 'mtk1', v: '?>' }],
+      [{ c: 'mtk1', v: '<' }, { c: 'mtk5', v: 'xsl:stylesheet' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'version' }, { c: 'mtk1', v: '=' }, { c: 'mtk11', v: '"1.0"' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'xmlns:xsl' }, { c: 'mtk1', v: '=' }, { c: 'mtk11', v: '"http://www.w3.org/1999/XSL/Transform"' }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk1', v: '  <' }, { c: 'mtk5', v: 'xsl:template' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'match' }, { c: 'mtk1', v: '=' }, { c: 'mtk11', v: '"/"' }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk1', v: '    <' }, { c: 'mtk5', v: 'html' }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk1', v: '      <' }, { c: 'mtk5', v: 'head' }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk1', v: '        <' }, { c: 'mtk5', v: 'title' }, { c: 'mtk1', v: '>' }, { c: 'mtk11', v: randomComment() }, { c: 'mtk1', v: '</' }, { c: 'mtk5', v: 'title' }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk1', v: '      </' }, { c: 'mtk5', v: 'head' }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk1', v: '      <' }, { c: 'mtk5', v: 'body' }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk1', v: '        <' }, { c: 'mtk5', v: 'xsl:for-each' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'select' }, { c: 'mtk1', v: '=' }, { c: 'mtk11', v: `"${randomVariableName()}"` }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk1', v: '          <' }, { c: 'mtk5', v: 'div' }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk1', v: '            <' }, { c: 'mtk5', v: 'xsl:value-of' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'select' }, { c: 'mtk1', v: '=' }, { c: 'mtk11', v: `"${randomProperty()}"` }, { c: 'mtk1', v: '/>' }],
+      [{ c: 'mtk1', v: '          </' }, { c: 'mtk5', v: 'div' }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk1', v: '        </' }, { c: 'mtk5', v: 'xsl:for-each' }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk1', v: '      </' }, { c: 'mtk5', v: 'body' }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk1', v: '    </' }, { c: 'mtk5', v: 'html' }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk1', v: '  </' }, { c: 'mtk5', v: 'xsl:template' }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk1', v: '  <' }, { c: 'mtk5', v: 'xsl:template' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'match' }, { c: 'mtk1', v: '=' }, { c: 'mtk11', v: `"${randomVariableName()}"` }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk1', v: '    <' }, { c: 'mtk5', v: 'xsl:if' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'test' }, { c: 'mtk1', v: '=' }, { c: 'mtk11', v: `"${randomProperty()} != ''"` }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk1', v: '      <' }, { c: 'mtk5', v: 'span' }, { c: 'mtk1', v: '><' }, { c: 'mtk5', v: 'xsl:value-of' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'select' }, { c: 'mtk1', v: '=' }, { c: 'mtk11', v: '"."' }, { c: 'mtk1', v: '/></' }, { c: 'mtk5', v: 'span' }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk1', v: '    </' }, { c: 'mtk5', v: 'xsl:if' }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk1', v: '  </' }, { c: 'mtk5', v: 'xsl:template' }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk1', v: '</' }, { c: 'mtk5', v: 'xsl:stylesheet' }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk4', v: '<!-- ' }, { c: 'mtk4', v: randomComment() }, { c: 'mtk4', v: ' -->' }]
+    ]
   return getNextPattern(fileType, patterns)
 }
 
@@ -848,34 +854,34 @@ const generateXslLine = (fileType: string): { c: string; v: string }[] => {
  */
 const generateYamlLine = (fileType: string): { c: string; v: string }[] => {
   // prettier-ignore
-  const patterns = 
-  [
-    [{ c: 'mtk9', v: 'version:' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: `'${randomNumber()}'` }],
-    [{ c: 'mtk9', v: 'name:' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: `"${randomVariableName()}"` }],
-    [{ c: 'mtk9', v: 'description:' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: `"${randomComment()}"` }],
-    [{ c: 'mtk9', v: 'author:' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: `"${randomVariableName()}"` }],
-    [{ c: 'mtk9', v: 'license:' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: 'MIT' }],
-    [{ c: 'mtk9', v: 'scripts:' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: 'start:' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: `"node index.js"` }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: 'test:' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: `"jest"` }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: 'build:' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: `"webpack --mode production"` }],
-    [{ c: 'mtk9', v: 'dependencies:' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: 'react:' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: '^18.2.0' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: 'express:' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: '^4.18.0' }],
-    [{ c: 'mtk9', v: 'devDependencies:' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: 'typescript:' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: '^4.9.0' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: 'webpack:' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: '^5.75.0' }],
-    [{ c: 'mtk9', v: 'database:' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: 'host:' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: 'localhost' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: 'port:' }, { c: 'mtk1', v: ' ' }, { c: 'mtk10', v: '5432' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: 'name:' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: 'myapp' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: 'user:' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: 'admin' }],
-    [{ c: 'mtk9', v: 'server:' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: 'port:' }, { c: 'mtk1', v: ' ' }, { c: 'mtk10', v: '3000' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: 'host:' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: '0.0.0.0' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: 'ssl:' }, { c: 'mtk1', v: ' ' }, { c: 'mtk10', v: 'true' }],
-    [{ c: 'mtk4', v: '# ' }, { c: 'mtk4', v: randomComment() }]
-  ]
+  const patterns =
+    [
+      [{ c: 'mtk9', v: 'version:' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: `'${randomNumber()}'` }],
+      [{ c: 'mtk9', v: 'name:' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: `"${randomVariableName()}"` }],
+      [{ c: 'mtk9', v: 'description:' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: `"${randomComment()}"` }],
+      [{ c: 'mtk9', v: 'author:' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: `"${randomVariableName()}"` }],
+      [{ c: 'mtk9', v: 'license:' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: 'MIT' }],
+      [{ c: 'mtk9', v: 'scripts:' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: 'start:' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: `"node index.js"` }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: 'test:' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: `"jest"` }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: 'build:' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: `"webpack --mode production"` }],
+      [{ c: 'mtk9', v: 'dependencies:' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: 'react:' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: '^18.2.0' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: 'express:' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: '^4.18.0' }],
+      [{ c: 'mtk9', v: 'devDependencies:' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: 'typescript:' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: '^4.9.0' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: 'webpack:' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: '^5.75.0' }],
+      [{ c: 'mtk9', v: 'database:' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: 'host:' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: 'localhost' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: 'port:' }, { c: 'mtk1', v: ' ' }, { c: 'mtk10', v: '5432' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: 'name:' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: 'myapp' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: 'user:' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: 'admin' }],
+      [{ c: 'mtk9', v: 'server:' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: 'port:' }, { c: 'mtk1', v: ' ' }, { c: 'mtk10', v: '3000' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: 'host:' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: '0.0.0.0' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: 'ssl:' }, { c: 'mtk1', v: ' ' }, { c: 'mtk10', v: 'true' }],
+      [{ c: 'mtk4', v: '# ' }, { c: 'mtk4', v: randomComment() }]
+    ]
   return getNextPattern(fileType, patterns)
 }
 
@@ -884,33 +890,33 @@ const generateYamlLine = (fileType: string): { c: string; v: string }[] => {
  */
 const generateMarkdownLine = (fileType: string): { c: string; v: string }[] => {
   // prettier-ignore
-  const patterns = 
-  [
-    [{ c: 'mtk7', v: '# ' }, { c: 'mtk7', v: randomComment() }],
-    [{ c: 'mtk7', v: '## ' }, { c: 'mtk7', v: randomComment() }],
-    [{ c: 'mtk7', v: '### ' }, { c: 'mtk7', v: randomComment() }],
-    [{ c: 'mtk1', v: '- ' }, { c: 'mtk1', v: randomComment() }],
-    [{ c: 'mtk1', v: '1. ' }, { c: 'mtk1', v: randomComment() }],
-    [{ c: 'mtk5', v: '**' }, { c: 'mtk1', v: randomComment() }, { c: 'mtk5', v: '**' }],
-    [{ c: 'mtk5', v: '*' }, { c: 'mtk1', v: randomComment() }, { c: 'mtk5', v: '*' }],
-    [{ c: 'mtk5', v: '~~' }, { c: 'mtk1', v: randomComment() }, { c: 'mtk5', v: '~~' }],
-    [{ c: 'mtk4', v: '> ' }, { c: 'mtk4', v: randomComment() }],
-    [{ c: 'mtk1', v: '`' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: '`' }],
-    [{ c: 'mtk1', v: '``' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: '``' }],
-    [{ c: 'mtk5', v: '[' }, { c: 'mtk1', v: randomComment() }, { c: 'mtk5', v: '](' }, { c: 'mtk11', v: '#链接' }, { c: 'mtk5', v: ')' }],
-    [{ c: 'mtk1', v: '![' }, { c: 'mtk1', v: randomComment() }, { c: 'mtk1', v: '](' }, { c: 'mtk11', v: '图片链接.jpg' }, { c: 'mtk1', v: ')' }],
-    [{ c: 'mtk1', v: '| ' }, { c: 'mtk1', v: randomComment() }, { c: 'mtk1', v: ' | ' }, { c: 'mtk1', v: randomComment() }, { c: 'mtk1', v: ' |' }],
-    [{ c: 'mtk1', v: '|---|---|' }],
-    [{ c: 'mtk1', v: '| ' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ' | ' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ' |' }],
-    [{ c: 'mtk5', v: '- [ ] ' }, { c: 'mtk1', v: randomComment() }],
-    [{ c: 'mtk5', v: '- [x] ' }, { c: 'mtk1', v: randomComment() }],
-    [{ c: 'mtk5', v: '---' }],
-    [{ c: 'mtk8', v: '```' }, { c: 'mtk9', v: 'javascript' }],
-    [{ c: 'mtk9', v: 'const' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk8', v: '```' }],
-    [{ c: 'mtk9', v: '@' }, { c: 'mtk1', v: '用户名' }],
-    [{ c: 'mtk5', v: '#️⃣ ' }, { c: 'mtk1', v: '标题' }]
-  ]
+  const patterns =
+    [
+      [{ c: 'mtk7', v: '# ' }, { c: 'mtk7', v: randomComment() }],
+      [{ c: 'mtk7', v: '## ' }, { c: 'mtk7', v: randomComment() }],
+      [{ c: 'mtk7', v: '### ' }, { c: 'mtk7', v: randomComment() }],
+      [{ c: 'mtk1', v: '- ' }, { c: 'mtk1', v: randomComment() }],
+      [{ c: 'mtk1', v: '1. ' }, { c: 'mtk1', v: randomComment() }],
+      [{ c: 'mtk5', v: '**' }, { c: 'mtk1', v: randomComment() }, { c: 'mtk5', v: '**' }],
+      [{ c: 'mtk5', v: '*' }, { c: 'mtk1', v: randomComment() }, { c: 'mtk5', v: '*' }],
+      [{ c: 'mtk5', v: '~~' }, { c: 'mtk1', v: randomComment() }, { c: 'mtk5', v: '~~' }],
+      [{ c: 'mtk4', v: '> ' }, { c: 'mtk4', v: randomComment() }],
+      [{ c: 'mtk1', v: '`' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: '`' }],
+      [{ c: 'mtk1', v: '``' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: '``' }],
+      [{ c: 'mtk5', v: '[' }, { c: 'mtk1', v: randomComment() }, { c: 'mtk5', v: '](' }, { c: 'mtk11', v: '#链接' }, { c: 'mtk5', v: ')' }],
+      [{ c: 'mtk1', v: '![' }, { c: 'mtk1', v: randomComment() }, { c: 'mtk1', v: '](' }, { c: 'mtk11', v: '图片链接.jpg' }, { c: 'mtk1', v: ')' }],
+      [{ c: 'mtk1', v: '| ' }, { c: 'mtk1', v: randomComment() }, { c: 'mtk1', v: ' | ' }, { c: 'mtk1', v: randomComment() }, { c: 'mtk1', v: ' |' }],
+      [{ c: 'mtk1', v: '|---|---|' }],
+      [{ c: 'mtk1', v: '| ' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ' | ' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ' |' }],
+      [{ c: 'mtk5', v: '- [ ] ' }, { c: 'mtk1', v: randomComment() }],
+      [{ c: 'mtk5', v: '- [x] ' }, { c: 'mtk1', v: randomComment() }],
+      [{ c: 'mtk5', v: '---' }],
+      [{ c: 'mtk8', v: '```' }, { c: 'mtk9', v: 'javascript' }],
+      [{ c: 'mtk9', v: 'const' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk8', v: '```' }],
+      [{ c: 'mtk9', v: '@' }, { c: 'mtk1', v: '用户名' }],
+      [{ c: 'mtk5', v: '#️⃣ ' }, { c: 'mtk1', v: '标题' }]
+    ]
   return getNextPattern(fileType, patterns)
 }
 
@@ -919,37 +925,37 @@ const generateMarkdownLine = (fileType: string): { c: string; v: string }[] => {
  */
 const generateTexLine = (fileType: string): { c: string; v: string }[] => {
   // prettier-ignore
-  const patterns = 
-  [
-    [{ c: 'mtk17', v: '\\documentclass' }, { c: 'mtk1', v: '[' }, { c: 'mtk11', v: '12pt' }, { c: 'mtk1', v: ']{' }, { c: 'mtk11', v: 'article' }, { c: 'mtk1', v: '}' }],
-    [{ c: 'mtk17', v: '\\usepackage' }, { c: 'mtk1', v: '{' }, { c: 'mtk11', v: 'amsmath' }, { c: 'mtk1', v: '}' }],
-    [{ c: 'mtk17', v: '\\usepackage' }, { c: 'mtk1', v: '{' }, { c: 'mtk11', v: 'graphicx' }, { c: 'mtk1', v: '}' }],
-    [{ c: 'mtk17', v: '\\usepackage' }, { c: 'mtk1', v: '{' }, { c: 'mtk11', v: 'geometry' }, { c: 'mtk1', v: '}' }],
-    [{ c: 'mtk17', v: '\\title' }, { c: 'mtk1', v: '{' }, { c: 'mtk11', v: randomComment() }, { c: 'mtk1', v: '}' }],
-    [{ c: 'mtk17', v: '\\author' }, { c: 'mtk1', v: '{' }, { c: 'mtk11', v: randomVariableName() }, { c: 'mtk1', v: '}' }],
-    [{ c: 'mtk17', v: '\\date' }, { c: 'mtk1', v: '{' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: '}' }],
-    [{ c: 'mtk17', v: '\\begin' }, { c: 'mtk1', v: '{' }, { c: 'mtk11', v: 'document' }, { c: 'mtk1', v: '}' }],
-    [{ c: 'mtk17', v: '\\maketitle' }],
-    [{ c: 'mtk17', v: '\\section' }, { c: 'mtk1', v: '{' }, { c: 'mtk11', v: randomComment() }, { c: 'mtk1', v: '}' }],
-    [{ c: 'mtk17', v: '\\subsection' }, { c: 'mtk1', v: '{' }, { c: 'mtk11', v: randomComment() }, { c: 'mtk1', v: '}' }],
-    [{ c: 'mtk1', v: randomComment() }],
-    [{ c: 'mtk17', v: '\\begin' }, { c: 'mtk1', v: '{' }, { c: 'mtk11', v: 'itemize' }, { c: 'mtk1', v: '}' }],
-    [{ c: 'mtk17', v: '\\item' }, { c: 'mtk1', v: ' ' }, { c: 'mtk1', v: randomComment() }],
-    [{ c: 'mtk17', v: '\\item' }, { c: 'mtk1', v: ' ' }, { c: 'mtk1', v: randomComment() }],
-    [{ c: 'mtk17', v: '\\end' }, { c: 'mtk1', v: '{' }, { c: 'mtk11', v: 'itemize' }, { c: 'mtk1', v: '}' }],
-    [{ c: 'mtk17', v: '\\begin' }, { c: 'mtk1', v: '{' }, { c: 'mtk11', v: 'enumerate' }, { c: 'mtk1', v: '}' }],
-    [{ c: 'mtk17', v: '\\item' }, { c: 'mtk1', v: ' ' }, { c: 'mtk1', v: randomComment() }],
-    [{ c: 'mtk17', v: '\\item' }, { c: 'mtk1', v: ' ' }, { c: 'mtk1', v: randomComment() }],
-    [{ c: 'mtk17', v: '\\end' }, { c: 'mtk1', v: '{' }, { c: 'mtk11', v: 'enumerate' }, { c: 'mtk1', v: '}' }],
-    [{ c: 'mtk1', v: '$' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' + ' }, { c: 'mtk10', v: randomNumber() }, { c: 'mtk1', v: '$' }],
-    [{ c: 'mtk1', v: '\\[' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk17', v: '\\frac' }, { c: 'mtk1', v: '{' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: '}{' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: '}' }, { c: 'mtk1', v: '\\]' }],
-    [{ c: 'mtk17', v: '\\begin' }, { c: 'mtk1', v: '{' }, { c: 'mtk11', v: 'figure' }, { c: 'mtk1', v: '}' }],
-    [{ c: 'mtk17', v: '\\includegraphics' }, { c: 'mtk1', v: '[' }, { c: 'mtk9', v: 'width=0.8\\textwidth' }, { c: 'mtk1', v: ']{' }, { c: 'mtk11', v: 'image.pdf' }, { c: 'mtk1', v: '}' }],
-    [{ c: 'mtk17', v: '\\caption' }, { c: 'mtk1', v: '{' }, { c: 'mtk11', v: randomComment() }, { c: 'mtk1', v: '}' }],
-    [{ c: 'mtk17', v: '\\end' }, { c: 'mtk1', v: '{' }, { c: 'mtk11', v: 'figure' }, { c: 'mtk1', v: '}' }],
-    [{ c: 'mtk17', v: '\\end' }, { c: 'mtk1', v: '{' }, { c: 'mtk11', v: 'document' }, { c: 'mtk1', v: '}' }],
-    [{ c: 'mt4', v: '% ' }, { c: 'mt4', v: randomComment() }]
-  ]
+  const patterns =
+    [
+      [{ c: 'mtk17', v: '\\documentclass' }, { c: 'mtk1', v: '[' }, { c: 'mtk11', v: '12pt' }, { c: 'mtk1', v: ']{' }, { c: 'mtk11', v: 'article' }, { c: 'mtk1', v: '}' }],
+      [{ c: 'mtk17', v: '\\usepackage' }, { c: 'mtk1', v: '{' }, { c: 'mtk11', v: 'amsmath' }, { c: 'mtk1', v: '}' }],
+      [{ c: 'mtk17', v: '\\usepackage' }, { c: 'mtk1', v: '{' }, { c: 'mtk11', v: 'graphicx' }, { c: 'mtk1', v: '}' }],
+      [{ c: 'mtk17', v: '\\usepackage' }, { c: 'mtk1', v: '{' }, { c: 'mtk11', v: 'geometry' }, { c: 'mtk1', v: '}' }],
+      [{ c: 'mtk17', v: '\\title' }, { c: 'mtk1', v: '{' }, { c: 'mtk11', v: randomComment() }, { c: 'mtk1', v: '}' }],
+      [{ c: 'mtk17', v: '\\author' }, { c: 'mtk1', v: '{' }, { c: 'mtk11', v: randomVariableName() }, { c: 'mtk1', v: '}' }],
+      [{ c: 'mtk17', v: '\\date' }, { c: 'mtk1', v: '{' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: '}' }],
+      [{ c: 'mtk17', v: '\\begin' }, { c: 'mtk1', v: '{' }, { c: 'mtk11', v: 'document' }, { c: 'mtk1', v: '}' }],
+      [{ c: 'mtk17', v: '\\maketitle' }],
+      [{ c: 'mtk17', v: '\\section' }, { c: 'mtk1', v: '{' }, { c: 'mtk11', v: randomComment() }, { c: 'mtk1', v: '}' }],
+      [{ c: 'mtk17', v: '\\subsection' }, { c: 'mtk1', v: '{' }, { c: 'mtk11', v: randomComment() }, { c: 'mtk1', v: '}' }],
+      [{ c: 'mtk1', v: randomComment() }],
+      [{ c: 'mtk17', v: '\\begin' }, { c: 'mtk1', v: '{' }, { c: 'mtk11', v: 'itemize' }, { c: 'mtk1', v: '}' }],
+      [{ c: 'mtk17', v: '\\item' }, { c: 'mtk1', v: ' ' }, { c: 'mtk1', v: randomComment() }],
+      [{ c: 'mtk17', v: '\\item' }, { c: 'mtk1', v: ' ' }, { c: 'mtk1', v: randomComment() }],
+      [{ c: 'mtk17', v: '\\end' }, { c: 'mtk1', v: '{' }, { c: 'mtk11', v: 'itemize' }, { c: 'mtk1', v: '}' }],
+      [{ c: 'mtk17', v: '\\begin' }, { c: 'mtk1', v: '{' }, { c: 'mtk11', v: 'enumerate' }, { c: 'mtk1', v: '}' }],
+      [{ c: 'mtk17', v: '\\item' }, { c: 'mtk1', v: ' ' }, { c: 'mtk1', v: randomComment() }],
+      [{ c: 'mtk17', v: '\\item' }, { c: 'mtk1', v: ' ' }, { c: 'mtk1', v: randomComment() }],
+      [{ c: 'mtk17', v: '\\end' }, { c: 'mtk1', v: '{' }, { c: 'mtk11', v: 'enumerate' }, { c: 'mtk1', v: '}' }],
+      [{ c: 'mtk1', v: '$' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' + ' }, { c: 'mtk10', v: randomNumber() }, { c: 'mtk1', v: '$' }],
+      [{ c: 'mtk1', v: '\\[' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk17', v: '\\frac' }, { c: 'mtk1', v: '{' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: '}{' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: '}' }, { c: 'mtk1', v: '\\]' }],
+      [{ c: 'mtk17', v: '\\begin' }, { c: 'mtk1', v: '{' }, { c: 'mtk11', v: 'figure' }, { c: 'mtk1', v: '}' }],
+      [{ c: 'mtk17', v: '\\includegraphics' }, { c: 'mtk1', v: '[' }, { c: 'mtk9', v: 'width=0.8\\textwidth' }, { c: 'mtk1', v: ']{' }, { c: 'mtk11', v: 'image.pdf' }, { c: 'mtk1', v: '}' }],
+      [{ c: 'mtk17', v: '\\caption' }, { c: 'mtk1', v: '{' }, { c: 'mtk11', v: randomComment() }, { c: 'mtk1', v: '}' }],
+      [{ c: 'mtk17', v: '\\end' }, { c: 'mtk1', v: '{' }, { c: 'mtk11', v: 'figure' }, { c: 'mtk1', v: '}' }],
+      [{ c: 'mtk17', v: '\\end' }, { c: 'mtk1', v: '{' }, { c: 'mtk11', v: 'document' }, { c: 'mtk1', v: '}' }],
+      [{ c: 'mt4', v: '% ' }, { c: 'mt4', v: randomComment() }]
+    ]
   return getNextPattern(fileType, patterns)
 }
 
@@ -958,27 +964,27 @@ const generateTexLine = (fileType: string): { c: string; v: string }[] => {
  */
 const generateSqlLine = (fileType: string): { c: string; v: string }[] => {
   // prettier-ignore
-  const patterns = 
-  [
-    [{ c: 'mtk5', v: 'CREATE' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'TABLE' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' (' }],
-    [{ c: 'mtk1', v: '    ' }, { c: 'mtk9', v: 'id' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'INT' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'PRIMARY' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'KEY' }, { c: 'mtk1', v: ',' }],
-    [{ c: 'mtk1', v: '    ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'VARCHAR' }, { c: 'mtk1', v: '(' }, { c: 'mtk10', v: '255' }, { c: 'mtk1', v: ') ' }, { c: 'mtk5', v: 'NOT' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'NULL' }, { c: 'mtk1', v: ',' }],
-    [{ c: 'mtk1', v: '    ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'TEXT' }, { c: 'mtk1', v: ',' }],
-    [{ c: 'mtk1', v: '    ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'DATETIME' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'DEFAULT' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: 'CURRENT_TIMESTAMP' }],
-    [{ c: 'mtk1', v: ');' }],
-    [{ c: 'mtk5', v: 'INSERT' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'INTO' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' (' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ', ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ')' }],
-    [{ c: 'mtk5', v: 'VALUES' }, { c: 'mtk1', v: ' (' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ', ' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ');' }],
-    [{ c: 'mtk5', v: 'SELECT' }, { c: 'mtk1', v: ' * ' }, { c: 'mtk5', v: 'FROM' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }],
-    [{ c: 'mtk5', v: 'SELECT' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ', ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'FROM' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }],
-    [{ c: 'mtk5', v: 'SELECT' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'FROM' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'WHERE' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }],
-    [{ c: 'mtk5', v: 'SELECT' }, { c: 'mtk1', v: ' * ' }, { c: 'mtk5', v: 'FROM' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'WHERE' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'LIKE' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: "'%value%'" }],
-    [{ c: 'mtk5', v: 'SELECT' }, { c: 'mtk1', v: ' * ' }, { c: 'mtk5', v: 'FROM' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'WHERE' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'IN' }, { c: 'mtk1', v: ' (' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ', ' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ')' }],
-    [{ c: 'mtk5', v: 'SELECT' }, { c: 'mtk1', v: ' * ' }, { c: 'mtk5', v: 'FROM' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'ORDER' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'BY' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomProperty() }],
-    [{ c: 'mtk5', v: 'UPDATE' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'SET' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'WHERE' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }],
-    [{ c: 'mtk5', v: 'DELETE' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'FROM' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'WHERE' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }],
-    [{ c: 'mtk5', v: 'CREATE' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'INDEX' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'idx_' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'ON' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' (' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ')' }],
-    [{ c: 'mtk5', v: 'DROP' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'TABLE' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'IF' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'EXISTS' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }]
-  ]
+  const patterns =
+    [
+      [{ c: 'mtk5', v: 'CREATE' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'TABLE' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' (' }],
+      [{ c: 'mtk1', v: '    ' }, { c: 'mtk9', v: 'id' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'INT' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'PRIMARY' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'KEY' }, { c: 'mtk1', v: ',' }],
+      [{ c: 'mtk1', v: '    ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'VARCHAR' }, { c: 'mtk1', v: '(' }, { c: 'mtk10', v: '255' }, { c: 'mtk1', v: ') ' }, { c: 'mtk5', v: 'NOT' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'NULL' }, { c: 'mtk1', v: ',' }],
+      [{ c: 'mtk1', v: '    ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'TEXT' }, { c: 'mtk1', v: ',' }],
+      [{ c: 'mtk1', v: '    ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'DATETIME' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'DEFAULT' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: 'CURRENT_TIMESTAMP' }],
+      [{ c: 'mtk1', v: ');' }],
+      [{ c: 'mtk5', v: 'INSERT' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'INTO' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' (' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ', ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ')' }],
+      [{ c: 'mtk5', v: 'VALUES' }, { c: 'mtk1', v: ' (' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ', ' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ');' }],
+      [{ c: 'mtk5', v: 'SELECT' }, { c: 'mtk1', v: ' * ' }, { c: 'mtk5', v: 'FROM' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }],
+      [{ c: 'mtk5', v: 'SELECT' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ', ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'FROM' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }],
+      [{ c: 'mtk5', v: 'SELECT' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'FROM' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'WHERE' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }],
+      [{ c: 'mtk5', v: 'SELECT' }, { c: 'mtk1', v: ' * ' }, { c: 'mtk5', v: 'FROM' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'WHERE' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'LIKE' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: "'%value%'" }],
+      [{ c: 'mtk5', v: 'SELECT' }, { c: 'mtk1', v: ' * ' }, { c: 'mtk5', v: 'FROM' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'WHERE' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'IN' }, { c: 'mtk1', v: ' (' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ', ' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ')' }],
+      [{ c: 'mtk5', v: 'SELECT' }, { c: 'mtk1', v: ' * ' }, { c: 'mtk5', v: 'FROM' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'ORDER' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'BY' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomProperty() }],
+      [{ c: 'mtk5', v: 'UPDATE' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'SET' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'WHERE' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }],
+      [{ c: 'mtk5', v: 'DELETE' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'FROM' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'WHERE' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }],
+      [{ c: 'mtk5', v: 'CREATE' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'INDEX' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'idx_' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'ON' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' (' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ')' }],
+      [{ c: 'mtk5', v: 'DROP' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'TABLE' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'IF' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'EXISTS' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }]
+    ]
   return getNextPattern(fileType, patterns)
 }
 
@@ -987,43 +993,43 @@ const generateSqlLine = (fileType: string): { c: string; v: string }[] => {
  */
 const generatePhpLine = (fileType: string): { c: string; v: string }[] => {
   // prettier-ignore
-  const patterns = 
-  [
-    [{ c: 'mtk1', v: '<?php' }],
-    [{ c: 'mtk4', v: '// ' }, { c: 'mtk4', v: randomComment() }],
-    [{ c: 'mtk9', v: '$' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk5', v: 'function' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomFunctionName() }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: '$' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ') {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'return' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: '$' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '}' }],
-    [{ c: 'mtk5', v: 'class' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomClassName() }, { c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'private' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: '$' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'public' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'function' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: '__construct' }, { c: 'mtk1', v: '() {' }],
-    [{ c: 'mtk1', v: '    ' }, { c: 'mtk9', v: '$this' }, { c: 'mtk1', v: '->' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '  }' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'public' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'function' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomMethod() }, { c: 'mtk1', v: '() {' }],
-    [{ c: 'mtk1', v: '    ' }, { c: 'mtk5', v: 'return' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: '$this' }, { c: 'mtk1', v: '->' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '  }' }],
-    [{ c: 'mtk1', v: '}' }],
-    [{ c: 'mtk5', v: 'if' }, { c: 'mtk1', v: ' (' }, { c: 'mtk9', v: '$' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ') {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: '$' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '}' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'elseif' }, { c: 'mtk1', v: ' (' }, { c: 'mtk9', v: '$' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ') {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: '$' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '}' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'else' }, { c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: 'echo' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: randomString() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '}' }],
-    [{ c: 'mtk5', v: 'foreach' }, { c: 'mtk1', v: ' (' }, { c: 'mtk9', v: '$' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'as' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: '$' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ') {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: 'echo' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: '$' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '}' }],
-    [{ c: 'mtk5', v: 'try' }, { c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: '$' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '}' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'catch' }, { c: 'mtk1', v: ' (' }, { c: 'mtk16', v: 'Exception' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: '$' }, { c: 'mtk9', v: 'e' }, { c: 'mtk1', v: ') {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: 'echo' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: "'Error: '" }, { c: 'mtk1', v: ' . ' }, { c: 'mtk9', v: '$' }, { c: 'mtk9', v: 'e' }, { c: 'mtk1', v: '->' }, { c: 'mtk15', v: 'getMessage' }, { c: 'mtk1', v: '()' }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '}' }],
-    [{ c: 'mtk9', v: '$_POST' }, { c: 'mtk1', v: '[' }, { c: 'mtk11', v: "'" }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk11', v: "'" }, { c: 'mtk1', v: ']' }],
-    [{ c: 'mtk9', v: '$_GET' }, { c: 'mtk1', v: '[' }, { c: 'mtk11', v: "'" }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk11', v: "'" }, { c: 'mtk1', v: ']' }],
-    [{ c: 'mtk9', v: '$_SESSION' }, { c: 'mtk1', v: '[' }, { c: 'mtk11', v: "'" }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk11', v: "'" }, { c: 'mtk1', v: '] = ' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk5', v: 'require_once' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: "'" }, { c: 'mtk9', v: randomFileName() }, { c: 'mtk11', v: ".php'" }, { c: 'mtk1', v: ';' }]
-  ]
+  const patterns =
+    [
+      [{ c: 'mtk1', v: '<?php' }],
+      [{ c: 'mtk4', v: '// ' }, { c: 'mtk4', v: randomComment() }],
+      [{ c: 'mtk9', v: '$' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk5', v: 'function' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomFunctionName() }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: '$' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ') {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'return' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: '$' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '}' }],
+      [{ c: 'mtk5', v: 'class' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomClassName() }, { c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'private' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: '$' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'public' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'function' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: '__construct' }, { c: 'mtk1', v: '() {' }],
+      [{ c: 'mtk1', v: '    ' }, { c: 'mtk9', v: '$this' }, { c: 'mtk1', v: '->' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '  }' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'public' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'function' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomMethod() }, { c: 'mtk1', v: '() {' }],
+      [{ c: 'mtk1', v: '    ' }, { c: 'mtk5', v: 'return' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: '$this' }, { c: 'mtk1', v: '->' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '  }' }],
+      [{ c: 'mtk1', v: '}' }],
+      [{ c: 'mtk5', v: 'if' }, { c: 'mtk1', v: ' (' }, { c: 'mtk9', v: '$' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ') {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: '$' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '}' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'elseif' }, { c: 'mtk1', v: ' (' }, { c: 'mtk9', v: '$' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ') {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: '$' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '}' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'else' }, { c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: 'echo' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: randomString() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '}' }],
+      [{ c: 'mtk5', v: 'foreach' }, { c: 'mtk1', v: ' (' }, { c: 'mtk9', v: '$' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'as' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: '$' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ') {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: 'echo' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: '$' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '}' }],
+      [{ c: 'mtk5', v: 'try' }, { c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: '$' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '}' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'catch' }, { c: 'mtk1', v: ' (' }, { c: 'mtk16', v: 'Exception' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: '$' }, { c: 'mtk9', v: 'e' }, { c: 'mtk1', v: ') {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: 'echo' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: "'Error: '" }, { c: 'mtk1', v: ' . ' }, { c: 'mtk9', v: '$' }, { c: 'mtk9', v: 'e' }, { c: 'mtk1', v: '->' }, { c: 'mtk15', v: 'getMessage' }, { c: 'mtk1', v: '()' }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '}' }],
+      [{ c: 'mtk9', v: '$_POST' }, { c: 'mtk1', v: '[' }, { c: 'mtk11', v: "'" }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk11', v: "'" }, { c: 'mtk1', v: ']' }],
+      [{ c: 'mtk9', v: '$_GET' }, { c: 'mtk1', v: '[' }, { c: 'mtk11', v: "'" }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk11', v: "'" }, { c: 'mtk1', v: ']' }],
+      [{ c: 'mtk9', v: '$_SESSION' }, { c: 'mtk1', v: '[' }, { c: 'mtk11', v: "'" }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk11', v: "'" }, { c: 'mtk1', v: '] = ' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk5', v: 'require_once' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: "'" }, { c: 'mtk9', v: randomFileName() }, { c: 'mtk11', v: ".php'" }, { c: 'mtk1', v: ';' }]
+    ]
   return getNextPattern(fileType, patterns)
 }
 
@@ -1032,50 +1038,50 @@ const generatePhpLine = (fileType: string): { c: string; v: string }[] => {
  */
 const generateRubyLine = (fileType: string): { c: string; v: string }[] => {
   // prettier-ignore
-  const patterns = 
-  [
-    [{ c: 'mtk5', v: 'require' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: "'" }, { c: 'mtk9', v: randomModuleName() }, { c: 'mtk11', v: "'" }],
-    [{ c: 'mtk5', v: 'class' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomClassName() }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'def' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: 'initialize' }],
-    [{ c: 'mtk1', v: '    ' }, { c: 'mtk9', v: '@' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'end' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'def' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomMethod() }],
-    [{ c: 'mtk1', v: '    ' }, { c: 'mtk9', v: '@' }, { c: 'mtk9', v: randomProperty() }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'end' }],
-    [{ c: 'mtk5', v: 'end' }],
-    [{ c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }],
-    [{ c: 'mtk5', v: 'def' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomFunctionName() }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'return' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }],
-    [{ c: 'mtk1', v: 'end' }],
-    [{ c: 'mtk5', v: 'if' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomCondition() }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }],
-    [{ c: 'mtk1', v: 'end' }],
-    [{ c: 'mtk5', v: 'unless' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomCondition() }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }],
-    [{ c: 'mtk1', v: 'end' }],
-    [{ c: 'mtk5', v: 'case' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'when' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: randomValue() }],
-    [{ c: 'mtk1', v: '    ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'when' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: randomValue() }],
-    [{ c: 'mtk1', v: '    ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }],
-    [{ c: 'mtk1', v: 'end' }],
-    [{ c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: '.' }, { c: 'mtk15', v: randomMethod() }, { c: 'mtk1', v: ' {' }, { c: 'mtk9', v: randomParameters() }, { c: 'mtk1', v: '}' }],
-    [{ c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: '.each' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'do' }, { c: 'mtk1', v: ' |' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: '|' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: 'puts' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }],
-    [{ c: 'mtk1', v: 'end' }],
-    [{ c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: '.map' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'do' }, { c: 'mtk1', v: ' |' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: '|' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' * 2' }],
-    [{ c: 'mtk1', v: 'end' }],
-    [{ c: 'mtk4', v: '# ' }, { c: 'mtk4', v: randomComment() }],
-    [{ c: 'mtk5', v: 'begin' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }],
-    [{ c: 'mtk5', v: 'rescue' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'StandardError' }, { c: 'mtk1', v: ' => ' }, { c: 'mtk9', v: 'e' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: 'puts' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: "'Error: #{e}'" }],
-    [{ c: 'mtk5', v: 'end' }],
-    [{ c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk9', v: 'Array' }, { c: 'mtk1', v: '.' }, { c: 'mtk15', v: 'new' }, { c: 'mtk1', v: '(' }, { c: 'mtk10', v: randomNumber() }, { c: 'mtk1', v: ') {' }, { c: 'mtk9', v: randomValue() }, { c: 'mtk1', v: '}' }],
-    [{ c: 'mtk9', v: 'hash' }, { c: 'mtk1', v: ' = ' }, { c: 'mtk1', v: '{' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: '}' }]
-  ]
+  const patterns =
+    [
+      [{ c: 'mtk5', v: 'require' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: "'" }, { c: 'mtk9', v: randomModuleName() }, { c: 'mtk11', v: "'" }],
+      [{ c: 'mtk5', v: 'class' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomClassName() }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'def' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: 'initialize' }],
+      [{ c: 'mtk1', v: '    ' }, { c: 'mtk9', v: '@' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'end' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'def' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomMethod() }],
+      [{ c: 'mtk1', v: '    ' }, { c: 'mtk9', v: '@' }, { c: 'mtk9', v: randomProperty() }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'end' }],
+      [{ c: 'mtk5', v: 'end' }],
+      [{ c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }],
+      [{ c: 'mtk5', v: 'def' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomFunctionName() }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'return' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }],
+      [{ c: 'mtk1', v: 'end' }],
+      [{ c: 'mtk5', v: 'if' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomCondition() }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }],
+      [{ c: 'mtk1', v: 'end' }],
+      [{ c: 'mtk5', v: 'unless' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomCondition() }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }],
+      [{ c: 'mtk1', v: 'end' }],
+      [{ c: 'mtk5', v: 'case' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'when' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: randomValue() }],
+      [{ c: 'mtk1', v: '    ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'when' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: randomValue() }],
+      [{ c: 'mtk1', v: '    ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }],
+      [{ c: 'mtk1', v: 'end' }],
+      [{ c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: '.' }, { c: 'mtk15', v: randomMethod() }, { c: 'mtk1', v: ' {' }, { c: 'mtk9', v: randomParameters() }, { c: 'mtk1', v: '}' }],
+      [{ c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: '.each' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'do' }, { c: 'mtk1', v: ' |' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: '|' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: 'puts' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }],
+      [{ c: 'mtk1', v: 'end' }],
+      [{ c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: '.map' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'do' }, { c: 'mtk1', v: ' |' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: '|' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' * 2' }],
+      [{ c: 'mtk1', v: 'end' }],
+      [{ c: 'mtk4', v: '# ' }, { c: 'mtk4', v: randomComment() }],
+      [{ c: 'mtk5', v: 'begin' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }],
+      [{ c: 'mtk5', v: 'rescue' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'StandardError' }, { c: 'mtk1', v: ' => ' }, { c: 'mtk9', v: 'e' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: 'puts' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: "'Error: #{e}'" }],
+      [{ c: 'mtk5', v: 'end' }],
+      [{ c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk9', v: 'Array' }, { c: 'mtk1', v: '.' }, { c: 'mtk15', v: 'new' }, { c: 'mtk1', v: '(' }, { c: 'mtk10', v: randomNumber() }, { c: 'mtk1', v: ') {' }, { c: 'mtk9', v: randomValue() }, { c: 'mtk1', v: '}' }],
+      [{ c: 'mtk9', v: 'hash' }, { c: 'mtk1', v: ' = ' }, { c: 'mtk1', v: '{' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: '}' }]
+    ]
   return getNextPattern(fileType, patterns)
 }
 
@@ -1084,68 +1090,68 @@ const generateRubyLine = (fileType: string): { c: string; v: string }[] => {
  */
 const generateRustLine = (fileType: string): { c: string; v: string }[] => {
   // prettier-ignore
-  const patterns = 
-  [
-    [{ c: 'mtk5', v: 'use' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'std::collections::HashMap' }],
-    [{ c: 'mtk5', v: 'use' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'std::io::{self, Read, Write}' }],
-    [{ c: 'mtk5', v: 'use' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'std::fs::File' }],
-    [{ c: 'mtk5', v: 'fn' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomFunctionName() }, { c: 'mtk1', v: '() -> ' }, { c: 'mtk16', v: randomCppType() }, { c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'let' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'mut' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomVariableName() }],
-    [{ c: 'mtk1', v: '}' }],
-    [{ c: 'mtk5', v: 'fn' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomFunctionName() }, { c: 'mtk1', v: '<' }, { c: 'mtk16', v: 'T' }, { c: 'mtk1', v: '>(' }, { c: 'mtk9', v: 'param' }, { c: 'mtk1', v: ': T) -> T {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: 'param' }],
-    [{ c: 'mtk1', v: '}' }],
-    [{ c: 'mtk5', v: 'struct' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomClassName() }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ': ' }, { c: 'mtk16', v: randomCppType() }, { c: 'mtk1', v: ',' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ': ' }, { c: 'mtk16', v: randomCppType() }],
-    [{ c: 'mtk1', v: '}' }],
-    [{ c: 'mtk5', v: 'impl' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomClassName() }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'fn' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: 'new' }, { c: 'mtk1', v: '() -> Self {' }],
-    [{ c: 'mtk1', v: '    ' }, { c: 'mtk16', v: 'Self' }, { c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk1', v: '      ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ',' }],
-    [{ c: 'mtk1', v: '      ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomValue() }],
-    [{ c: 'mtk1', v: '    }' }],
-    [{ c: 'mtk1', v: '  }' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'fn' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomMethod() }, { c: 'mtk1', v: '(&self) -> ' }, { c: 'mtk16', v: randomCppType() }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'fn' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomMethod() }, { c: 'mtk1', v: '(&mut self) {' }],
-    [{ c: 'mtk1', v: '    ' }, { c: 'mtk5', v: 'self' }, { c: 'mtk1', v: '.' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '  }' }],
-    [{ c: 'mtk1', v: '}' }],
-    [{ c: 'mtk5', v: 'enum' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomEnumName() }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomEnumValue() }, { c: 'mtk1', v: ',' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomEnumValue() }],
-    [{ c: 'mtk1', v: '}' }],
-    [{ c: 'mtk5', v: 'trait' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomInterfaceName() }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'fn' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomMethod() }, { c: 'mtk1', v: '(&self);' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'fn' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomMethod() }, { c: 'mtk1', v: '(&mut self);' }],
-    [{ c: 'mtk1', v: '}' }],
-    [{ c: 'mtk5', v: 'impl' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomInterfaceName() }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'for' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomClassName() }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'fn' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomMethod() }, { c: 'mtk1', v: '(&self);' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'fn' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomMethod() }, { c: 'mtk1', v: '(&mut self);' }],
-    [{ c: 'mtk1', v: '}' }],
-    [{ c: 'mtk5', v: 'if' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomCondition() }, { c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '}' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'else' }, { c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '}' }],
-    [{ c: 'mtk5', v: 'match' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomValue() }, { c: 'mtk1', v: ' => ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomValue() }, { c: 'mtk1', v: ' => ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: '_' }, { c: 'mtk1', v: ' => ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }],
-    [{ c: 'mtk1', v: '}' }],
-    [{ c: 'mtk5', v: 'loop' }, { c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' += 1' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'if' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' > ' }, { c: 'mtk10', v: randomNumber() }, { c: 'mtk1', v: ' {' }, { c: 'mtk5', v: 'break' }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '  ' }],
-    [{ c: 'mtk1', v: '}' }],
-    [{ c: 'mtk5', v: 'for' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'i' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'in' }, { c: 'mtk1', v: ' ' }, { c: 'mtk10', v: '0' }, { c: 'mtk1', v: '..' }, { c: 'mtk10', v: randomNumber() }],
-    [{ c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'let' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'mut' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'sum' }, { c: 'mtk1', v: ' = ' }, { c: 'mtk10', v: '0' }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: 'sum' }, { c: 'mtk1', v: ' += ' }, { c: 'mtk9', v: 'i' }],
-    [{ c: 'mtk1', v: '}' }],
-    [{ c: 'mtk4', v: '// ' }, { c: 'mtk4', v: randomComment() }]
-  ]
+  const patterns =
+    [
+      [{ c: 'mtk5', v: 'use' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'std::collections::HashMap' }],
+      [{ c: 'mtk5', v: 'use' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'std::io::{self, Read, Write}' }],
+      [{ c: 'mtk5', v: 'use' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'std::fs::File' }],
+      [{ c: 'mtk5', v: 'fn' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomFunctionName() }, { c: 'mtk1', v: '() -> ' }, { c: 'mtk16', v: randomCppType() }, { c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'let' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'mut' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomVariableName() }],
+      [{ c: 'mtk1', v: '}' }],
+      [{ c: 'mtk5', v: 'fn' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomFunctionName() }, { c: 'mtk1', v: '<' }, { c: 'mtk16', v: 'T' }, { c: 'mtk1', v: '>(' }, { c: 'mtk9', v: 'param' }, { c: 'mtk1', v: ': T) -> T {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: 'param' }],
+      [{ c: 'mtk1', v: '}' }],
+      [{ c: 'mtk5', v: 'struct' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomClassName() }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ': ' }, { c: 'mtk16', v: randomCppType() }, { c: 'mtk1', v: ',' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ': ' }, { c: 'mtk16', v: randomCppType() }],
+      [{ c: 'mtk1', v: '}' }],
+      [{ c: 'mtk5', v: 'impl' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomClassName() }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'fn' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: 'new' }, { c: 'mtk1', v: '() -> Self {' }],
+      [{ c: 'mtk1', v: '    ' }, { c: 'mtk16', v: 'Self' }, { c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk1', v: '      ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ',' }],
+      [{ c: 'mtk1', v: '      ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomValue() }],
+      [{ c: 'mtk1', v: '    }' }],
+      [{ c: 'mtk1', v: '  }' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'fn' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomMethod() }, { c: 'mtk1', v: '(&self) -> ' }, { c: 'mtk16', v: randomCppType() }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'fn' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomMethod() }, { c: 'mtk1', v: '(&mut self) {' }],
+      [{ c: 'mtk1', v: '    ' }, { c: 'mtk5', v: 'self' }, { c: 'mtk1', v: '.' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '  }' }],
+      [{ c: 'mtk1', v: '}' }],
+      [{ c: 'mtk5', v: 'enum' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomEnumName() }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomEnumValue() }, { c: 'mtk1', v: ',' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomEnumValue() }],
+      [{ c: 'mtk1', v: '}' }],
+      [{ c: 'mtk5', v: 'trait' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomInterfaceName() }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'fn' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomMethod() }, { c: 'mtk1', v: '(&self);' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'fn' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomMethod() }, { c: 'mtk1', v: '(&mut self);' }],
+      [{ c: 'mtk1', v: '}' }],
+      [{ c: 'mtk5', v: 'impl' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomInterfaceName() }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'for' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomClassName() }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'fn' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomMethod() }, { c: 'mtk1', v: '(&self);' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'fn' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomMethod() }, { c: 'mtk1', v: '(&mut self);' }],
+      [{ c: 'mtk1', v: '}' }],
+      [{ c: 'mtk5', v: 'if' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomCondition() }, { c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '}' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'else' }, { c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '}' }],
+      [{ c: 'mtk5', v: 'match' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomValue() }, { c: 'mtk1', v: ' => ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomValue() }, { c: 'mtk1', v: ' => ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: '_' }, { c: 'mtk1', v: ' => ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }],
+      [{ c: 'mtk1', v: '}' }],
+      [{ c: 'mtk5', v: 'loop' }, { c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' += 1' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'if' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' > ' }, { c: 'mtk10', v: randomNumber() }, { c: 'mtk1', v: ' {' }, { c: 'mtk5', v: 'break' }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '  ' }],
+      [{ c: 'mtk1', v: '}' }],
+      [{ c: 'mtk5', v: 'for' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'i' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'in' }, { c: 'mtk1', v: ' ' }, { c: 'mtk10', v: '0' }, { c: 'mtk1', v: '..' }, { c: 'mtk10', v: randomNumber() }],
+      [{ c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'let' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'mut' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'sum' }, { c: 'mtk1', v: ' = ' }, { c: 'mtk10', v: '0' }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: 'sum' }, { c: 'mtk1', v: ' += ' }, { c: 'mtk9', v: 'i' }],
+      [{ c: 'mtk1', v: '}' }],
+      [{ c: 'mtk4', v: '// ' }, { c: 'mtk4', v: randomComment() }]
+    ]
   return getNextPattern(fileType, patterns)
 }
 
@@ -1154,31 +1160,31 @@ const generateRustLine = (fileType: string): { c: string; v: string }[] => {
  */
 const generateRustToolchainLine = (fileType: string): { c: string; v: string }[] => {
   // prettier-ignore
-  const patterns = 
-  [
-    [{ c: 'mtk9', v: '[toolchain]' }],
-    [{ c: 'mtk9', v: 'channel' }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: '"stable"' }],
-    [{ c: 'mtk9', v: 'components' }, { c: 'mtk1', v: ' = [' }, { c: 'mtk11', v: '"rustc"' }, { c: 'mtk1', v: ', ' }, { c: 'mtk11', v: '"rust-std"' }, { c: 'mtk1', v: ', ' }, { c: 'mtk11', v: '"cargo"' }, { c: 'mtk1', v: ']' }],
-    [{ c: 'mtk9', v: 'profile' }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: '"minimal"' }],
-    [{ c: 'mtk9', v: 'targets' }, { c: 'mtk1', v: ' = [' }, { c: 'mtk11', v: '"x86_64-unknown-linux-gnu"' }, { c: 'mtk1', v: ']' }],
-    [{ c: 'mtk4', v: '# ' }, { c: 'mtk4', v: ' ' }, { c: 'mtk4', v: randomComment() }],
-    [{ c: 'mtk9', v: '[source.crates-io]' }],
-    [{ c: 'mtk9', v: 'replace-with' }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: '"https://mirrors.ustc.edu.cn/crates.io-index"' }],
-    [{ c: 'mtk9', v: '[source]' }],
-    [{ c: 'mtk9', v: 'replace-with' }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: '"https://mirrors.ustc.edu.cn/rust-static"' }],
-    [{ c: 'mtk9', v: '[build]' }],
-    [{ c: 'mtk9', v: 'rustflags' }, { c: 'mtk1', v: ' = ["-C", "target-cpu=native"]' }],
-    [{ c: 'mtk9', v: '[target.x86_64-unknown-linux-gnu]' }],
-    [{ c: 'mtk9', v: 'linker' }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: '"ld.lld"' }],
-    [{ c: 'mtk4', v: '# ' }, { c: 'mtk4', v: ' ' }, { c: 'mtk4', v: randomComment() }],
-    [{ c: 'mtk9', v: '[env]' }],
-    [{ c: 'mtk9', v: 'CC_OVERRIDE' }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: '"clang"' }],
-    [{ c: 'mtk9', v: 'CXX_OVERRIDE' }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: '"clang++"' }],
-    [{ c: 'mtk9', v: '[target.' }, { c: 'mtk11', v: '"x86_64-unknown-linux-musl"' }, { c: 'mtk9', v: ']' }],
-    [{ c: 'mtk9', v: 'linker' }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: '"musl-gcc"' }],
-    [{ c: 'mtk9', v: 'rustflags' }, { c: 'mtk1', v: ' = ["-C", "target-feature=+crt-static"]' }],
-    [{ c: 'mtk4', v: '# ' }, { c: 'mtk4', v: ' ' }, { c: 'mtk4', v: randomComment() }]
-  ]
+  const patterns =
+    [
+      [{ c: 'mtk9', v: '[toolchain]' }],
+      [{ c: 'mtk9', v: 'channel' }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: '"stable"' }],
+      [{ c: 'mtk9', v: 'components' }, { c: 'mtk1', v: ' = [' }, { c: 'mtk11', v: '"rustc"' }, { c: 'mtk1', v: ', ' }, { c: 'mtk11', v: '"rust-std"' }, { c: 'mtk1', v: ', ' }, { c: 'mtk11', v: '"cargo"' }, { c: 'mtk1', v: ']' }],
+      [{ c: 'mtk9', v: 'profile' }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: '"minimal"' }],
+      [{ c: 'mtk9', v: 'targets' }, { c: 'mtk1', v: ' = [' }, { c: 'mtk11', v: '"x86_64-unknown-linux-gnu"' }, { c: 'mtk1', v: ']' }],
+      [{ c: 'mtk4', v: '# ' }, { c: 'mtk4', v: ' ' }, { c: 'mtk4', v: randomComment() }],
+      [{ c: 'mtk9', v: '[source.crates-io]' }],
+      [{ c: 'mtk9', v: 'replace-with' }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: '"https://mirrors.ustc.edu.cn/crates.io-index"' }],
+      [{ c: 'mtk9', v: '[source]' }],
+      [{ c: 'mtk9', v: 'replace-with' }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: '"https://mirrors.ustc.edu.cn/rust-static"' }],
+      [{ c: 'mtk9', v: '[build]' }],
+      [{ c: 'mtk9', v: 'rustflags' }, { c: 'mtk1', v: ' = ["-C", "target-cpu=native"]' }],
+      [{ c: 'mtk9', v: '[target.x86_64-unknown-linux-gnu]' }],
+      [{ c: 'mtk9', v: 'linker' }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: '"ld.lld"' }],
+      [{ c: 'mtk4', v: '# ' }, { c: 'mtk4', v: ' ' }, { c: 'mtk4', v: randomComment() }],
+      [{ c: 'mtk9', v: '[env]' }],
+      [{ c: 'mtk9', v: 'CC_OVERRIDE' }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: '"clang"' }],
+      [{ c: 'mtk9', v: 'CXX_OVERRIDE' }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: '"clang++"' }],
+      [{ c: 'mtk9', v: '[target.' }, { c: 'mtk11', v: '"x86_64-unknown-linux-musl"' }, { c: 'mtk9', v: ']' }],
+      [{ c: 'mtk9', v: 'linker' }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: '"musl-gcc"' }],
+      [{ c: 'mtk9', v: 'rustflags' }, { c: 'mtk1', v: ' = ["-C", "target-feature=+crt-static"]' }],
+      [{ c: 'mtk4', v: '# ' }, { c: 'mtk4', v: ' ' }, { c: 'mtk4', v: randomComment() }]
+    ]
   return getNextPattern(fileType, patterns)
 }
 
@@ -1187,53 +1193,53 @@ const generateRustToolchainLine = (fileType: string): { c: string; v: string }[]
  */
 const generateSwiftLine = (fileType: string): { c: string; v: string }[] => {
   // prettier-ignore
-  const patterns = 
-  [
-    [{ c: 'mtk5', v: 'import' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'Foundation' }],
-    [{ c: 'mtk5', v: 'import' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'UIKit' }],
-    [{ c: 'mtk5', v: 'import' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'SwiftUI' }],
-    [{ c: 'mtk5', v: 'import' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'Combine' }],
-    [{ c: 'mtk5', v: 'class' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomClassName() }, { c: 'mtk1', v: ': ' }, { c: 'mtk16', v: 'UIViewController' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'override' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'func' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: 'viewDidLoad' }, { c: 'mtk1', v: '() {' }],
-    [{ c: 'mtk1', v: '    ' }, { c: 'mt5', v: 'super' }, { c: 'mtk1', v: '.' }, { c: 'mt15', v: 'viewDidLoad' }, { c: 'mtk1', v: '()' }],
-    [{ c: 'mtk1', v: '    ' }, { c: 'mtk9', v: 'setupUI' }, { c: 'mtk1', v: '()' }],
-    [{ c: 'mtk1', v: '  }' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'private' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'func' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: 'setupUI' }, { c: 'mtk1', v: '() {' }],
-    [{ c: 'mtk1', v: '    ' }, { c: 'mtk9', v: 'view' }, { c: 'mtk1', v: '.' }, { c: 'mtk9', v: 'backgroundColor' }, { c: 'mtk1', v: ' = ' }, { c: 'mtk9', v: 'UIColor' }, { c: 'mtk1', v: '.' }, { c: 'mtk9', v: 'systemBackground' }],
-    [{ c: 'mtk1', v: '  }' }],
-    [{ c: 'mtk1', v: '}' }],
-    [{ c: 'mtk5', v: 'struct' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomClassName() }, { c: 'mtk1', v: ': ' }, { c: 'mtk16', v: 'View' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'var' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ': ' }, { c: 'mtk16', v: 'String' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'var' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'body' }, { c: 'mtk1', v: ': ' }, { c: 'mtk5', v: 'some' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: 'View' }],
-    [{ c: 'mtk1', v: '    ' }, { c: 'mtk9', v: 'Text' }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ')' }],
-    [{ c: 'mtk1', v: '      ' }, { c: 'mtk1', v: '.' }, { c: 'mtk9', v: 'padding' }, { c: 'mtk1', v: '()' }],
-    [{ c: 'mtk1', v: '  }' }],
-    [{ c: 'mtk1', v: '}' }],
-    [{ c: 'mtk5', v: 'protocol' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomInterfaceName() }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'func' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomMethod() }, { c: 'mtk1', v: '()' }],
-    [{ c: 'mtk1', v: '}' }],
-    [{ c: 'mtk5', v: 'extension' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomClassName() }, { c: 'mtk1', v: ': ' }, { c: 'mtk16', v: randomInterfaceName() }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'func' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomMethod() }, { c: 'mtk1', v: '() {' }],
-    [{ c: 'mtk1', v: '    ' }, { c: 'mtk9', v: 'print' }, { c: 'mtk1', v: '(' }, { c: 'mtk11', v: randomString() }, { c: 'mtk1', v: ')' }],
-    [{ c: 'mtk1', v: '  }' }],
-    [{ c: 'mtk1', v: '}' }],
-    [{ c: 'mtk5', v: 'enum' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomEnumName() }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'case' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomEnumValue() }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'case' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomEnumValue() }],
-    [{ c: 'mtk1', v: '}' }],
-    [{ c: 'mtk4', v: '// ' }, { c: 'mtk4', v: randomComment() }],
-    [{ c: 'mtk5', v: 'let' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ': ' }, { c: 'mtk16', v: 'String' }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomString() }],
-    [{ c: 'mtk5', v: 'var' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ': ' }, { c: 'mtk16', v: 'Int' }, { c: 'mtk1', v: ' = ' }, { c: 'mtk10', v: randomNumber() }],
-    [{ c: 'mtk5', v: 'guard' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'let' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'else' }, { c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'return' }],
-    [{ c: 'mtk1', v: '}' }],
-    [{ c: 'mtk5', v: 'if' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomCondition() }, { c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: 'print' }, { c: 'mtk1', v: '(' }, { c: 'mtk11', v: randomString() }, { c: 'mtk1', v: ')' }],
-    [{ c: 'mtk1', v: '}' }],
-    [{ c: 'mtk5', v: 'for' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'in' }, { c: 'mtk1', v: ' ' }, { c: 'mtk10', v: '0' }, { c: 'mtk1', v: '...' }, { c: 'mtk10', v: randomNumber() }, { c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: 'print' }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ')' }],
-    [{ c: 'mtk1', v: '}' }]
-  ]
+  const patterns =
+    [
+      [{ c: 'mtk5', v: 'import' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'Foundation' }],
+      [{ c: 'mtk5', v: 'import' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'UIKit' }],
+      [{ c: 'mtk5', v: 'import' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'SwiftUI' }],
+      [{ c: 'mtk5', v: 'import' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'Combine' }],
+      [{ c: 'mtk5', v: 'class' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomClassName() }, { c: 'mtk1', v: ': ' }, { c: 'mtk16', v: 'UIViewController' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'override' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'func' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: 'viewDidLoad' }, { c: 'mtk1', v: '() {' }],
+      [{ c: 'mtk1', v: '    ' }, { c: 'mt5', v: 'super' }, { c: 'mtk1', v: '.' }, { c: 'mt15', v: 'viewDidLoad' }, { c: 'mtk1', v: '()' }],
+      [{ c: 'mtk1', v: '    ' }, { c: 'mtk9', v: 'setupUI' }, { c: 'mtk1', v: '()' }],
+      [{ c: 'mtk1', v: '  }' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'private' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'func' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: 'setupUI' }, { c: 'mtk1', v: '() {' }],
+      [{ c: 'mtk1', v: '    ' }, { c: 'mtk9', v: 'view' }, { c: 'mtk1', v: '.' }, { c: 'mtk9', v: 'backgroundColor' }, { c: 'mtk1', v: ' = ' }, { c: 'mtk9', v: 'UIColor' }, { c: 'mtk1', v: '.' }, { c: 'mtk9', v: 'systemBackground' }],
+      [{ c: 'mtk1', v: '  }' }],
+      [{ c: 'mtk1', v: '}' }],
+      [{ c: 'mtk5', v: 'struct' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomClassName() }, { c: 'mtk1', v: ': ' }, { c: 'mtk16', v: 'View' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'var' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ': ' }, { c: 'mtk16', v: 'String' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'var' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'body' }, { c: 'mtk1', v: ': ' }, { c: 'mtk5', v: 'some' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: 'View' }],
+      [{ c: 'mtk1', v: '    ' }, { c: 'mtk9', v: 'Text' }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ')' }],
+      [{ c: 'mtk1', v: '      ' }, { c: 'mtk1', v: '.' }, { c: 'mtk9', v: 'padding' }, { c: 'mtk1', v: '()' }],
+      [{ c: 'mtk1', v: '  }' }],
+      [{ c: 'mtk1', v: '}' }],
+      [{ c: 'mtk5', v: 'protocol' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomInterfaceName() }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'func' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomMethod() }, { c: 'mtk1', v: '()' }],
+      [{ c: 'mtk1', v: '}' }],
+      [{ c: 'mtk5', v: 'extension' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomClassName() }, { c: 'mtk1', v: ': ' }, { c: 'mtk16', v: randomInterfaceName() }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'func' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomMethod() }, { c: 'mtk1', v: '() {' }],
+      [{ c: 'mtk1', v: '    ' }, { c: 'mtk9', v: 'print' }, { c: 'mtk1', v: '(' }, { c: 'mtk11', v: randomString() }, { c: 'mtk1', v: ')' }],
+      [{ c: 'mtk1', v: '  }' }],
+      [{ c: 'mtk1', v: '}' }],
+      [{ c: 'mtk5', v: 'enum' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomEnumName() }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'case' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomEnumValue() }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'case' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomEnumValue() }],
+      [{ c: 'mtk1', v: '}' }],
+      [{ c: 'mtk4', v: '// ' }, { c: 'mtk4', v: randomComment() }],
+      [{ c: 'mtk5', v: 'let' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ': ' }, { c: 'mtk16', v: 'String' }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomString() }],
+      [{ c: 'mtk5', v: 'var' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ': ' }, { c: 'mtk16', v: 'Int' }, { c: 'mtk1', v: ' = ' }, { c: 'mtk10', v: randomNumber() }],
+      [{ c: 'mtk5', v: 'guard' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'let' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'else' }, { c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'return' }],
+      [{ c: 'mtk1', v: '}' }],
+      [{ c: 'mtk5', v: 'if' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomCondition() }, { c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: 'print' }, { c: 'mtk1', v: '(' }, { c: 'mtk11', v: randomString() }, { c: 'mtk1', v: ')' }],
+      [{ c: 'mtk1', v: '}' }],
+      [{ c: 'mtk5', v: 'for' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'in' }, { c: 'mtk1', v: ' ' }, { c: 'mtk10', v: '0' }, { c: 'mtk1', v: '...' }, { c: 'mtk10', v: randomNumber() }, { c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: 'print' }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ')' }],
+      [{ c: 'mtk1', v: '}' }]
+    ]
   return getNextPattern(fileType, patterns)
 }
 
@@ -1242,30 +1248,30 @@ const generateSwiftLine = (fileType: string): { c: string; v: string }[] => {
  */
 const generateTypeScriptLine = (fileType: string): { c: string; v: string }[] => {
   // prettier-ignore
-  const patterns = 
-  [
-    [{ c: 'mtk5', v: 'interface' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomInterfaceName() }, { c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ': ' }, { c: 'mtk16', v: randomType() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk15', v: randomMethod() }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomParameters() }, { c: 'mtk1', v: '): ' }, { c: 'mtk16', v: randomType() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '}' }],
-    [{ c: 'mtk5', v: 'type' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomTypeName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk16', v: randomType() }, { c: 'mtk1', v: ' | ' }, { c: 'mtk16', v: randomType() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk5', v: 'const' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ': ' }, { c: 'mtk16', v: randomType() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk5', v: 'function' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomFunctionName() }, { c: 'mtk1', v: '<' }, { c: 'mtk16', v: 'T' }, { c: 'mtk1', v: '>(' }, { c: 'mtk9', v: 'param' }, { c: 'mtk1', v: ': ' }, { c: 'mtk16', v: 'T' }, { c: 'mtk1', v: '): ' }, { c: 'mtk16', v: 'T' }, { c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'return' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'param' }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '}' }],
-    [{ c: 'mtk5', v: 'class' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomClassName() }, { c: 'mtk1', v: '<' }, { c: 'mtk16', v: 'T' }, { c: 'mtk1', v: '> ' }, { c: 'mtk5', v: 'implements' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomInterfaceName() }, { c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'private' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ': ' }, { c: 'mtk16', v: 'T' }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'public' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomMethod() }, { c: 'mtk1', v: '(): ' }, { c: 'mtk16', v: 'T' }, { c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk1', v: '    ' }, { c: 'mtk5', v: 'return' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'this' }, { c: 'mtk1', v: '.' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '  }' }],
-    [{ c: 'mtk1', v: '}' }],
-    [{ c: 'mtk5', v: 'enum' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomEnumName() }, { c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomEnumValue() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: `'${randomString().replace(/"/g, '')}'` }, { c: 'mtk1', v: ',' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomEnumValue() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: `'${randomString().replace(/"/g, '')}'` }],
-    [{ c: 'mtk1', v: '}' }],
-    [{ c: 'mtk5', v: 'import' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'type' }, { c: 'mtk1', v: ' { ' }, { c: 'mtk16', v: randomInterfaceName() }, { c: 'mtk1', v: ' } ' }, { c: 'mtk5', v: 'from' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: `'${randomModuleName()}'` }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk5', v: 'export' }, { c: 'mtk1', v: ' { ' }, { c: 'mtk16', v: randomClassName() }, { c: 'mtk1', v: ' }' }]
-  ]
+  const patterns =
+    [
+      [{ c: 'mtk5', v: 'interface' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomInterfaceName() }, { c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ': ' }, { c: 'mtk16', v: randomType() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk15', v: randomMethod() }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomParameters() }, { c: 'mtk1', v: '): ' }, { c: 'mtk16', v: randomType() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '}' }],
+      [{ c: 'mtk5', v: 'type' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomTypeName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk16', v: randomType() }, { c: 'mtk1', v: ' | ' }, { c: 'mtk16', v: randomType() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk5', v: 'const' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ': ' }, { c: 'mtk16', v: randomType() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk5', v: 'function' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomFunctionName() }, { c: 'mtk1', v: '<' }, { c: 'mtk16', v: 'T' }, { c: 'mtk1', v: '>(' }, { c: 'mtk9', v: 'param' }, { c: 'mtk1', v: ': ' }, { c: 'mtk16', v: 'T' }, { c: 'mtk1', v: '): ' }, { c: 'mtk16', v: 'T' }, { c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'return' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'param' }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '}' }],
+      [{ c: 'mtk5', v: 'class' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomClassName() }, { c: 'mtk1', v: '<' }, { c: 'mtk16', v: 'T' }, { c: 'mtk1', v: '> ' }, { c: 'mtk5', v: 'implements' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomInterfaceName() }, { c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'private' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ': ' }, { c: 'mtk16', v: 'T' }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'public' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomMethod() }, { c: 'mtk1', v: '(): ' }, { c: 'mtk16', v: 'T' }, { c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk1', v: '    ' }, { c: 'mtk5', v: 'return' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'this' }, { c: 'mtk1', v: '.' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '  }' }],
+      [{ c: 'mtk1', v: '}' }],
+      [{ c: 'mtk5', v: 'enum' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomEnumName() }, { c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomEnumValue() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: `'${randomString().replace(/"/g, '')}'` }, { c: 'mtk1', v: ',' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomEnumValue() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: `'${randomString().replace(/"/g, '')}'` }],
+      [{ c: 'mtk1', v: '}' }],
+      [{ c: 'mtk5', v: 'import' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'type' }, { c: 'mtk1', v: ' { ' }, { c: 'mtk16', v: randomInterfaceName() }, { c: 'mtk1', v: ' } ' }, { c: 'mtk5', v: 'from' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: `'${randomModuleName()}'` }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk5', v: 'export' }, { c: 'mtk1', v: ' { ' }, { c: 'mtk16', v: randomClassName() }, { c: 'mtk1', v: ' }' }]
+    ]
   return getNextPattern(fileType, patterns)
 }
 
@@ -1274,33 +1280,33 @@ const generateTypeScriptLine = (fileType: string): { c: string; v: string }[] =>
  */
 const generatePythonLine = (fileType: string): { c: string; v: string }[] => {
   // prettier-ignore
-  const patterns = 
-  [
-    [{ c: 'mtk5', v: 'import' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomModuleName() }],
-    [{ c: 'mtk5', v: 'from' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomModuleName() }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'import' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }],
-    [{ c: 'mtk5', v: 'def' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomFunctionName() }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomPythonParameters() }, { c: 'mtk1', v: '):' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk11', v: '"""' }, { c: 'mtk11', v: randomComment() }, { c: 'mtk11', v: '"""' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'return' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: randomValue() }],
-    [{ c: 'mtk5', v: 'class' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomClassName() }, { c: 'mtk1', v: ':' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'def' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: '__init__' }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: 'self' }, { c: 'mtk1', v: ', ' }, { c: 'mtk9', v: randomPythonParameters() }, { c: 'mtk1', v: '):' }],
-    [{ c: 'mtk1', v: '    ' }, { c: 'mtk9', v: 'self' }, { c: 'mtk1', v: '.' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'def' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomMethod() }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: 'self' }, { c: 'mtk1', v: '):' }],
-    [{ c: 'mtk1', v: '    ' }, { c: 'mtk5', v: 'return' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'self' }, { c: 'mtk1', v: '.' }, { c: 'mtk9', v: randomProperty() }],
-    [{ c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }],
-    [{ c: 'mtk5', v: 'if' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomCondition() }, { c: 'mtk1', v: ':' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }],
-    [{ c: 'mtk5', v: 'elif' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomCondition() }, { c: 'mtk1', v: ':' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'pass' }],
-    [{ c: 'mtk5', v: 'else' }, { c: 'mtk1', v: ':' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk15', v: 'print' }, { c: 'mtk1', v: '(' }, { c: 'mtk11', v: randomString() }, { c: 'mtk1', v: ')' }],
-    [{ c: 'mtk4', v: '# ' }, { c: 'mtk4', v: randomComment() }],
-    [{ c: 'mtk5', v: 'try' }, { c: 'mtk1', v: ':' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }],
-    [{ c: 'mtk5', v: 'except' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: 'Exception' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'as' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'e' }, { c: 'mtk1', v: ':' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk15', v: 'print' }, { c: 'mtk1', v: '(' }, { c: 'mtk11', v: 'f"Error: {e}"' }, { c: 'mtk1', v: ')' }],
-    [{ c: 'mtk5', v: 'for' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'in' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ':' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: '.' }, { c: 'mtk15', v: randomMethod() }, { c: 'mtk1', v: '()' }]
-  ]
+  const patterns =
+    [
+      [{ c: 'mtk5', v: 'import' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomModuleName() }],
+      [{ c: 'mtk5', v: 'from' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomModuleName() }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'import' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }],
+      [{ c: 'mtk5', v: 'def' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomFunctionName() }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomPythonParameters() }, { c: 'mtk1', v: '):' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk11', v: '"""' }, { c: 'mtk11', v: randomComment() }, { c: 'mtk11', v: '"""' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'return' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: randomValue() }],
+      [{ c: 'mtk5', v: 'class' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomClassName() }, { c: 'mtk1', v: ':' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'def' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: '__init__' }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: 'self' }, { c: 'mtk1', v: ', ' }, { c: 'mtk9', v: randomPythonParameters() }, { c: 'mtk1', v: '):' }],
+      [{ c: 'mtk1', v: '    ' }, { c: 'mtk9', v: 'self' }, { c: 'mtk1', v: '.' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'def' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomMethod() }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: 'self' }, { c: 'mtk1', v: '):' }],
+      [{ c: 'mtk1', v: '    ' }, { c: 'mtk5', v: 'return' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'self' }, { c: 'mtk1', v: '.' }, { c: 'mtk9', v: randomProperty() }],
+      [{ c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }],
+      [{ c: 'mtk5', v: 'if' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomCondition() }, { c: 'mtk1', v: ':' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }],
+      [{ c: 'mtk5', v: 'elif' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomCondition() }, { c: 'mtk1', v: ':' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'pass' }],
+      [{ c: 'mtk5', v: 'else' }, { c: 'mtk1', v: ':' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk15', v: 'print' }, { c: 'mtk1', v: '(' }, { c: 'mtk11', v: randomString() }, { c: 'mtk1', v: ')' }],
+      [{ c: 'mtk4', v: '# ' }, { c: 'mtk4', v: randomComment() }],
+      [{ c: 'mtk5', v: 'try' }, { c: 'mtk1', v: ':' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }],
+      [{ c: 'mtk5', v: 'except' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: 'Exception' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'as' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'e' }, { c: 'mtk1', v: ':' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk15', v: 'print' }, { c: 'mtk1', v: '(' }, { c: 'mtk11', v: 'f"Error: {e}"' }, { c: 'mtk1', v: ')' }],
+      [{ c: 'mtk5', v: 'for' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'in' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ':' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: '.' }, { c: 'mtk15', v: randomMethod() }, { c: 'mtk1', v: '()' }]
+    ]
   return getNextPattern(fileType, patterns)
 }
 
@@ -1309,34 +1315,34 @@ const generatePythonLine = (fileType: string): { c: string; v: string }[] => {
  */
 const generateJavaLine = (fileType: string): { c: string; v: string }[] => {
   // prettier-ignore
-  const patterns = 
-  [
-    [{ c: 'mtk5', v: 'package' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'com.' }, { c: 'mtk9', v: randomModuleName() }, { c: 'mtk1', v: '.' }, { c: 'mtk9', v: randomModuleName() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk5', v: 'import' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'java.util.' }, { c: 'mtk16', v: randomClassName() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk5', v: 'import' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'java.io.' }, { c: 'mtk16', v: randomClassName() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk5', v: 'public' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'class' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomClassName() }, { c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'private' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomType() }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'public' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomClassName() }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomJavaParameters() }, { c: 'mtk1', v: ') {' }],
-    [{ c: 'mtk1', v: '    ' }, { c: 'mtk5', v: 'this' }, { c: 'mtk1', v: '.' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '  }' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'public' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomType() }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomMethod() }, { c: 'mtk1', v: '() {' }],
-    [{ c: 'mtk1', v: '    ' }, { c: 'mtk5', v: 'return' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '  }' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'public' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: 'void' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomMethod() }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomJavaParameters() }, { c: 'mtk1', v: ') {' }],
-    [{ c: 'mtk1', v: '    ' }, { c: 'mtk5', v: 'this' }, { c: 'mtk1', v: '.' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '  }' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk4', v: '// ' }, { c: 'mtk4', v: randomComment() }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk17', v: '@Override' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'public' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: 'String' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: 'toString' }, { c: 'mtk1', v: '() {' }],
-    [{ c: 'mtk1', v: '    ' }, { c: 'mtk5', v: 'return' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: '"Object: "' }, { c: 'mtk1', v: ' + ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '  }' }],
-    [{ c: 'mtk1', v: '}' }],
-    [{ c: 'mtk5', v: 'if' }, { c: 'mtk1', v: ' (' }, { c: 'mtk9', v: randomCondition() }, { c: 'mtk1', v: ') {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk16', v: 'System' }, { c: 'mtk1', v: '.' }, { c: 'mtk9', v: 'out' }, { c: 'mtk1', v: '.' }, { c: 'mtk15', v: 'println' }, { c: 'mtk1', v: '(' }, { c: 'mtk11', v: randomString() }, { c: 'mtk1', v: ');' }],
-    [{ c: 'mtk1', v: '} ' }, { c: 'mtk5', v: 'else' }, { c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: '.' }, { c: 'mtk15', v: randomMethod() }, { c: 'mtk1', v: '();' }],
-    [{ c: 'mtk1', v: '}' }]
-  ]
+  const patterns =
+    [
+      [{ c: 'mtk5', v: 'package' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'com.' }, { c: 'mtk9', v: randomModuleName() }, { c: 'mtk1', v: '.' }, { c: 'mtk9', v: randomModuleName() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk5', v: 'import' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'java.util.' }, { c: 'mtk16', v: randomClassName() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk5', v: 'import' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'java.io.' }, { c: 'mtk16', v: randomClassName() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk5', v: 'public' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'class' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomClassName() }, { c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'private' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomType() }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'public' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomClassName() }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomJavaParameters() }, { c: 'mtk1', v: ') {' }],
+      [{ c: 'mtk1', v: '    ' }, { c: 'mtk5', v: 'this' }, { c: 'mtk1', v: '.' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '  }' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'public' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomType() }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomMethod() }, { c: 'mtk1', v: '() {' }],
+      [{ c: 'mtk1', v: '    ' }, { c: 'mtk5', v: 'return' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '  }' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'public' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: 'void' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomMethod() }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomJavaParameters() }, { c: 'mtk1', v: ') {' }],
+      [{ c: 'mtk1', v: '    ' }, { c: 'mtk5', v: 'this' }, { c: 'mtk1', v: '.' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '  }' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk4', v: '// ' }, { c: 'mtk4', v: randomComment() }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk17', v: '@Override' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'public' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: 'String' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: 'toString' }, { c: 'mtk1', v: '() {' }],
+      [{ c: 'mtk1', v: '    ' }, { c: 'mtk5', v: 'return' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: '"Object: "' }, { c: 'mtk1', v: ' + ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '  }' }],
+      [{ c: 'mtk1', v: '}' }],
+      [{ c: 'mtk5', v: 'if' }, { c: 'mtk1', v: ' (' }, { c: 'mtk9', v: randomCondition() }, { c: 'mtk1', v: ') {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk16', v: 'System' }, { c: 'mtk1', v: '.' }, { c: 'mtk9', v: 'out' }, { c: 'mtk1', v: '.' }, { c: 'mtk15', v: 'println' }, { c: 'mtk1', v: '(' }, { c: 'mtk11', v: randomString() }, { c: 'mtk1', v: ');' }],
+      [{ c: 'mtk1', v: '} ' }, { c: 'mtk5', v: 'else' }, { c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: '.' }, { c: 'mtk15', v: randomMethod() }, { c: 'mtk1', v: '();' }],
+      [{ c: 'mtk1', v: '}' }]
+    ]
   return getNextPattern(fileType, patterns)
 }
 
@@ -1345,35 +1351,35 @@ const generateJavaLine = (fileType: string): { c: string; v: string }[] => {
  */
 const generateCppLine = (fileType: string): { c: string; v: string }[] => {
   // prettier-ignore
-  const patterns = 
-  [
-    [{ c: 'mtk17', v: '#include' }, { c: 'mtk1', v: ' <' }, { c: 'mtk11', v: randomHeaderName() }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk17', v: '#include' }, { c: 'mtk1', v: ' "' }, { c: 'mtk11', v: `${randomFileName()}.h"` }, { c: 'mtk1', v: '"' }],
-    [{ c: 'mtk5', v: 'using' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'namespace' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'std' }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk5', v: 'class' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomClassName() }, { c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk5', v: 'private' }, { c: 'mtk1', v: ':' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk16', v: randomCppType() }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk5', v: 'public' }, { c: 'mtk1', v: ':' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk16', v: randomClassName() }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomCppParameters() }, { c: 'mtk1', v: ');' }],
-    [{ c: 'mtk1', v: '  ~' }, { c: 'mtk16', v: randomClassName() }, { c: 'mtk1', v: '();' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk16', v: randomCppType() }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomMethod() }, { c: 'mtk1', v: '();' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'void' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomMethod() }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomCppParameters() }, { c: 'mtk1', v: ');' }],
-    [{ c: 'mtk1', v: '};' }],
-    [{ c: 'mtk16', v: randomCppType() }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk5', v: 'if' }, { c: 'mtk1', v: ' (' }, { c: 'mtk9', v: randomCondition() }, { c: 'mtk1', v: ') {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: 'cout' }, { c: 'mtk1', v: ' << ' }, { c: 'mtk11', v: randomString() }, { c: 'mtk1', v: ' << ' }, { c: 'mtk9', v: 'endl' }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '} ' }, { c: 'mtk5', v: 'else' }, { c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: '.' }, { c: 'mtk15', v: randomMethod() }, { c: 'mtk1', v: '();' }],
-    [{ c: 'mtk1', v: '}' }],
-    [{ c: 'mtk4', v: '// ' }, { c: 'mtk4', v: randomComment() }],
-    [{ c: 'mtk5', v: 'for' }, { c: 'mtk1', v: ' (' }, { c: 'mtk5', v: 'int' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'i' }, { c: 'mtk1', v: ' = ' }, { c: 'mtk10', v: '0' }, { c: 'mtk1', v: '; ' }, { c: 'mtk9', v: 'i' }, { c: 'mtk1', v: ' < ' }, { c: 'mtk10', v: randomNumber() }, { c: 'mtk1', v: '; ' }, { c: 'mtk9', v: 'i' }, { c: 'mtk1', v: '++) {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: '[' }, { c: 'mtk9', v: 'i' }, { c: 'mtk1', v: '] = ' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '}' }],
-    [{ c: 'mtk5', v: 'template' }, { c: 'mtk1', v: ' <' }, { c: 'mtk5', v: 'typename' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: 'T' }, { c: 'mtk1', v: '>' }],
-    [{ c: 'mtk16', v: 'T' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomFunctionName() }, { c: 'mtk1', v: '(' }, { c: 'mtk16', v: 'T' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'param' }, { c: 'mtk1', v: ') {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'return' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'param' }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '}' }]
-  ]
+  const patterns =
+    [
+      [{ c: 'mtk17', v: '#include' }, { c: 'mtk1', v: ' <' }, { c: 'mtk11', v: randomHeaderName() }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk17', v: '#include' }, { c: 'mtk1', v: ' "' }, { c: 'mtk11', v: `${randomFileName()}.h"` }, { c: 'mtk1', v: '"' }],
+      [{ c: 'mtk5', v: 'using' }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'namespace' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'std' }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk5', v: 'class' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: randomClassName() }, { c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk5', v: 'private' }, { c: 'mtk1', v: ':' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk16', v: randomCppType() }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk5', v: 'public' }, { c: 'mtk1', v: ':' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk16', v: randomClassName() }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomCppParameters() }, { c: 'mtk1', v: ');' }],
+      [{ c: 'mtk1', v: '  ~' }, { c: 'mtk16', v: randomClassName() }, { c: 'mtk1', v: '();' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk16', v: randomCppType() }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomMethod() }, { c: 'mtk1', v: '();' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'void' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomMethod() }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomCppParameters() }, { c: 'mtk1', v: ');' }],
+      [{ c: 'mtk1', v: '};' }],
+      [{ c: 'mtk16', v: randomCppType() }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk5', v: 'if' }, { c: 'mtk1', v: ' (' }, { c: 'mtk9', v: randomCondition() }, { c: 'mtk1', v: ') {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: 'cout' }, { c: 'mtk1', v: ' << ' }, { c: 'mtk11', v: randomString() }, { c: 'mtk1', v: ' << ' }, { c: 'mtk9', v: 'endl' }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '} ' }, { c: 'mtk5', v: 'else' }, { c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: '.' }, { c: 'mtk15', v: randomMethod() }, { c: 'mtk1', v: '();' }],
+      [{ c: 'mtk1', v: '}' }],
+      [{ c: 'mtk4', v: '// ' }, { c: 'mtk4', v: randomComment() }],
+      [{ c: 'mtk5', v: 'for' }, { c: 'mtk1', v: ' (' }, { c: 'mtk5', v: 'int' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'i' }, { c: 'mtk1', v: ' = ' }, { c: 'mtk10', v: '0' }, { c: 'mtk1', v: '; ' }, { c: 'mtk9', v: 'i' }, { c: 'mtk1', v: ' < ' }, { c: 'mtk10', v: randomNumber() }, { c: 'mtk1', v: '; ' }, { c: 'mtk9', v: 'i' }, { c: 'mtk1', v: '++) {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: '[' }, { c: 'mtk9', v: 'i' }, { c: 'mtk1', v: '] = ' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '}' }],
+      [{ c: 'mtk5', v: 'template' }, { c: 'mtk1', v: ' <' }, { c: 'mtk5', v: 'typename' }, { c: 'mtk1', v: ' ' }, { c: 'mtk16', v: 'T' }, { c: 'mtk1', v: '>' }],
+      [{ c: 'mtk16', v: 'T' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomFunctionName() }, { c: 'mtk1', v: '(' }, { c: 'mtk16', v: 'T' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'param' }, { c: 'mtk1', v: ') {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'return' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'param' }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '}' }]
+    ]
   return getNextPattern(fileType, patterns)
 }
 
@@ -1382,32 +1388,32 @@ const generateCppLine = (fileType: string): { c: string; v: string }[] => {
  */
 const generateCssLine = (fileType: string): { c: string; v: string }[] => {
   // prettier-ignore
-  const patterns = 
-  [
-    [{ c: 'mtk12', v: '.' }, { c: 'mtk13', v: randomCssClass() }, { c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk14', v: randomCssProperty() }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomCssValue() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk14', v: randomCssProperty() }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomCssValue() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '}' }],
-    [{ c: 'mtk12', v: '#' }, { c: 'mtk13', v: randomVariableName() }, { c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk14', v: randomCssProperty() }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomCssValue() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '}' }],
-    [{ c: 'mtk4', v: '/* ' }, { c: 'mtk4', v: randomComment() }, { c: 'mtk4', v: ' */' }],
-    [{ c: 'mtk17', v: '@media' }, { c: 'mtk1', v: ' (' }, { c: 'mtk14', v: 'max-width' }, { c: 'mtk1', v: ': ' }, { c: 'mtk10', v: randomNumber() }, { c: 'mtk1', v: 'px) {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk12', v: '.' }, { c: 'mtk13', v: randomCssClass() }, { c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk1', v: '    ' }, { c: 'mtk14', v: randomCssProperty() }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomCssValue() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '  }' }],
-    [{ c: 'mtk1', v: '}' }],
-    [{ c: 'mtk17', v: '@keyframes' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk10', v: '0%' }, { c: 'mtk1', v: ' { ' }, { c: 'mtk14', v: randomCssProperty() }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomCssValue() }, { c: 'mtk1', v: '; }' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk10', v: '100%' }, { c: 'mtk1', v: ' { ' }, { c: 'mtk14', v: randomCssProperty() }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomCssValue() }, { c: 'mtk1', v: '; }' }],
-    [{ c: 'mtk1', v: '}' }],
-    [{ c: 'mtk12', v: ':root' }, { c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk14', v: '--' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomCssValue() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '}' }],
-    [{ c: 'mtk12', v: '.' }, { c: 'mtk13', v: randomCssClass() }, { c: 'mtk12', v: ':hover' }, { c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk14', v: randomCssProperty() }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomCssValue() }, { c: 'mtk1', v: ';' }],
-    [{ c: 'mtk1', v: '}' }]
-  ]
+  const patterns =
+    [
+      [{ c: 'mtk12', v: '.' }, { c: 'mtk13', v: randomCssClass() }, { c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk14', v: randomCssProperty() }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomCssValue() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk14', v: randomCssProperty() }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomCssValue() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '}' }],
+      [{ c: 'mtk12', v: '#' }, { c: 'mtk13', v: randomVariableName() }, { c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk14', v: randomCssProperty() }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomCssValue() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '}' }],
+      [{ c: 'mtk4', v: '/* ' }, { c: 'mtk4', v: randomComment() }, { c: 'mtk4', v: ' */' }],
+      [{ c: 'mtk17', v: '@media' }, { c: 'mtk1', v: ' (' }, { c: 'mtk14', v: 'max-width' }, { c: 'mtk1', v: ': ' }, { c: 'mtk10', v: randomNumber() }, { c: 'mtk1', v: 'px) {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk12', v: '.' }, { c: 'mtk13', v: randomCssClass() }, { c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk1', v: '    ' }, { c: 'mtk14', v: randomCssProperty() }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomCssValue() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '  }' }],
+      [{ c: 'mtk1', v: '}' }],
+      [{ c: 'mtk17', v: '@keyframes' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk10', v: '0%' }, { c: 'mtk1', v: ' { ' }, { c: 'mtk14', v: randomCssProperty() }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomCssValue() }, { c: 'mtk1', v: '; }' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk10', v: '100%' }, { c: 'mtk1', v: ' { ' }, { c: 'mtk14', v: randomCssProperty() }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomCssValue() }, { c: 'mtk1', v: '; }' }],
+      [{ c: 'mtk1', v: '}' }],
+      [{ c: 'mtk12', v: ':root' }, { c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk14', v: '--' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomCssValue() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '}' }],
+      [{ c: 'mtk12', v: '.' }, { c: 'mtk13', v: randomCssClass() }, { c: 'mtk12', v: ':hover' }, { c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk14', v: randomCssProperty() }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomCssValue() }, { c: 'mtk1', v: ';' }],
+      [{ c: 'mtk1', v: '}' }]
+    ]
   return getNextPattern(fileType, patterns)
 }
 
@@ -1416,43 +1422,43 @@ const generateCssLine = (fileType: string): { c: string; v: string }[] => {
  */
 const generateLuaLine = (fileType: string): { c: string; v: string }[] => {
   // prettier-ignore
-  const patterns = 
-  [
-    [{ c: 'mtk9', v: 'local' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }],
-    [{ c: 'mtk5', v: 'function' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomFunctionName() }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomParameters() }, { c: 'mtk1', v: ')' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'local' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'return' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }],
-    [{ c: 'mtk5', v: 'end' }],
-    [{ c: 'mtk5', v: 'if' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomCondition() }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'then' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }],
-    [{ c: 'mtk5', v: 'elseif' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomCondition() }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'then' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }],
-    [{ c: 'mtk5', v: 'else' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: 'print' }, { c: 'mtk1', v: '(' }, { c: 'mtk11', v: randomString() }, { c: 'mtk1', v: ')' }],
-    [{ c: 'mtk5', v: 'end' }],
-    [{ c: 'mtk5', v: 'for' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk10', v: '1' }, { c: 'mtk1', v: ', ' }, { c: 'mtk10', v: randomNumber() }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'do' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: 'print' }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ')' }],
-    [{ c: 'mtk5', v: 'end' }],
-    [{ c: 'mtk5', v: 'while' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomCondition() }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'do' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }],
-    [{ c: 'mtk5', v: 'end' }],
-    [{ c: 'mtk5', v: 'repeat' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }],
-    [{ c: 'mtk5', v: 'until' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomCondition() }],
-    [{ c: 'mtk9', v: randomModuleName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk5', v: 'require' }, { c: 'mtk1', v: '(' }, { c: 'mtk11', v: `"${randomModuleName()}"` }, { c: 'mtk1', v: ')' }],
-    [{ c: 'mtk9', v: randomModuleName() }, { c: 'mtk1', v: '.' }, { c: 'mtk15', v: randomMethod() }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomParameters() }, { c: 'mtk1', v: ')' }],
-    [{ c: 'mtk5', v: 'function' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomModuleName() }, { c: 'mtk1', v: '.' }, { c: 'mtk15', v: randomMethod() }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomParameters() }, { c: 'mtk1', v: ')' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'return' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: randomValue() }],
-    [{ c: 'mtk5', v: 'end' }],
-    [{ c: 'mtk9', v: 'table' }, { c: 'mtk1', v: ' = ' }, { c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ',' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }],
-    [{ c: 'mtk1', v: '}' }],
-    [{ c: 'mtk4', v: '-- ' }, { c: 'mtk4', v: randomComment() }],
-    [{ c: 'mtk5', v: 'if' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'not' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomCondition() }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'then' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: 'print' }, { c: 'mtk1', v: '(' }, { c: 'mtk11', v: randomString() }, { c: 'mtk1', v: ')' }],
-    [{ c: 'mtk5', v: 'end' }]
-  ]
+  const patterns =
+    [
+      [{ c: 'mtk9', v: 'local' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }],
+      [{ c: 'mtk5', v: 'function' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomFunctionName() }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomParameters() }, { c: 'mtk1', v: ')' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'local' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'return' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }],
+      [{ c: 'mtk5', v: 'end' }],
+      [{ c: 'mtk5', v: 'if' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomCondition() }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'then' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }],
+      [{ c: 'mtk5', v: 'elseif' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomCondition() }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'then' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }],
+      [{ c: 'mtk5', v: 'else' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: 'print' }, { c: 'mtk1', v: '(' }, { c: 'mtk11', v: randomString() }, { c: 'mtk1', v: ')' }],
+      [{ c: 'mtk5', v: 'end' }],
+      [{ c: 'mtk5', v: 'for' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk10', v: '1' }, { c: 'mtk1', v: ', ' }, { c: 'mtk10', v: randomNumber() }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'do' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: 'print' }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ')' }],
+      [{ c: 'mtk5', v: 'end' }],
+      [{ c: 'mtk5', v: 'while' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomCondition() }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'do' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }],
+      [{ c: 'mtk5', v: 'end' }],
+      [{ c: 'mtk5', v: 'repeat' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }],
+      [{ c: 'mtk5', v: 'until' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomCondition() }],
+      [{ c: 'mtk9', v: randomModuleName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk5', v: 'require' }, { c: 'mtk1', v: '(' }, { c: 'mtk11', v: `"${randomModuleName()}"` }, { c: 'mtk1', v: ')' }],
+      [{ c: 'mtk9', v: randomModuleName() }, { c: 'mtk1', v: '.' }, { c: 'mtk15', v: randomMethod() }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomParameters() }, { c: 'mtk1', v: ')' }],
+      [{ c: 'mtk5', v: 'function' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomModuleName() }, { c: 'mtk1', v: '.' }, { c: 'mtk15', v: randomMethod() }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomParameters() }, { c: 'mtk1', v: ')' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'return' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: randomValue() }],
+      [{ c: 'mtk5', v: 'end' }],
+      [{ c: 'mtk9', v: 'table' }, { c: 'mtk1', v: ' = ' }, { c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ',' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }],
+      [{ c: 'mtk1', v: '}' }],
+      [{ c: 'mtk4', v: '-- ' }, { c: 'mtk4', v: randomComment() }],
+      [{ c: 'mtk5', v: 'if' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: 'not' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomCondition() }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'then' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: 'print' }, { c: 'mtk1', v: '(' }, { c: 'mtk11', v: randomString() }, { c: 'mtk1', v: ')' }],
+      [{ c: 'mtk5', v: 'end' }]
+    ]
   return getNextPattern(fileType, patterns)
 }
 
@@ -1461,35 +1467,35 @@ const generateLuaLine = (fileType: string): { c: string; v: string }[] => {
  */
 const generateRLine = (fileType: string): { c: string; v: string }[] => {
   // prettier-ignore
-  const patterns = 
-  [
-    [{ c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' <- ' }, { c: 'mtk11', v: randomValue() }],
-    [{ c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' <- c(' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ', ' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ')' }],
-    [{ c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' <- function(' }, { c: 'mtk9', v: randomParameters() }, { c: 'mtk1', v: ') {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'return' }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ')' }],
-    [{ c: 'mtk1', v: '}' }],
-    [{ c: 'mtk5', v: 'if' }, { c: 'mtk1', v: ' (' }, { c: 'mtk9', v: randomCondition() }, { c: 'mtk1', v: ') {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' <- ' }, { c: 'mtk11', v: randomValue() }],
-    [{ c: 'mtk1', v: '} ' }, { c: 'mtk5', v: 'else' }, { c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' <- ' }, { c: 'mtk11', v: randomValue() }],
-    [{ c: 'mtk1', v: '}' }],
-    [{ c: 'mtk5', v: 'for' }, { c: 'mtk1', v: ' (' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'in' }, { c: 'mtk1', v: ' ' }, { c: 'mtk10', v: '1' }, { c: 'mtk1', v: ':' }, { c: 'mtk10', v: randomNumber() }, { c: 'mtk1', v: ') {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk15', v: 'print' }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ')' }],
-    [{ c: 'mtk1', v: '}' }],
-    [{ c: 'mtk15', v: 'library' }, { c: 'mtk1', v: '(' }, { c: 'mtk11', v: `"${randomModuleName()}"` }, { c: 'mtk1', v: ')' }],
-    [{ c: 'mtk15', v: 'data' }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ')' }],
-    [{ c: 'mtk15', v: 'read.csv' }, { c: 'mtk1', v: '(' }, { c: 'mtk11', v: `"${randomFileName()}.csv"` }, { c: 'mtk1', v: ')' }],
-    [{ c: 'mtk15', v: 'write.csv' }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ', ' }, { c: 'mtk11', v: `"${randomFileName()}.csv"` }, { c: 'mtk1', v: ')' }],
-    [{ c: 'mtk15', v: 'plot' }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ')' }],
-    [{ c: 'mtk15', v: 'hist' }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ')' }],
-    [{ c: 'mtk15', v: 'summary' }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ')' }],
-    [{ c: 'mtk15', v: 'mean' }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ')' }],
-    [{ c: 'mtk15', v: 'median' }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ')' }],
-    [{ c: 'mtk15', v: 'sd' }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ')' }],
-    [{ c: 'mtk15', v: 'lm' }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' ~ ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ', ' }, { c: 'mtk5', v: 'data' }, { c: 'mtk1', v: ' = ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ')' }],
-    [{ c: 'mtk15', v: 'glm' }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' ~ ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ', ' }, { c: 'mtk5', v: 'family' }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: '"binomial"' }, { c: 'mtk1', v: ')' }],
-    [{ c: 'mtk4', v: '# ' }, { c: 'mtk4', v: randomComment() }]
-  ]
+  const patterns =
+    [
+      [{ c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' <- ' }, { c: 'mtk11', v: randomValue() }],
+      [{ c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' <- c(' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ', ' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ')' }],
+      [{ c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' <- function(' }, { c: 'mtk9', v: randomParameters() }, { c: 'mtk1', v: ') {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'return' }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ')' }],
+      [{ c: 'mtk1', v: '}' }],
+      [{ c: 'mtk5', v: 'if' }, { c: 'mtk1', v: ' (' }, { c: 'mtk9', v: randomCondition() }, { c: 'mtk1', v: ') {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' <- ' }, { c: 'mtk11', v: randomValue() }],
+      [{ c: 'mtk1', v: '} ' }, { c: 'mtk5', v: 'else' }, { c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' <- ' }, { c: 'mtk11', v: randomValue() }],
+      [{ c: 'mtk1', v: '}' }],
+      [{ c: 'mtk5', v: 'for' }, { c: 'mtk1', v: ' (' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'in' }, { c: 'mtk1', v: ' ' }, { c: 'mtk10', v: '1' }, { c: 'mtk1', v: ':' }, { c: 'mtk10', v: randomNumber() }, { c: 'mtk1', v: ') {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk15', v: 'print' }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ')' }],
+      [{ c: 'mtk1', v: '}' }],
+      [{ c: 'mtk15', v: 'library' }, { c: 'mtk1', v: '(' }, { c: 'mtk11', v: `"${randomModuleName()}"` }, { c: 'mtk1', v: ')' }],
+      [{ c: 'mtk15', v: 'data' }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ')' }],
+      [{ c: 'mtk15', v: 'read.csv' }, { c: 'mtk1', v: '(' }, { c: 'mtk11', v: `"${randomFileName()}.csv"` }, { c: 'mtk1', v: ')' }],
+      [{ c: 'mtk15', v: 'write.csv' }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ', ' }, { c: 'mtk11', v: `"${randomFileName()}.csv"` }, { c: 'mtk1', v: ')' }],
+      [{ c: 'mtk15', v: 'plot' }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ')' }],
+      [{ c: 'mtk15', v: 'hist' }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ')' }],
+      [{ c: 'mtk15', v: 'summary' }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ')' }],
+      [{ c: 'mtk15', v: 'mean' }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ')' }],
+      [{ c: 'mtk15', v: 'median' }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ')' }],
+      [{ c: 'mtk15', v: 'sd' }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ')' }],
+      [{ c: 'mtk15', v: 'lm' }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' ~ ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ', ' }, { c: 'mtk5', v: 'data' }, { c: 'mtk1', v: ' = ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ')' }],
+      [{ c: 'mtk15', v: 'glm' }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' ~ ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ', ' }, { c: 'mtk5', v: 'family' }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: '"binomial"' }, { c: 'mtk1', v: ')' }],
+      [{ c: 'mtk4', v: '# ' }, { c: 'mtk4', v: randomComment() }]
+    ]
   return getNextPattern(fileType, patterns)
 }
 
@@ -1498,42 +1504,42 @@ const generateRLine = (fileType: string): { c: string; v: string }[] => {
  */
 const generatePowerShellLine = (fileType: string): { c: string; v: string }[] => {
   // prettier-ignore
-  const patterns = 
-  [
-    [{ c: 'mtk9', v: '$' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }],
-    [{ c: 'mtk5', v: 'function' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomFunctionName() }, { c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'param' }, { c: 'mtk1', v: ' (' }],
-    [{ c: 'mtk1', v: '    ' }, { c: 'mtk9', v: '$' }, { c: 'mtk9', v: randomVariableName() }],
-    [{ c: 'mtk1', v: '  )' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: '$' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'return' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: '$' }, { c: 'mtk9', v: randomVariableName() }],
-    [{ c: 'mtk1', v: '}' }],
-    [{ c: 'mtk5', v: 'if' }, { c: 'mtk1', v: ' (' }, { c: 'mtk9', v: '$' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ') {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: '$' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }],
-    [{ c: 'mtk1', v: '} ' }, { c: 'mtk5', v: 'else' }, { c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mt15', v: 'Write-Host' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: randomString() }],
-    [{ c: 'mtk1', v: '}' }],
-    [{ c: 'mtk5', v: 'foreach' }, { c: 'mtk1', v: ' (' }, { c: 'mtk9', v: '$' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'in' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: '$' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ') {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mt15', v: 'Write-Host' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: '$' }, { c: 'mtk9', v: randomVariableName() }],
-    [{ c: 'mtk1', v: '}' }],
-    [{ c: 'mtk5', v: 'try' }, { c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: '$' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mt11', v: 'Get-Content' }, { c: 'mtk1', v: ' -Path ' }, { c: 'mtk11', v: `"${randomFileName()}.txt"` }],
-    [{ c: 'mtk1', v: '} ' }, { c: 'mtk5', v: 'catch' }, { c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mt15', v: 'Write-Error' }, { c: 'mtk1', v: ' ' }, { c: 'mt11', v: `"Error: $($_.Exception.Message)"` }],
-    [{ c: 'mtk1', v: '}' }],
-    [{ c: 'mtk15', v: 'Get-ChildItem' }, { c: 'mtk1', v: ' -Path ' }, { c: 'mtk11', v: `"${randomFileName()}"` }, { c: 'mtk1', v: ' -Recurse' }],
-    [{ c: 'mtk15', v: 'Set-Content' }, { c: 'mtk1', v: ' -Path ' }, { c: 'mtk11', v: `"${randomFileName()}.txt"` }, { c: 'mtk1', v: ' -Value ' }, { c: 'mtk11', v: randomString() }],
-    [{ c: 'mtk15', v: 'New-Item' }, { c: 'mtk1', v: ' -Path ' }, { c: 'mtk11', v: `"${randomFileName()}"` }, { c: 'mtk1', v: ' -ItemType Directory' }],
-    [{ c: 'mtk15', v: 'Import-Module' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: `"${randomModuleName()}"` }],
-    [{ c: 'mtk15', v: 'Export-Module' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: `"${randomModuleName()}"` }],
-    [{ c: 'mtk4', v: '# ' }, { c: 'mtk4', v: randomComment() }],
-    [{ c: 'mtk9', v: '$' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' | ' }, { c: 'mt15', v: 'Where-Object' }, { c: 'mtk1', v: ' {' }, { c: 'mtk9', v: '$_' }, { c: 'mtk1', v: '.' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' -eq ' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ' }' }],
-    [{ c: 'mtk9', v: '$' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' | ' }, { c: 'mt15', v: 'Select-Object' }, { c: 'mtk1', v: ' -Property ' }, { c: 'mtk9', v: randomProperty() }],
-    [{ c: 'mtk9', v: '$' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' | ' }, { c: 'mt15', v: 'Sort-Object' }, { c: 'mtk1', v: ' -Property ' }, { c: 'mtk9', v: randomProperty() }],
-    [{ c: 'mtk9', v: '$' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' | ' }, { c: 'mt15', v: 'ForEach-Object' }, { c: 'mtk1', v: ' {' }],
-    [{ c: 'mtk1', v: '  ' }, { c: 'mt15', v: 'Write-Host' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: '$_' }, { c: 'mtk1', v: '.' }, { c: 'mtk9', v: randomProperty() }],
-    [{ c: 'mtk1', v: '}' }]
-  ]
+  const patterns =
+    [
+      [{ c: 'mtk9', v: '$' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }],
+      [{ c: 'mtk5', v: 'function' }, { c: 'mtk1', v: ' ' }, { c: 'mtk15', v: randomFunctionName() }, { c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'param' }, { c: 'mtk1', v: ' (' }],
+      [{ c: 'mtk1', v: '    ' }, { c: 'mtk9', v: '$' }, { c: 'mtk9', v: randomVariableName() }],
+      [{ c: 'mtk1', v: '  )' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: '$' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk5', v: 'return' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: '$' }, { c: 'mtk9', v: randomVariableName() }],
+      [{ c: 'mtk1', v: '}' }],
+      [{ c: 'mtk5', v: 'if' }, { c: 'mtk1', v: ' (' }, { c: 'mtk9', v: '$' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ') {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: '$' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }],
+      [{ c: 'mtk1', v: '} ' }, { c: 'mtk5', v: 'else' }, { c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mt15', v: 'Write-Host' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: randomString() }],
+      [{ c: 'mtk1', v: '}' }],
+      [{ c: 'mtk5', v: 'foreach' }, { c: 'mtk1', v: ' (' }, { c: 'mtk9', v: '$' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' ' }, { c: 'mtk5', v: 'in' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: '$' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ') {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mt15', v: 'Write-Host' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: '$' }, { c: 'mtk9', v: randomVariableName() }],
+      [{ c: 'mtk1', v: '}' }],
+      [{ c: 'mtk5', v: 'try' }, { c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mtk9', v: '$' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' = ' }, { c: 'mt11', v: 'Get-Content' }, { c: 'mtk1', v: ' -Path ' }, { c: 'mtk11', v: `"${randomFileName()}.txt"` }],
+      [{ c: 'mtk1', v: '} ' }, { c: 'mtk5', v: 'catch' }, { c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mt15', v: 'Write-Error' }, { c: 'mtk1', v: ' ' }, { c: 'mt11', v: `"Error: $($_.Exception.Message)"` }],
+      [{ c: 'mtk1', v: '}' }],
+      [{ c: 'mtk15', v: 'Get-ChildItem' }, { c: 'mtk1', v: ' -Path ' }, { c: 'mtk11', v: `"${randomFileName()}"` }, { c: 'mtk1', v: ' -Recurse' }],
+      [{ c: 'mtk15', v: 'Set-Content' }, { c: 'mtk1', v: ' -Path ' }, { c: 'mtk11', v: `"${randomFileName()}.txt"` }, { c: 'mtk1', v: ' -Value ' }, { c: 'mtk11', v: randomString() }],
+      [{ c: 'mtk15', v: 'New-Item' }, { c: 'mtk1', v: ' -Path ' }, { c: 'mtk11', v: `"${randomFileName()}"` }, { c: 'mtk1', v: ' -ItemType Directory' }],
+      [{ c: 'mtk15', v: 'Import-Module' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: `"${randomModuleName()}"` }],
+      [{ c: 'mtk15', v: 'Export-Module' }, { c: 'mtk1', v: ' ' }, { c: 'mtk11', v: `"${randomModuleName()}"` }],
+      [{ c: 'mtk4', v: '# ' }, { c: 'mtk4', v: randomComment() }],
+      [{ c: 'mtk9', v: '$' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' | ' }, { c: 'mt15', v: 'Where-Object' }, { c: 'mtk1', v: ' {' }, { c: 'mtk9', v: '$_' }, { c: 'mtk1', v: '.' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' -eq ' }, { c: 'mtk11', v: randomValue() }, { c: 'mtk1', v: ' }' }],
+      [{ c: 'mtk9', v: '$' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' | ' }, { c: 'mt15', v: 'Select-Object' }, { c: 'mtk1', v: ' -Property ' }, { c: 'mtk9', v: randomProperty() }],
+      [{ c: 'mtk9', v: '$' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' | ' }, { c: 'mt15', v: 'Sort-Object' }, { c: 'mtk1', v: ' -Property ' }, { c: 'mtk9', v: randomProperty() }],
+      [{ c: 'mtk9', v: '$' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' | ' }, { c: 'mt15', v: 'ForEach-Object' }, { c: 'mtk1', v: ' {' }],
+      [{ c: 'mtk1', v: '  ' }, { c: 'mt15', v: 'Write-Host' }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: '$_' }, { c: 'mtk1', v: '.' }, { c: 'mtk9', v: randomProperty() }],
+      [{ c: 'mtk1', v: '}' }]
+    ]
   return getNextPattern(fileType, patterns)
 }
 
@@ -1542,30 +1548,30 @@ const generatePowerShellLine = (fileType: string): { c: string; v: string }[] =>
  */
 const generateIniLine = (fileType: string): { c: string; v: string }[] => {
   // prettier-ignore
-  const patterns = 
-  [
-    [{ c: 'mtk9', v: '[' }, { c: 'mtk9', v: randomModuleName() }, { c: 'mtk9', v: ']' }],
-    [{ c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }],
-    [{ c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: `"${randomString()}"` }],
-    [{ c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk10', v: randomNumber() }],
-    [{ c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk10', v: 'true' }],
-    [{ c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk10', v: 'false' }],
-    [{ c: 'mtk4', v: '; ' }, { c: 'mtk4', v: randomComment() }],
-    [{ c: 'mtk4', v: '# ' }, { c: 'mtk4', v: randomComment() }],
-    [{ c: 'mtk9', v: '[' }, { c: 'mtk9', v: randomModuleName() }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomModuleName() }, { c: 'mtk9', v: ']' }],
-    [{ c: 'mtk9', v: 'database' }, { c: 'mtk1', v: '.' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }],
-    [{ c: 'mtk9', v: 'server' }, { c: 'mtk1', v: '.' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk10', v: randomNumber() }],
-    [{ c: 'mtk9', v: 'user' }, { c: 'mtk1', v: '.' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }],
-    [{ c: 'mtk9', v: 'path' }, { c: 'mtk1', v: '.' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: `"/path/to/${randomFileName()}"` }],
-    [{ c: 'mtk9', v: 'logging' }, { c: 'mtk1', v: '.' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk10', v: 'true' }],
-    [{ c: 'mtk9', v: '[DEFAULT]' }],
-    [{ c: 'mtk9', v: 'backup' }, { c: 'mtk1', v: '.' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: `"${randomFileName()}.bak"` }],
-    [{ c: 'mtk9', v: 'timezone' }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: '"UTC"' }],
-    [{ c: 'mtk9', v: 'encoding' }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: '"utf-8"' }],
-    [{ c: 'mtk9', v: 'max_connections' }, { c: 'mtk1', v: ' = ' }, { c: 'mtk10', v: randomNumber() }],
-    [{ c: 'mtk9', v: 'timeout' }, { c: 'mtk1', v: ' = ' }, { c: 'mtk10', v: randomNumber() }],
-    [{ c: 'mtk9', v: 'retry_count' }, { c: 'mtk1', v: ' = ' }, { c: 'mtk10', v: randomNumber() }]
-  ]
+  const patterns =
+    [
+      [{ c: 'mtk9', v: '[' }, { c: 'mtk9', v: randomModuleName() }, { c: 'mtk9', v: ']' }],
+      [{ c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }],
+      [{ c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: `"${randomString()}"` }],
+      [{ c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk10', v: randomNumber() }],
+      [{ c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk10', v: 'true' }],
+      [{ c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk10', v: 'false' }],
+      [{ c: 'mtk4', v: '; ' }, { c: 'mtk4', v: randomComment() }],
+      [{ c: 'mtk4', v: '# ' }, { c: 'mtk4', v: randomComment() }],
+      [{ c: 'mtk9', v: '[' }, { c: 'mtk9', v: randomModuleName() }, { c: 'mtk1', v: ' ' }, { c: 'mtk9', v: randomModuleName() }, { c: 'mtk9', v: ']' }],
+      [{ c: 'mtk9', v: 'database' }, { c: 'mtk1', v: '.' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }],
+      [{ c: 'mtk9', v: 'server' }, { c: 'mtk1', v: '.' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk10', v: randomNumber() }],
+      [{ c: 'mtk9', v: 'user' }, { c: 'mtk1', v: '.' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: randomValue() }],
+      [{ c: 'mtk9', v: 'path' }, { c: 'mtk1', v: '.' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: `"/path/to/${randomFileName()}"` }],
+      [{ c: 'mtk9', v: 'logging' }, { c: 'mtk1', v: '.' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk10', v: 'true' }],
+      [{ c: 'mtk9', v: '[DEFAULT]' }],
+      [{ c: 'mtk9', v: 'backup' }, { c: 'mtk1', v: '.' }, { c: 'mtk9', v: randomProperty() }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: `"${randomFileName()}.bak"` }],
+      [{ c: 'mtk9', v: 'timezone' }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: '"UTC"' }],
+      [{ c: 'mtk9', v: 'encoding' }, { c: 'mtk1', v: ' = ' }, { c: 'mtk11', v: '"utf-8"' }],
+      [{ c: 'mtk9', v: 'max_connections' }, { c: 'mtk1', v: ' = ' }, { c: 'mtk10', v: randomNumber() }],
+      [{ c: 'mtk9', v: 'timeout' }, { c: 'mtk1', v: ' = ' }, { c: 'mtk10', v: randomNumber() }],
+      [{ c: 'mtk9', v: 'retry_count' }, { c: 'mtk1', v: ' = ' }, { c: 'mtk10', v: randomNumber() }]
+    ]
   return getNextPattern(fileType, patterns)
 }
 
@@ -1574,28 +1580,28 @@ const generateIniLine = (fileType: string): { c: string; v: string }[] => {
  */
 const generateLogLine = (fileType: string): { c: string; v: string }[] => {
   // prettier-ignore
-  const patterns = 
-  [
-    [{ c: 'mtk10', v: new Date().toISOString() }, { c: 'mtk1', v: ' [' }, { c: 'mtk5', v: 'INFO' }, { c: 'mtk1', v: '] ' }, { c: 'mtk11', v: randomComment() }],
-    [{ c: 'mtk10', v: new Date().toISOString() }, { c: 'mtk1', v: ' [' }, { c: 'mtk12', v: 'ERROR' }, { c: 'mtk1', v: '] ' }, { c: 'mtk11', v: randomComment() }],
-    [{ c: 'mtk10', v: new Date().toISOString() }, { c: 'mtk1', v: ' [' }, { c: 'mtk13', v: 'WARN' }, { c: 'mtk1', v: '] ' }, { c: 'mtk11', v: randomComment() }],
-    [{ c: 'mtk10', v: new Date().toISOString() }, { c: 'mtk1', v: ' [' }, { c: 'mtk16', v: 'DEBUG' }, { c: 'mtk1', v: '] ' }, { c: 'mtk11', v: randomComment() }],
-    [{ c: 'mtk10', v: new Date().toISOString() }, { c: 'mtk1', v: ' [' }, { c: 'mtk5', v: 'INFO' }, { c: 'mtk1', v: '] ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: '=' }, { c: 'mtk11', v: randomValue() }],
-    [{ c: 'mtk10', v: new Date().toISOString() }, { c: 'mtk1', v: ' [' }, { c: 'mtk12', v: 'ERROR' }, { c: 'mtk1', v: '] ' }, { c: 'mtk9', v: randomFunctionName() }, { c: 'mtk1', v: '() failed: ' }, { c: 'mtk11', v: randomValue() }],
-    [{ c: 'mtk10', v: new Date().toISOString() }, { c: 'mtk1', v: ' [' }, { c: 'mtk13', v: 'WARN' }, { c: 'mtk1', v: '] ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' is deprecated' }],
-    [{ c: 'mtk10', v: new Date().toISOString() }, { c: 'mtk1', v: ' [' }, { c: 'mtk16', v: 'DEBUG' }, { c: 'mtk1', v: '] ' }, { c: 'mtk9', v: randomFunctionName() }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomParameters() }, { c: 'mtk1', v: ') called' }],
-    [{ c: 'mtk10', v: new Date().toISOString() }, { c: 'mtk1', v: ' [' }, { c: 'mtk5', v: 'INFO' }, { c: 'mtk1', v: '] ' }, { c: 'mtk9', v: 'User ' }, { c: 'mtk10', v: randomNumber() }, { c: 'mtk1', v: ' logged in' }],
-    [{ c: 'mtk10', v: new Date().toISOString() }, { c: 'mtk1', v: ' [' }, { c: 'mtk5', v: 'INFO' }, { c: 'mtk1', v: '] ' }, { c: 'mtk9', v: 'Request ' }, { c: 'mtk10', v: randomNumber() }, { c: 'mtk1', v: ' processed in ' }, { c: 'mtk10', v: randomNumber() }, { c: 'mtk1', v: 'ms' }],
-    [{ c: 'mtk10', v: new Date().toISOString() }, { c: 'mtk1', v: ' [' }, { c: 'mtk12', v: 'ERROR' }, { c: 'mtk1', v: '] ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' not found' }],
-    [{ c: 'mtk10', v: new Date().toISOString() }, { c: 'mtk1', v: ' [' }, { c: 'mtk13', v: 'WARN' }, { c: 'mtk1', v: '] ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' timed out' }],
-    [{ c: 'mtk10', v: new Date().toISOString() }, { c: 'mtk1', v: ' [' }, { c: 'mtk16', v: 'DEBUG' }, { c: 'mtk1', v: '] ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomValue() }],
-    [{ c: 'mtk1', v: '[' }, { c: 'mtk5', v: 'INFO' }, { c: 'mtk1', v: '] ' }, { c: 'mtk11', v: randomComment() }],
-    [{ c: 'mtk1', v: '[' }, { c: 'mtk12', v: 'ERROR' }, { c: 'mtk1', v: '] ' }, { c: 'mtk11', v: randomComment() }],
-    [{ c: 'mtk1', v: '[' }, { c: 'mtk13', v: 'WARN' }, { c: 'mtk1', v: '] ' }, { c: 'mtk11', v: randomComment() }],
-    [{ c: 'mtk1', v: '[' }, { c: 'mtk16', v: 'DEBUG' }, { c: 'mtk1', v: '] ' }, { c: 'mtk11', v: randomComment() }],
-    [{ c: 'mtk10', v: new Date().toLocaleString() }, { c: 'mtk1', v: ' - ' }, { c: 'mtk5', v: 'INFO' }, { c: 'mtk1', v: ' - ' }, { c: 'mtk11', v: randomComment() }],
-    [{ c: 'mtk10', v: new Date().toLocaleString() }, { c: 'mtk1', v: ' - ' }, { c: 'mtk12', v: 'ERROR' }, { c: 'mtk1', v: ' - ' }, { c: 'mtk11', v: randomComment() }]
-  ]
+  const patterns =
+    [
+      [{ c: 'mtk10', v: new Date().toISOString() }, { c: 'mtk1', v: ' [' }, { c: 'mtk5', v: 'INFO' }, { c: 'mtk1', v: '] ' }, { c: 'mtk11', v: randomComment() }],
+      [{ c: 'mtk10', v: new Date().toISOString() }, { c: 'mtk1', v: ' [' }, { c: 'mtk12', v: 'ERROR' }, { c: 'mtk1', v: '] ' }, { c: 'mtk11', v: randomComment() }],
+      [{ c: 'mtk10', v: new Date().toISOString() }, { c: 'mtk1', v: ' [' }, { c: 'mtk13', v: 'WARN' }, { c: 'mtk1', v: '] ' }, { c: 'mtk11', v: randomComment() }],
+      [{ c: 'mtk10', v: new Date().toISOString() }, { c: 'mtk1', v: ' [' }, { c: 'mtk16', v: 'DEBUG' }, { c: 'mtk1', v: '] ' }, { c: 'mtk11', v: randomComment() }],
+      [{ c: 'mtk10', v: new Date().toISOString() }, { c: 'mtk1', v: ' [' }, { c: 'mtk5', v: 'INFO' }, { c: 'mtk1', v: '] ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: '=' }, { c: 'mtk11', v: randomValue() }],
+      [{ c: 'mtk10', v: new Date().toISOString() }, { c: 'mtk1', v: ' [' }, { c: 'mtk12', v: 'ERROR' }, { c: 'mtk1', v: '] ' }, { c: 'mtk9', v: randomFunctionName() }, { c: 'mtk1', v: '() failed: ' }, { c: 'mtk11', v: randomValue() }],
+      [{ c: 'mtk10', v: new Date().toISOString() }, { c: 'mtk1', v: ' [' }, { c: 'mtk13', v: 'WARN' }, { c: 'mtk1', v: '] ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' is deprecated' }],
+      [{ c: 'mtk10', v: new Date().toISOString() }, { c: 'mtk1', v: ' [' }, { c: 'mtk16', v: 'DEBUG' }, { c: 'mtk1', v: '] ' }, { c: 'mtk9', v: randomFunctionName() }, { c: 'mtk1', v: '(' }, { c: 'mtk9', v: randomParameters() }, { c: 'mtk1', v: ') called' }],
+      [{ c: 'mtk10', v: new Date().toISOString() }, { c: 'mtk1', v: ' [' }, { c: 'mtk5', v: 'INFO' }, { c: 'mtk1', v: '] ' }, { c: 'mtk9', v: 'User ' }, { c: 'mtk10', v: randomNumber() }, { c: 'mtk1', v: ' logged in' }],
+      [{ c: 'mtk10', v: new Date().toISOString() }, { c: 'mtk1', v: ' [' }, { c: 'mtk5', v: 'INFO' }, { c: 'mtk1', v: '] ' }, { c: 'mtk9', v: 'Request ' }, { c: 'mtk10', v: randomNumber() }, { c: 'mtk1', v: ' processed in ' }, { c: 'mtk10', v: randomNumber() }, { c: 'mtk1', v: 'ms' }],
+      [{ c: 'mtk10', v: new Date().toISOString() }, { c: 'mtk1', v: ' [' }, { c: 'mtk12', v: 'ERROR' }, { c: 'mtk1', v: '] ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' not found' }],
+      [{ c: 'mtk10', v: new Date().toISOString() }, { c: 'mtk1', v: ' [' }, { c: 'mtk13', v: 'WARN' }, { c: 'mtk1', v: '] ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ' timed out' }],
+      [{ c: 'mtk10', v: new Date().toISOString() }, { c: 'mtk1', v: ' [' }, { c: 'mtk16', v: 'DEBUG' }, { c: 'mtk1', v: '] ' }, { c: 'mtk9', v: randomVariableName() }, { c: 'mtk1', v: ': ' }, { c: 'mtk11', v: randomValue() }],
+      [{ c: 'mtk1', v: '[' }, { c: 'mtk5', v: 'INFO' }, { c: 'mtk1', v: '] ' }, { c: 'mtk11', v: randomComment() }],
+      [{ c: 'mtk1', v: '[' }, { c: 'mtk12', v: 'ERROR' }, { c: 'mtk1', v: '] ' }, { c: 'mtk11', v: randomComment() }],
+      [{ c: 'mtk1', v: '[' }, { c: 'mtk13', v: 'WARN' }, { c: 'mtk1', v: '] ' }, { c: 'mtk11', v: randomComment() }],
+      [{ c: 'mtk1', v: '[' }, { c: 'mtk16', v: 'DEBUG' }, { c: 'mtk1', v: '] ' }, { c: 'mtk11', v: randomComment() }],
+      [{ c: 'mtk10', v: new Date().toLocaleString() }, { c: 'mtk1', v: ' - ' }, { c: 'mtk5', v: 'INFO' }, { c: 'mtk1', v: ' - ' }, { c: 'mtk11', v: randomComment() }],
+      [{ c: 'mtk10', v: new Date().toLocaleString() }, { c: 'mtk1', v: ' - ' }, { c: 'mtk12', v: 'ERROR' }, { c: 'mtk1', v: ' - ' }, { c: 'mtk11', v: randomComment() }]
+    ]
   return getNextPattern(fileType, patterns)
 }
 
@@ -1604,50 +1610,50 @@ const generateLogLine = (fileType: string): { c: string; v: string }[] => {
  */
 const generateGitLine = (fileType: string): { c: string; v: string }[] => {
   // prettier-ignore
-  const patterns = 
-  [
-    [{ c: 'mtk4', v: '# ' }, { c: 'mtk4', v: randomComment() }],
-    [{ c: 'mtk1', v: '*.log' }],
-    [{ c: 'mtk1', v: 'node_modules/' }],
-    [{ c: 'mtk1', v: '.DS_Store' }],
-    [{ c: 'mtk1', v: '*.tmp' }],
-    [{ c: 'mtk1', v: 'dist/' }],
-    [{ c: 'mtk1', v: 'build/' }],
-    [{ c: 'mtk1', v: 'coverage/' }],
-    [{ c: 'mtk1', v: '.env' }],
-    [{ c: 'mtk1', v: '.env.local' }],
-    [{ c: 'mtk1', v: '.env.*.local' }],
-    [{ c: 'mtk1', v: '.vscode/settings.json' }],
-    [{ c: 'mtk1', v: '*.swp' }],
-    [{ c: 'mtk1', v: '*.swo' }],
-    [{ c: 'mtk1', v: '*~' }],
-    [{ c: 'mtk4', v: '# Editor directories and files' }],
-    [{ c: 'mtk1', v: '.idea/' }],
-    [{ c: 'mtk1', v: '.vscode/' }],
-    [{ c: 'mtk1', v: '*.suo' }],
-    [{ c: 'mtk1', v: '*.ntvs*' }],
-    [{ c: 'mtk1', v: '*.njsproj' }],
-    [{ c: 'mtk1', v: '*.sln' }],
-    [{ c: 'mtk1', v: '*.sw?' }],
-    [{ c: 'mtk4', v: '# OS generated files' }],
-    [{ c: 'mtk1', v: '.DS_Store?' }],
-    [{ c: 'mtk1', v: '.Thumbs.db' }],
-    [{ c: 'mtk4', v: '# Dependency directories' }],
-    [{ c: 'mtk1', v: 'node_modules/' }],
-    [{ c: 'mtk1', v: 'jspm_packages/' }],
-    [{ c: 'mtk1', v: 'bower_components/' }],
-    [{ c: 'mtk4', v: '# Logs' }],
-    [{ c: 'mtk1', v: 'logs' }],
-    [{ c: 'mtk1', v: '*.log' }],
-    [{ c: 'mtk1', v: 'npm-debug.log*' }],
-    [{ c: 'mtk1', v: 'yarn-debug.log*' }],
-    [{ c: 'mtk1', v: 'yarn-error.log*' }],
-    [{ c: 'mtk4', v: '# Runtime data' }],
-    [{ c: 'mtk1', v: 'pids' }],
-    [{ c: 'mtk1', v: '*.pid' }],
-    [{ c: 'mtk1', v: '*.seed' }],
-    [{ c: 'mtk1', v: '*.pid.lock' }]
-  ]
+  const patterns =
+    [
+      [{ c: 'mtk4', v: '# ' }, { c: 'mtk4', v: randomComment() }],
+      [{ c: 'mtk1', v: '*.log' }],
+      [{ c: 'mtk1', v: 'node_modules/' }],
+      [{ c: 'mtk1', v: '.DS_Store' }],
+      [{ c: 'mtk1', v: '*.tmp' }],
+      [{ c: 'mtk1', v: 'dist/' }],
+      [{ c: 'mtk1', v: 'build/' }],
+      [{ c: 'mtk1', v: 'coverage/' }],
+      [{ c: 'mtk1', v: '.env' }],
+      [{ c: 'mtk1', v: '.env.local' }],
+      [{ c: 'mtk1', v: '.env.*.local' }],
+      [{ c: 'mtk1', v: '.vscode/settings.json' }],
+      [{ c: 'mtk1', v: '*.swp' }],
+      [{ c: 'mtk1', v: '*.swo' }],
+      [{ c: 'mtk1', v: '*~' }],
+      [{ c: 'mtk4', v: '# Editor directories and files' }],
+      [{ c: 'mtk1', v: '.idea/' }],
+      [{ c: 'mtk1', v: '.vscode/' }],
+      [{ c: 'mtk1', v: '*.suo' }],
+      [{ c: 'mtk1', v: '*.ntvs*' }],
+      [{ c: 'mtk1', v: '*.njsproj' }],
+      [{ c: 'mtk1', v: '*.sln' }],
+      [{ c: 'mtk1', v: '*.sw?' }],
+      [{ c: 'mtk4', v: '# OS generated files' }],
+      [{ c: 'mtk1', v: '.DS_Store?' }],
+      [{ c: 'mtk1', v: '.Thumbs.db' }],
+      [{ c: 'mtk4', v: '# Dependency directories' }],
+      [{ c: 'mtk1', v: 'node_modules/' }],
+      [{ c: 'mtk1', v: 'jspm_packages/' }],
+      [{ c: 'mtk1', v: 'bower_components/' }],
+      [{ c: 'mtk4', v: '# Logs' }],
+      [{ c: 'mtk1', v: 'logs' }],
+      [{ c: 'mtk1', v: '*.log' }],
+      [{ c: 'mtk1', v: 'npm-debug.log*' }],
+      [{ c: 'mtk1', v: 'yarn-debug.log*' }],
+      [{ c: 'mtk1', v: 'yarn-error.log*' }],
+      [{ c: 'mtk4', v: '# Runtime data' }],
+      [{ c: 'mtk1', v: 'pids' }],
+      [{ c: 'mtk1', v: '*.pid' }],
+      [{ c: 'mtk1', v: '*.seed' }],
+      [{ c: 'mtk1', v: '*.pid.lock' }]
+    ]
   return getNextPattern(fileType, patterns)
 }
 

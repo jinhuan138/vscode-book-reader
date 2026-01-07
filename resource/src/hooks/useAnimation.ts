@@ -20,15 +20,15 @@ export default function useAnimation(isSidebar = false) {
     }
   }
   onReady(() => setAnimation(defaultAnimation))
-  watch(animation, (value) => {
-    setAnimation(value)
+  watch(animation, (a) => {
+    setAnimation(a)
     if (!isSidebar && vscode) {
       vscode.postMessage({
         type: 'animation',
-        content: String(value),
+        content: String(a),
       })
     }
-    localStorage.setItem('animation', String(value))
+    localStorage.setItem('animation', String(a))
   })
   return animation
 }

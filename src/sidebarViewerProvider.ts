@@ -56,6 +56,12 @@ export class SidebarViewerProvider implements vscode.WebviewViewProvider {
         content,
       })
     })
+    this.emitter.on('disguise', (content: any) => {
+      webview.postMessage({
+        type: 'disguise',
+        content,
+      })
+    })
     this.emitter.on('animation', (content: any) => {
       webview.postMessage({
         type: 'animation',
