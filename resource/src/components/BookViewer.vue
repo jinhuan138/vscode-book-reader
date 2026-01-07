@@ -41,7 +41,7 @@ import useProcessDisplay from '@/hooks/useProcessDisplay'
 import '@/hooks/useKeyboard'
 
 const { url, type } = useStore()
-const { showBook } = useDisguise()
+const { showBook } = useDisguise(true)
 const { theme } = useTheme(false)
 
 const grayscale = useGrayscale()

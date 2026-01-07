@@ -47,15 +47,15 @@ export default function useFlow(isSidebar = false) {
       })
     }
   })
-  watch(flow, (value) => {
-    setFlow(value)
+  watch(flow, (f) => {
+    setFlow(f)
     if (!isSidebar && vscode) {
       vscode.postMessage({
         type: 'flow',
-        content: value,
+        content: f,
       })
     }
-    localStorage.setItem('flow', value)
+    localStorage.setItem('flow', f)
   })
   return flow
 }

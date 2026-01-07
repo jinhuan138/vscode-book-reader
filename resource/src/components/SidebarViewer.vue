@@ -101,7 +101,7 @@ const style = computed(() => {
 })
 
 //Disguise
-const { showBook } = useDisguise()
+const { showBook, disguise } = useDisguise()
 const postMessage = (title) => {
   if (vscode) {
     vscode.postMessage({
@@ -134,6 +134,9 @@ window.addEventListener('message', ({ data }) => {
         break
       case 'grayscale':
         grayscale.value = JSON.parse(data.content)
+        break
+      case 'disguise':
+        disguise.value = JSON.parse(data.content)
         break
     }
   }

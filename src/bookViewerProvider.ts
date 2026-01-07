@@ -15,7 +15,7 @@ export class BookViewerProvider implements vscode.CustomReadonlyEditorProvider {
   public openCustomDocument(
     uri: vscode.Uri,
   ): vscode.CustomDocument | Thenable<vscode.CustomDocument> {
-    return { uri, dispose: (): void => {} }
+    return { uri, dispose: (): void => { } }
   }
 
   public resolveCustomEditor(
@@ -55,6 +55,9 @@ export class BookViewerProvider implements vscode.CustomReadonlyEditorProvider {
           })
         case 'title':
           webviewPanel.title = message.content
+          break
+        case 'disguise':
+          this.emitter.emit('disguise', message.content)
           break
       }
     })
