@@ -4,4 +4,6 @@ resource/dist
 node_modules
 .vscode-test/
 *.vsix
-stats.html
+stats*.html
+resource/auto-imports.d.ts
+resource/components.d.ts

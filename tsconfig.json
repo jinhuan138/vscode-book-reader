@@ -10,7 +10,7 @@
     "baseUrl": "./",
     "paths": {
       "@/*": ["resource/src/*"]
-    }
+    },
   },
   "exclude": ["node_modules", "/resource/**/*", "vite.config.ts"],
   "include": ["src/**/*"]
