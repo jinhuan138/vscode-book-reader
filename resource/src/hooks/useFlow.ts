@@ -1,10 +1,11 @@
 import { ref, watch, onMounted, onUnmounted } from 'vue'
 import useVscode from './useVscode'
 import { rendition, isEpub, onReady } from './useRendition'
+import { isSidebar } from './useSidebar'
 
 const vscode = useVscode()
 type Flow = 'paginated' | 'scrolled-doc'
-export default function useFlow(isSidebar = false) {
+export default function useFlow() {
   const defaultFlow: Flow = (localStorage.getItem('flow') as Flow | null) || 'paginated'
   const flow = ref<Flow>(defaultFlow)
 
@@ -29,7 +30,7 @@ export default function useFlow(isSidebar = false) {
   }
   onReady(() => {
     setFlow(defaultFlow)
-    if (isSidebar && isEpub()) {
+    if (isSidebar.value && isEpub()) {
       rendition.value.hooks.content.register(({ document }) => {
         const annotation = Array.from(document.querySelectorAll('a')) as HTMLAnchorElement[]
         if (annotation.length) {
@@ -49,7 +50,7 @@ export default function useFlow(isSidebar = false) {
   })
   watch(flow, (f) => {
     setFlow(f)
-    if (!isSidebar && vscode) {
+    if (!isSidebar.value && vscode) {
       vscode.postMessage({
         type: 'flow',
         content: f,

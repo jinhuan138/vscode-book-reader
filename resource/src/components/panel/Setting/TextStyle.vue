@@ -63,7 +63,7 @@
 //textStyle setting
 import useTheme from '@/hooks/useTheme'
 
-const { theme, textList, backgroundList, fontFamilyList, textAlignList, restore } = useTheme(false)
+const { theme, textList, backgroundList, fontFamilyList, textAlignList, restore } = useTheme()
 const formatOpacity = (val: number):string => {
   return val + '%'
 }

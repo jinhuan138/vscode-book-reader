@@ -58,10 +58,10 @@ const vscode = useVscode()
 
 const { url, type } = useStore()
 
-const { theme } = useTheme(true)
-const flow = useFlow(true)
-const animation = useAnimation(true)
-const grayscale = useGrayscale(true)
+const { theme } = useTheme()
+const flow = useFlow()
+const animation = useAnimation()
+const grayscale = useGrayscale()
 const information = useInfo()
 
 const toc = useToc()

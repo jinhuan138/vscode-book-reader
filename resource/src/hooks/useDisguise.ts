@@ -1,6 +1,7 @@
 import { ref, watch, computed } from 'vue'
 import useVscode from './useVscode'
 import useInfo from './useInfo'
+import { isSidebar } from './useSidebar'
 
 const lineCount = ref(100)
 const fileType = ref('')
@@ -29,13 +30,13 @@ document.body.onkeydown = function (event: KeyboardEvent) {
     event.preventDefault()
   }
 }
-export default function useDisguise(isSidebar = false) {
+export default function useDisguise() {
   watch(disguise, (enabled) => {
     if (!enabled) {
       showBook.value = true
     }
     localStorage.setItem('disguise', String(enabled))
-    if (!isSidebar && vscode) {
+    if (!isSidebar.value && vscode) {
       vscode.postMessage({
         type: 'disguise',
         content: enabled,
