@@ -49,6 +49,7 @@
 //https://www.npmjs.com/package/bing-translate-api
 //https://marketplace.visualstudio.com/manage/publishers/
 import VueEasyLightbox from 'vue-easy-lightbox'
+import { Download, CloseBold } from '@element-plus/icons-vue'
 import * as pdfjsLib from 'pdfjs-dist/build/pdf.min.mjs'
 import localforage from 'localforage'
 import { Search } from '@element-plus/icons-vue'
