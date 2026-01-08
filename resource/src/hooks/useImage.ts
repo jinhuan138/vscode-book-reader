@@ -1,4 +1,4 @@
-import { ref } from 'vue'
+import { ref, computed, watch } from 'vue'
 import useVscode from './useVscode'
 import { rendition, isEpub, onReady } from './useRendition'
 
@@ -27,12 +27,16 @@ const imageUrlToUint8Array = async (url: string) => {
 }
 
 export default function useImage() {
-  const imgsRef = ref<string[]>([])
-  const visibleRef = ref<boolean>(false)
+  const srcList = computed(() => imageList.value.map((img) => img.src || (img.getAttribute('xlink:href') as string)))
+  const imageList = ref<HTMLImageElement[]>([])
   const indexRef = ref<number>(0)
+  const showPreview = ref<boolean>(false)
+  const imageDisplayModeOptions = ['Normal', 'Mini', 'Hide']
+  const imageDisplayMode = ref(localStorage.getItem('imageDisplayMode') || 'Normal')
+  const miniMediaScale = ref<number>(Number(localStorage.getItem('miniMediaScale') || 100))
   const downloadImage = () => {
     if (vscode) {
-      imageUrlToUint8Array(imgsRef.value[indexRef.value]).then((data) => {
+      imageUrlToUint8Array(srcList.value[indexRef.value]).then((data) => {
         vscode.postMessage({
           type: 'download',
           content: data,
@@ -40,7 +44,7 @@ export default function useImage() {
       })
     } else {
       var downloadLink = document.createElement('a')
-      downloadLink.href = imgsRef.value[indexRef.value]
+      downloadLink.href = srcList.value[indexRef.value]
       downloadLink.download = Date.now() + '.jpg'
       downloadLink.style.display = 'none'
       document.body.appendChild(downloadLink)
@@ -48,16 +52,42 @@ export default function useImage() {
       document.body.removeChild(downloadLink)
     }
   }
-  const handleImage = (imageElements: Array<HTMLImageElement>) => {
-    imgsRef.value = imageElements.map((img, index) => {
+
+  const initImage = () => {
+    imageList.value.forEach((img, index) => {
       img.title = '点击查看图片'
       img.addEventListener('click', () => {
-        visibleRef.value = true
         indexRef.value = index
+        showPreview.value = true
       })
-      return img.src || (img.getAttribute('xlink:href') as string)
+      if (imageDisplayMode.value === 'Mini') {
+        img.style.width = `${miniMediaScale.value}%`
+      } else if (imageDisplayMode.value === 'Hide') {
+        img.style.display = 'none'
+      } else {
+        img.style.width = '100%'
+        img.style.display = 'inline-block'
+      }
     })
   }
+  const handleImage = () => {
+    console.log(imageList.value)
+    imageList.value.forEach((img) => {
+      if (imageDisplayMode.value === 'Mini') {
+        img.style.width = `${miniMediaScale.value}%`
+      } else if (imageDisplayMode.value === 'Hide') {
+        img.style.display = 'none'
+      } else {
+        img.style.width = '100%'
+        img.style.display = 'inline-block'
+      }
+    })
+  }
+  watch([imageDisplayMode, miniMediaScale], ([mode, scale]) => {
+    localStorage.setItem('imageDisplayMode', mode)
+    localStorage.setItem('miniMediaScale', scale.toString())
+    handleImage()
+  })
 
   onReady(() => {
     if (isEpub()) {
@@ -71,23 +101,27 @@ export default function useImage() {
       })
       rendition.value.hooks.content.register((content: { document: Document }) => {
         const imgs = [...document.querySelectorAll('img'), ...document.querySelectorAll('image')] as HTMLImageElement[]
-        handleImage(imgs)
+        imageList.value = imgs
+        console.log(imageList.value)
+        initImage()
       })
     } else {
       rendition.value.addEventListener('load', () => {
         rendition.value.renderer?.setStyles([
-        `img, image {
+          `img, image {
            cursor: pointer;
         }`,
-      ])
-      const docs = rendition.value.renderer.getContents()
-      docs.forEach(({ doc }) => {
-        const imgs = [...doc.querySelectorAll('img'), ...doc.querySelectorAll('image')]
-          handleImage(imgs)
+        ])
+        const docs = rendition.value.renderer.getContents()
+        docs.forEach(({ doc }) => {
+          const imgs = [...doc.querySelectorAll('img'), ...doc.querySelectorAll('image')]
+          imageList.value = imgs
+          console.log(imageList.value)
+          initImage()
         })
       })
     }
   })
 
-  return { visibleRef, indexRef, imgsRef, downloadImage }
+  return { indexRef, showPreview, srcList, downloadImage, imageDisplayModeOptions, imageDisplayMode, miniMediaScale }
 }

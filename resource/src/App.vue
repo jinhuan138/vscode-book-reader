@@ -3,25 +3,44 @@
     <!-- viewer -->
     <book-viewer v-if="!isSidebar" />
     <sidebar-viewer v-else />
-    <!-- lightbox -->
-    <vue-easy-lightbox
-      :visible="visibleRef"
-      :imgs="imgsRef"
-      :index="indexRef"
-      @hide="visibleRef = false"
-      @on-index-change="(oldIndex, newIndex) => (indexRef = newIndex)"
+    <!-- image preview -->
+    <el-image-viewer
+      v-if="showPreview"
+      :url-list="srcList"
+      show-progress
+      :initial-index="indexRef"
+      hide-on-click-modal
+      @close="showPreview = false"
     >
-      <template v-slot:close-btn="{ close }">
-        <el-icon @click="downloadImage" class="download-image" :size="24">
-          <Download />
+      <template #toolbar="{ actions, prev, next, activeIndex, setActiveItem }">
+        <el-icon @click="prev">
+          <Back />
         </el-icon>
-        <div role="button" aria-label="close image preview button" class="btn__close" @click="close">
-          <el-icon>
-            <CloseBold />
-          </el-icon>
-        </div>
-      </template>
-    </vue-easy-lightbox>
+        <el-icon @click="next">
+          <Right />
+        </el-icon>
+        <el-icon @click="setActiveItem(srcList.length - 1)">
+          <DArrowRight />
+        </el-icon>
+        <el-icon @click="actions('zoomOut')">
+          <ZoomOut />
+        </el-icon>
+        <el-icon @click="actions('zoomIn', { enableTransition: false, zoomRate: 2 })">
+          <ZoomIn />
+        </el-icon>
+        <el-icon @click="actions('clockwise', { rotateDeg: 180, enableTransition: false })">
+          <RefreshRight />
+        </el-icon>
+        <el-icon @click="actions('anticlockwise')">
+          <RefreshLeft />
+        </el-icon>
+        <el-icon @click="reset">
+          <Refresh />
+        </el-icon>
+        <el-icon @click="downloadImage">
+          <Download />
+        </el-icon> </template
+    ></el-image-viewer>
   </div>
   <!-- import -->
   <div v-else class="import">
@@ -48,8 +67,17 @@
 //http://element-plus.org/zh-CN/component/overview.html
 //https://www.npmjs.com/package/bing-translate-api
 //https://marketplace.visualstudio.com/manage/publishers/
-import VueEasyLightbox from 'vue-easy-lightbox'
-import { Download, CloseBold } from '@element-plus/icons-vue'
+import {
+  Back,
+  DArrowRight,
+  Download,
+  Refresh,
+  RefreshLeft,
+  RefreshRight,
+  Right,
+  ZoomIn,
+  ZoomOut,
+} from '@element-plus/icons-vue'
 import * as pdfjsLib from 'pdfjs-dist/build/pdf.min.mjs'
 import localforage from 'localforage'
 import { Search } from '@element-plus/icons-vue'
@@ -71,7 +99,7 @@ console.log(
   'background: skyblue; padding: 1px; border-radius: 0 3px 3px 0; color: #fff',
 )
 const inputUrl = ref('')
-const { imgsRef, indexRef, visibleRef, downloadImage } = useImage()
+const { srcList, showPreview, indexRef, downloadImage } = useImage()
 
 const { url, type } = useStore()
 
