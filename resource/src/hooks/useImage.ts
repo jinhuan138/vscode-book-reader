@@ -60,14 +60,7 @@ export default function useImage() {
         indexRef.value = index
         showPreview.value = true
       })
-      if (imageDisplayMode.value === 'Mini') {
-        img.style.width = `${miniMediaScale.value}%`
-      } else if (imageDisplayMode.value === 'Hide') {
-        img.style.display = 'none'
-      } else {
-        img.style.width = '100%'
-        img.style.display = 'inline-block'
-      }
+      handleImage()
     })
   }
   const handleImage = () => {

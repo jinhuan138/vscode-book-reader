@@ -8,3 +8,6 @@ src/**
 **/*.map
 **/*.ts
 resource/public/files
+resource/src
+resource/index.html
+stats*.html
