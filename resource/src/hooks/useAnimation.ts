@@ -1,9 +1,10 @@
 import { ref, watch } from 'vue'
 import useVscode from './useVscode'
 import { rendition, isEpub, onReady } from './useRendition'
+import { isSidebar } from './useSidebar'
 
 const vscode = useVscode()
-export default function useAnimation(isSidebar = false) {
+export default function useAnimation() {
   const defaultAnimation = JSON.parse(localStorage.getItem('animation') || 'false')
   const animation = ref<boolean>(defaultAnimation)
   const setAnimation = (animated: boolean) => {
@@ -22,7 +23,7 @@ export default function useAnimation(isSidebar = false) {
   onReady(() => setAnimation(defaultAnimation))
   watch(animation, (a) => {
     setAnimation(a)
-    if (!isSidebar && vscode) {
+    if (!isSidebar.value && vscode) {
       vscode.postMessage({
         type: 'animation',
         content: String(a),

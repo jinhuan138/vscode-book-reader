@@ -59,18 +59,18 @@ import BookViewer from '@/components/BookViewer.vue'
 import SidebarViewer from '@/components/SidebarViewer.vue'
 import useImage from '@/hooks/useImage'
 import useVscode from '@/hooks/useVscode'
+import { isSidebar } from '@/hooks/useSidebar'
 import pkg from '../../package.json'
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
   'pdfjs-dist/legacy/build/pdf.worker.min.mjs',
   import.meta.url,
-).toString();
+).toString()
 console.log(
   `%c ${pkg.name} %c v`.concat(pkg.version, ' '),
   'background: #35495e; padding: 1px; border-radius: 3px 0 0 3px; color: #fff',
   'background: skyblue; padding: 1px; border-radius: 0 3px 3px 0; color: #fff',
 )
 const inputUrl = ref('')
-const isSidebar = ref(false)
 const { imgsRef, indexRef, visibleRef, downloadImage } = useImage()
 
 const { url, type } = useStore()

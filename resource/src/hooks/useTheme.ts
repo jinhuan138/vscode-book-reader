@@ -1,5 +1,6 @@
 import { reactive, watch, toRaw } from 'vue'
 import { rendition, isEpub, onReady } from './useRendition'
+import { isSidebar } from './useSidebar'
 import useVscode from './useVscode'
 
 const hexToRgba = (hex: string, opacity: number) => {
@@ -65,104 +66,87 @@ const userTheme = localStorage.getItem('theme')
 const theme = reactive(userTheme ? JSON.parse(userTheme) : defaultTheme)
 
 const getCSS = ({ fontFamily, fontSize, textColor, backgroundColor, writingMode, textAlign, lineHeight, opacity }) => {
-  return [
+  return `
+    html {
+      --theme-text-color: ${textColor};
+      --theme-bg-color: ${backgroundColor};
+      --theme-font-family: ${fontFamily};
+      --theme-font-size: ${fontSize}%;
+      --theme-writing-mode: ${writingMode || ''};
+      --theme-text-align: ${textAlign};
+      --theme-line-height: ${lineHeight};
+    }
+    * {
+      color: var(--theme-text-color, transparent) !important;
+      background-color: var(--theme-bg-color, transparent) !important;
+      font-family: var(--theme-font-family) !important;
+      font-size: var(--theme-font-size) !important;
+      writing-mode: var(--theme-writing-mode) !important;
+      line-height: var(--theme-line-height) !important;
+      text-align: var(--theme-text-align) !important;
+      padding: 0 !important;
+      column-width: auto !important;
+    }
+    svg, img {
+      background-color: transparent !important;
+      mix-blend-mode: multiply;
+    }
     `
-  * {
-    font-family: ${fontFamily};
-    font-size:  ${fontSize}%;
-    color: ${textColor};
-  }
-  a {
-    color: 'inherit !important',
-  }
-  
-  a:link: {
-    color: '#1e83d2 !important',
-  }
-  
-  html,body {
-    font-family: ${fontFamily} !important;
-    writing-mode:${writingMode || ''} !important;
-    line-height: ${lineHeight} !important;
-    font-size: ${fontSize}% !important;
-    color: ${textColor} !important;
-    background-color: ${backgroundColor} !important;
-    text-align: ${textAlign} !important;
-    padding: 0 !important;
-    column-width: auto !important;
-    height: auto !important;
-    width: auto !important;
-  }
-  svg, img {
-    background-color: transparent !important;
-    mix-blend-mode: multiply;
-  }
-  `,
-  ]
 }
 
 const getRule = ({ fontFamily, fontSize, textColor, writingMode, backgroundColor, textAlign, lineHeight, opacity }) => {
   return {
-    body: {
-      color: `${textColor} !important`,
-      'background-color': backgroundColor,
-      'writing-mode': writingMode,
-      'text-align': `${textAlign} !important`,
-      'line-height': `${lineHeight} !important`,
+    html: {
+      '--theme-text-color': textColor,
+      '--theme-bg-color': backgroundColor,
+      '--theme-font-family': fontFamily,
+      '--theme-font-size': `${fontSize}%`,
+      '--theme-writing-mode': `${writingMode || ''}`,
+      '--theme-text-align': textAlign,
+      '--theme-line-height': lineHeight,
     },
-    a: {
-      color: 'inherit !important',
-      'text-decoration': 'none !important',
-      '-webkit-text-fill-color': 'inherit !important',
-    },
-    'a:link': {
-      color: `#1e83d2 !important`,
-      'text-decoration': 'none !important',
-      '-webkit-text-fill-color': `#1e83d2 !important`,
-    },
-    'a:link:hover': {
-      background: 'rgba(0, 0, 0, 0.1) !important',
+    'html,body': {
+      color: 'var(--theme-text-color, transparent) !important',
+      'background-color': 'var(--theme-bg-color, transparent) !important',
+      'font-family': 'var(--theme-font-family) !important',
+      'font-size': 'var(--theme-font-size) !important',
+      'writing-mode': 'var(--theme-writing-mode) !important',
+      'text-align': 'var(--theme-text-align) !important',
+      'line-height': 'var(--theme-line-height) !important',
     },
     '*': {
-      'font-family': fontFamily,
-      'font-size': fontSize !== '' ? `${fontSize}% !important` : '!invalid-hack',
-      color: `${textColor} !important`,
-      'background-color': backgroundColor,
-      'line-height': `${lineHeight} !important`,
+      color: 'var(--theme-text-color, transparent) !important',
     },
   }
 }
-export default function useTheme(isSlider = false) {
-  const updatedTheme = (newTheme: any) => {
-    if (!rendition.value) return
-    if (isEpub()) {
-      rendition.value.getContents().forEach((content) => {
-        content.addStylesheetRules(getRule(newTheme))
-      })
-    } else {
-      rendition.value.addEventListener('load', () => {
-        rendition.value.renderer?.setStyles && rendition.value.renderer.setStyles(getCSS(newTheme))
-      })
-    }
-    if (!isSlider && vscode) {
-      vscode.postMessage({
-        type: 'style',
-        content: JSON.stringify(newTheme),
-      })
-    }
+const updatedTheme = (newTheme: any) => {
+  if (!rendition.value) return
+  if (isEpub()) {
+    rendition.value.getContents().forEach((content) => {
+      content.addStylesheetRules(getRule(newTheme))
+    })
+  } else {
+    rendition.value.renderer?.setStyles && rendition.value.renderer.setStyles(getCSS(newTheme))
   }
-
+  if (!isSidebar.value && vscode) {
+    vscode.postMessage({
+      type: 'style',
+      content: JSON.stringify(newTheme),
+    })
+  }
+}
+watch(theme, (val) => {
+  updatedTheme(val)
+  console.log('theme', val)
+  localStorage.setItem('theme', JSON.stringify(val))
+})
+export default function useTheme() {
   const restore = () => {
     Object.keys(defaultTheme).forEach((key) => {
       // @ts-ignore
       theme[key] = defaultTheme[key]
     })
   }
-  watch(theme, (val) => {
-    updatedTheme(val)
-    console.log('update theme')
-    localStorage.setItem('theme', JSON.stringify(val))
-  })
   /**
    * 解析rgba字符串，返回r,g,b,a值
    */
@@ -215,14 +199,16 @@ export default function useTheme(isSlider = false) {
     },
   )
   onReady(() => {
-    const style = toRaw(theme)
     if (isEpub()) {
-      rendition.value.hooks.content.register(() => updatedTheme(style))
+      rendition.value.hooks.content.register(() => updatedTheme(toRaw(theme)))
       rendition.value.on('relocated', () => {
-        rendition.value.hooks.content.register(() => updatedTheme(style))
+        rendition.value.hooks.content.register(() => updatedTheme(toRaw(theme)))
       })
     } else {
-      updatedTheme(style)
+      rendition.value.renderer?.setStyles && rendition.value.renderer.setStyles(getCSS(toRaw(theme)))
+      rendition.value.addEventListener('load', () => {
+        rendition.value.renderer?.setStyles && rendition.value.renderer.setStyles(getCSS(toRaw(theme)))
+      })
     }
   })
 
