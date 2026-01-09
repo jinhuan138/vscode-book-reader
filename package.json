@@ -122,7 +122,7 @@
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.1",
     "colorthief": "^2.6.0",
-    "element-plus": "^2.7.3",
+    "element-plus": "^2.13.0",
     "localforage": "^1.10.0",
     "pdfjs-dist": "^5.4.530",
     "vue": "^3.4.26",
