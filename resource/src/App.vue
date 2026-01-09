@@ -12,16 +12,7 @@
       hide-on-click-modal
       @close="showPreview = false"
     >
-      <template #toolbar="{ actions, prev, next, activeIndex, setActiveItem }">
-        <el-icon @click="prev">
-          <Back />
-        </el-icon>
-        <el-icon @click="next">
-          <Right />
-        </el-icon>
-        <el-icon @click="setActiveItem(srcList.length - 1)">
-          <DArrowRight />
-        </el-icon>
+      <template #toolbar="{ actions }">
         <el-icon @click="actions('zoomOut')">
           <ZoomOut />
         </el-icon>
@@ -34,10 +25,7 @@
         <el-icon @click="actions('anticlockwise')">
           <RefreshLeft />
         </el-icon>
-        <el-icon @click="reset">
-          <Refresh />
-        </el-icon>
-        <el-icon @click="downloadImage">
+        <el-icon @click="downloadImage(indexRef)">
           <Download />
         </el-icon> </template
     ></el-image-viewer>
@@ -50,16 +38,14 @@
           <el-button :icon="Search" @click="url = inputUrl" />
         </template>
       </el-input>
-      <el-button class="import-button" size="large" @click="importFile"
-        ><input
-          v-show="false"
-          ref="input"
-          type="file"
-          :multiple="false"
-          accept=".epub,.mobi,.fk8,.azw3,.fb2,.cbz,.pdf"
-          @change="onchange"
-        />Open a Book</el-button
+      <el-upload
+        class="select-button"
+        :on-change="onchange"
+        :auto-upload="false"
+        accept=".epub,.mobi,.fk8,.azw3,.fb2,.cbz,.pdf"
       >
+        <el-button type="primary">select file</el-button>
+      </el-upload>
     </div>
   </div>
 </template>
@@ -67,20 +53,9 @@
 //http://element-plus.org/zh-CN/component/overview.html
 //https://www.npmjs.com/package/bing-translate-api
 //https://marketplace.visualstudio.com/manage/publishers/
-import {
-  Back,
-  DArrowRight,
-  Download,
-  Refresh,
-  RefreshLeft,
-  RefreshRight,
-  Right,
-  ZoomIn,
-  ZoomOut,
-} from '@element-plus/icons-vue'
+import { Download, RefreshLeft, RefreshRight, ZoomIn, ZoomOut, Search } from '@element-plus/icons-vue'
 import * as pdfjsLib from 'pdfjs-dist/build/pdf.min.mjs'
-import localforage from 'localforage'
-import { Search } from '@element-plus/icons-vue'
+import { createInstance } from 'localforage'
 import { ref, watch } from 'vue'
 import useStore from '@/hooks/useStore'
 import BookViewer from '@/components/BookViewer.vue'
@@ -121,30 +96,16 @@ window.addEventListener('message', ({ data }) => {
 })
 
 //Import file
-const bookDB = localforage.createInstance({
+const bookDB = createInstance({
   name: 'bookList',
 })
 const fileType = (path) => {
   return path.split('.').pop().toLocaleLowerCase()
 }
-const input = ref(null)
-const importFile = () => input.value.click()
-const onchange = (e) => {
-  const file = e.target.files[0]
+const onchange = (file) => {
   type.value = fileType(file.name)
-  if (type.value === 'epub') {
-    if (window.FileReader) {
-      var reader = new FileReader()
-      reader.onloadend = () => {
-        url.value = reader.result
-        isSidebar.value && bookDB.setItem('lastBook', url.value)
-      }
-      reader.readAsArrayBuffer(file)
-    }
-  } else {
-    url.value = file
-    isSidebar.value && bookDB.setItem('lastBook', url.value)
-  }
+  url.value = file.raw
+  isSidebar.value && bookDB.setItem('lastBook', url.value)
   if (isSidebar.value) {
     bookDB.setItem('lastBookType', type.value)
   }

@@ -1,14 +1,3 @@
-* {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
-    Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
-  margin: 0;
-  padding: 0;
-  color: inherit;
-  font-size: inherit;
-  font-weight: 300;
-  line-height: 1.4;
-  word-break: break-word;
-}
 html {
   font-size: 62.5%;
 }
@@ -55,7 +44,7 @@ body {
   align-items: center;
 }
 
-.import .import-button {
+.import .select-button {
   margin: 5px auto 0;
 }
 

@@ -34,9 +34,9 @@ export default function useImage() {
   const imageDisplayModeOptions = ['Normal', 'Mini', 'Hide']
   const imageDisplayMode = ref(localStorage.getItem('imageDisplayMode') || 'Normal')
   const miniMediaScale = ref<number>(Number(localStorage.getItem('miniMediaScale') || 100))
-  const downloadImage = () => {
+  const downloadImage = (index: number) => {
     if (vscode) {
-      imageUrlToUint8Array(srcList.value[indexRef.value]).then((data) => {
+      imageUrlToUint8Array(srcList.value[index]).then((data) => {
         vscode.postMessage({
           type: 'download',
           content: data,
@@ -44,7 +44,7 @@ export default function useImage() {
       })
     } else {
       var downloadLink = document.createElement('a')
-      downloadLink.href = srcList.value[indexRef.value]
+      downloadLink.href = srcList.value[index]
       downloadLink.download = Date.now() + '.jpg'
       downloadLink.style.display = 'none'
       document.body.appendChild(downloadLink)

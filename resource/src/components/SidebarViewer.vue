@@ -40,7 +40,7 @@ import { EpubView } from 'vue-reader'
 import { BookView } from 'vue-book-reader'
 import { Back, Close, Menu } from '@element-plus/icons-vue'
 import useStore from '@/hooks/useStore'
-import localforage from 'localforage'
+import { createInstance } from 'localforage'
 import { rendition, isEpub } from '@/hooks/useRendition'
 import useTheme from '@/hooks/useTheme'
 import useToc from '@/hooks/useToc'
@@ -71,7 +71,7 @@ const { progress, changeProgress, goBack } = useProgress()
 const chapter = useChapter()
 
 //store last book
-const bookDB = localforage.createInstance({
+const bookDB = createInstance({
   name: 'bookList',
 })
 const close = () => {
