@@ -101,61 +101,35 @@ const getCSS = ({ fontFamily, fontSize, textColor, backgroundColor, writingMode,
   }
 `
 
-const getRule = ({ fontFamily, fontSize, textColor, backgroundColor, writingMode, textAlign, lineHeight }) => {
-  const rule: { [key: string]: any } = {
-    html: {
-      '--theme-text-color': textColor,
-      '--theme-bg-color': backgroundColor,
-      '--theme-font-family': fontFamily,
-      '--theme-font-size': `${fontSize}%`,
-      '--theme-writing-mode': writingMode || '',
-      '--theme-text-align': textAlign,
-      '--theme-line-height': lineHeight,
-    },
-  }
-  // 条件添加 html,body 样式
-  const htmlBodyRule: { [key: string]: any } = {}
-  if (textColor) {
-    htmlBodyRule.color = 'var(--theme-text-color, transparent) !important'
-  }
-  if (backgroundColor) {
-    htmlBodyRule['background-color'] = 'var(--theme-bg-color, transparent) !important'
-  }
-  rule['body'] = htmlBodyRule
-  rule['html'] = { ...rule['html'], ...htmlBodyRule }
-
-  //条件添加常见标签样式
-  const commonTagsRule: { [key: string]: any } = htmlBodyRule
-  if(fontSize){
-    commonTagsRule['font-size'] = `var(--theme-font-size) !important`
-  }
-  if (fontFamily) {
-    commonTagsRule['font-family'] = `var(--theme-font-family) !important`
-  }
-  if (writingMode) {
-    commonTagsRule['writing-mode'] = `var(--theme-writing-mode) !important`
-  }
-  if (lineHeight) {
-    commonTagsRule['line-height'] = `var(--theme-line-height) !important`
-  }
-  if(textAlign){
-    commonTagsRule['text-align'] = `var(--theme-text-align) !important`
-  }
-  
-  commonTags.split(',').forEach((tag) => {
-    rule[tag] = commonTagsRule
-  }) 
-  return rule
-}
-
 // ============ 主题更新函数 ============
-const updatedTheme = (newTheme: any) => {
+const updatedTheme = (newTheme: { [key: string]: string }) => {
   if (!rendition.value) return
-
   if (isEpub()) {
-    rendition.value.getContents().forEach((content) => {
-      content.addStylesheetRules(getRule(newTheme))
-    })
+    // rendition.value.getContents().forEach((content) => {
+    //   content.addStylesheetRules(getRule(newTheme))
+    // })
+    const { fontFamily, fontSize, textColor, backgroundColor, writingMode, textAlign, lineHeight } = newTheme
+    if (textColor) {
+      rendition.value.themes.override('color', textColor)
+    }
+    if (backgroundColor) {
+      rendition.value.themes.override('background', backgroundColor)
+    }
+    if (fontFamily) {
+      rendition.value.themes.font(fontFamily)
+    }
+    if (fontSize) {
+      rendition.value.themes.fontSize(`${fontSize}%`)
+    }
+    if (writingMode) {
+      rendition.value.themes.override('writing-mode', writingMode)
+    }
+    if (textAlign) {
+      rendition.value.themes.override('text-align', textAlign)
+    }
+    if (lineHeight) {
+      rendition.value.themes.override('line-height', lineHeight)
+    }
   } else {
     rendition.value.renderer?.setStyles?.(getCSS(newTheme))
   }
@@ -191,10 +165,7 @@ export default function useTheme() {
   onReady(() => {
     const rawTheme = toRaw(theme)
     if (isEpub()) {
-      rendition.value.hooks.content.register(() => updatedTheme(rawTheme))
-      rendition.value.on('relocated', () => {
-        rendition.value.hooks.content.register(() => updatedTheme(rawTheme))
-      })
+      updatedTheme(rawTheme)
     } else {
       rendition.value.renderer?.setStyles?.(getCSS(rawTheme))
       rendition.value.addEventListener('load', () => {
@@ -203,5 +174,14 @@ export default function useTheme() {
     }
   })
 
-  return { theme, restore, textList, backgroundList, fontFamilyList, textAlignList }
+  return {
+    theme,
+    restore,
+    textList,
+    backgroundList,
+    fontFamilyList,
+    textAlignList,
+    defaultBackgroundColor,
+    defaultTextColor,
+  }
 }

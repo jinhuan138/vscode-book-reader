@@ -1,7 +1,6 @@
 <template>
-  <div v-show="showBook" style="height: 100%" :style="style">
-    <epub-reader v-if="type === 'epub'" :url="url" :getRendition="(val) => (rendition = val)" />
-    <book-reader v-else :url="url" :getRendition="(val) => (rendition = val)" />
+  <div v-show="showBook" :style="bookStyle">
+    <book-reader :url="url" :getRendition="(val) => (rendition = val)" />
     <!-- footer -->
     <div class="footer">
       <div v-if="progressDisplay === 'chapter'" class="chapter" :title="chapter">
@@ -19,16 +18,14 @@
       </div>
     </div>
   </div>
-  <panel />
+  <Panel />
   <CodeInterface />
 </template>
 <script setup>
-import { computed } from 'vue'
+import { computed, defineAsyncComponent } from 'vue'
 import { Back } from '@element-plus/icons-vue'
-import { VueReader as EpubReader } from 'vue-reader'
-import { VueReader as BookReader } from 'vue-book-reader'
 import CodeInterface from './CodeInterface/Index.vue'
-import panel from './panel/Index.vue'
+import Panel from './panel/Index.vue'
 import { rendition } from '@/hooks/useRendition'
 import useTheme from '@/hooks/useTheme'
 import useStore from '@/hooks/useStore'
@@ -39,23 +36,35 @@ import useDisguise from '@/hooks/useDisguise'
 import useGrayscale from '@/hooks/useGrayscale'
 import useProcessDisplay from '@/hooks/useProcessDisplay'
 import '@/hooks/useKeyboard'
-
 const { url, type } = useStore()
+
+const BookReader = defineAsyncComponent(() =>
+  type.value === 'epub' ? import('vue-reader') : import('vue-book-reader'),
+)
 const { showBook } = useDisguise()
-const { theme } = useTheme()
+const { theme, defaultBackgroundColor, defaultTextColor } = useTheme()
 
 const grayscale = useGrayscale()
-const style = computed(() => {
-  return {
+const bookStyle = computed(() => {
+  const style = {
+    height: '100%',
     filter: grayscale.value ? 'grayscale(100%)' : 'none',
-    color: theme.textColor,
     fontSize: `${theme.fontSize}%`,
     // opacity: theme.opacity,
     '--book-filter': grayscale.value ? 'grayscale(100%)' : 'none',
-    '--book-text-color': theme.textColor,
-    '--book-background-color': theme.backgroundColor,
     '--book-font-size': `${theme.fontSize}%`,
+    '--book-text-color': defaultTextColor,
+    '--book-background-color': defaultBackgroundColor,
   }
+  if (theme.textColor) {
+    style['color'] = theme.textColor
+    style['--book-text-color'] = theme.textColor
+  }
+  if (theme.backgroundColor) {
+    style['background-color'] = theme.backgroundColor
+    style['--book-background-color'] = theme.backgroundColor
+  }
+  return style
 })
 
 //footer
@@ -64,34 +73,32 @@ const chapter = useChapter()
 const location = useLocation()
 const { progress, changeProgress, goBack } = useProgress()
 </script>
-<style scoped>
+<style scoped lang="scss">
 /* book reader */
 :deep(.readerArea) {
-  background: var(--book-background-color) !important;
-  filter: var(--book-filter) !important;
-}
-
-:deep(.readerArea .titleArea) {
-  font-size: var(--book-font-size) !important;
-  color: var(--book-text-color) !important;
-  /* opacity: var(--book-opacity); */
+  background: var(--book-background-color, #fff) !important;
+  filter: var(--book-filter);
+  .titleArea {
+    font-size: var(--book-font-size);
+    color: var(--book-text-color, #000) !important;
+  }
 }
 
 :deep(.tocArea) {
-  font-size: var(--book-font-size) !important;
-  color: var(--book-text-color) !important;
-  background: var(--book-background-color) !important;
-  /* opacity: var(--book-opacity); */
-}
+  background: var(--book-background-color, #ccc);
+  font-size: var(--book-font-size);
+  color: var(--book-text-color, #000) !important;
 
-:deep(.tocAreaButton) {
-  font-size: var(--book-font-size) !important;
-  color: var(--book-text-color) !important;
+  .tocAreaButton {
+    background: var(--book-background-color, #ccc);
+    font-size: var(--book-font-size);
+    color: var(--book-text-color, #000) !important;
+  }
 }
 
 /* footer */
 .footer {
-  color: var(--book-text-color) !important;
+  color: var(--book-text-color, #000) !important;
   position: absolute;
   bottom: 5px;
   right: 0;

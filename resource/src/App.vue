@@ -1,8 +1,7 @@
 <template>
   <div v-if="url" :class="[isSidebar ? 'sidebar-reader' : 'book-reader']">
     <!-- viewer -->
-    <book-viewer v-if="!isSidebar" />
-    <sidebar-viewer v-else />
+    <book-viewer />
     <!-- image preview -->
     <el-image-viewer
       v-if="showPreview"
@@ -56,14 +55,16 @@
 import { Download, RefreshLeft, RefreshRight, ZoomIn, ZoomOut, Search } from '@element-plus/icons-vue'
 import * as pdfjsLib from 'pdfjs-dist/build/pdf.min.mjs'
 import { createInstance } from 'localforage'
-import { ref, watch } from 'vue'
+import { ref, watch, defineAsyncComponent } from 'vue'
 import useStore from '@/hooks/useStore'
-import BookViewer from '@/components/BookViewer.vue'
-import SidebarViewer from '@/components/SidebarViewer.vue'
 import useImage from '@/hooks/useImage'
 import useVscode from '@/hooks/useVscode'
 import { isSidebar } from '@/hooks/useSidebar'
 import pkg from '../../package.json'
+
+const BookViewer = defineAsyncComponent(() =>
+  isSidebar.value ? import('@/components/SidebarViewer.vue') : import('@/components/BookViewer.vue'),
+)
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
   'pdfjs-dist/legacy/build/pdf.worker.min.mjs',
   import.meta.url,
