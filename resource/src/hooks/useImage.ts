@@ -99,19 +99,18 @@ export default function useImage() {
         initImage()
       })
     } else {
-      rendition.value.addEventListener('load', () => {
         rendition.value.renderer?.setStyles([
           `img, image {
            cursor: pointer;
-        }`,
-        ])
-        const docs = rendition.value.renderer.getContents()
-        docs.forEach(({ doc }) => {
-          const imgs = [...doc.querySelectorAll('img'), ...doc.querySelectorAll('image')]
-          imageList.value = imgs
-          console.log(imageList.value)
-          initImage()
-        })
+        }`])
+        rendition.value.addEventListener('load', () => {
+          const docs = rendition.value.renderer.getContents()
+          docs.forEach(({ doc }) => {
+            const imgs = [...doc.querySelectorAll('img'), ...doc.querySelectorAll('image')]
+            imageList.value = imgs
+            console.log(imageList.value)
+            initImage()
+          })
       })
     }
   })
