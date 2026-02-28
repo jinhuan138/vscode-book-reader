@@ -5,7 +5,9 @@ import useVscode from './useVscode'
 
 // ============ 工具函数 ============
 const hexToRgba = (hex: string, opacity: number) => {
-  if (hex.startsWith('rgba')) return hex
+  if (hex.startsWith('rgba')) {
+    return hex
+  }
   const [r, g, b] = [hex.slice(1, 3), hex.slice(3, 5), hex.slice(5, 7)].map((x) => parseInt(x, 16))
   return `rgba(${r}, ${g}, ${b}, ${opacity / 100})`
 }
@@ -24,8 +26,9 @@ const parseRgba = (rgbaStr: string): { r: number; g: number; b: number; a: numbe
 
 const updateRgbaOpacity = (rgbaStr: string, opacity: number, decimals: number = 2): string => {
   const parsed = parseRgba(rgbaStr)
-  if (!parsed) return rgbaStr
-
+  if (!parsed) {
+    return rgbaStr
+  }
   const alpha = opacity / 100
   const roundedAlpha = Math.round(alpha * Math.pow(10, decimals)) / Math.pow(10, decimals)
   const finalAlpha = Number.isInteger(roundedAlpha) ? roundedAlpha : roundedAlpha.toFixed(decimals)
@@ -64,15 +67,29 @@ const defaultTheme = {
   backgroundColor: '',
   writingMode: 'horizontal-tb',
   textAlign: '',
-  opacity: 100,
+  opacity: 100, //透明度
+  grayscale: false, //灰色模式
 }
 
-const theme = reactive(localStorage.getItem('theme') ? JSON.parse(localStorage.getItem('theme')!) : defaultTheme)
+const theme = reactive<Record<string, any>>(
+  localStorage.getItem('theme') ? JSON.parse(localStorage.getItem('theme')!) : defaultTheme,
+)
 
 // ============ CSS 生成函数 ============
 const commonTags =
   'section, aside, blockquote, article, nav, header, footer, main, figure,div, p, font, h1, h2, h3, h4, h5, h6, li, span'
-const getCSS = ({ fontFamily, fontSize, textColor, backgroundColor, writingMode, textAlign, lineHeight }) => `
+const getCSS = ({
+  fontFamily,
+  fontSize,
+  textColor,
+  backgroundColor,
+  writingMode,
+  textAlign,
+  lineHeight,
+  grayscale,
+}: {
+  [key: string]: any
+}) => `
   html {
     --theme-text-color: ${textColor};
     --theme-bg-color: ${backgroundColor};
@@ -82,7 +99,8 @@ const getCSS = ({ fontFamily, fontSize, textColor, backgroundColor, writingMode,
     --theme-text-align: ${textAlign};
     --theme-line-height: ${lineHeight};
   }
-  html,body{
+  html,body {
+    filter: ${grayscale ? 'grayscale(100%)' : 'none'};
     ${textColor ? 'color: var(--theme-text-color, transparent) !important;' : ''}
     ${backgroundColor ? 'background: var(--theme-bg-color, transparent) !important;' : ''}
   }
@@ -95,20 +113,23 @@ const getCSS = ({ fontFamily, fontSize, textColor, backgroundColor, writingMode,
     ${lineHeight ? 'line-height: var(--theme-line-height) !important;' : ''}
     ${textAlign ? 'text-align: var(--theme-text-align) !important;' : ''}
   }
-  svg, img {
+  svg,img,image {
     background-color: transparent !important;
     mix-blend-mode: multiply;
-  }
+    cursor: pointer;
+  },
 `
 
 // ============ 主题更新函数 ============
-const updatedTheme = (newTheme: { [key: string]: string }) => {
-  if (!rendition.value) return
+const updatedTheme = (newTheme: { [key: string]: any }) => {
+  if (!rendition.value) {
+    return
+  }
   if (isEpub()) {
     // rendition.value.getContents().forEach((content) => {
     //   content.addStylesheetRules(getRule(newTheme))
     // })
-    const { fontFamily, fontSize, textColor, backgroundColor, writingMode, textAlign, lineHeight } = newTheme
+    const { fontFamily, fontSize, textColor, backgroundColor, writingMode, textAlign, lineHeight, grayscale } = newTheme
     if (textColor) {
       rendition.value.themes.override('color', textColor)
     }
@@ -130,6 +151,11 @@ const updatedTheme = (newTheme: { [key: string]: string }) => {
     if (lineHeight) {
       rendition.value.themes.override('line-height', lineHeight)
     }
+    rendition.value.themes.default({
+      html: {
+        filter: grayscale ? 'grayscale(100%)' : 'none',
+      },
+    })
   } else {
     rendition.value.renderer?.setStyles?.(getCSS(newTheme))
   }
@@ -141,7 +167,6 @@ const updatedTheme = (newTheme: { [key: string]: string }) => {
     })
   }
 }
-
 // ============ 监听器 ============
 watch(theme, (val) => {
   updatedTheme(val)
@@ -168,9 +193,6 @@ export default function useTheme() {
       updatedTheme(rawTheme)
     } else {
       rendition.value.renderer?.setStyles?.(getCSS(rawTheme))
-      rendition.value.addEventListener('load', () => {
-        rendition.value.renderer?.setStyles?.(getCSS(rawTheme))
-      })
     }
   })
 

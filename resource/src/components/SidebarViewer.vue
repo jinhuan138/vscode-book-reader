@@ -46,7 +46,6 @@ import useFlow from '@/hooks/useFlow'
 import useVscode from '@/hooks/useVscode'
 import useChapter from '@/hooks/useChapter'
 import useAnimation from '@/hooks/useAnimation'
-import useGrayscale from '@/hooks/useGrayscale'
 import useInfo from '@/hooks/useInfo'
 import '@/hooks/useKeyboard'
 import useDisguise from '@/hooks/useDisguise'
@@ -61,7 +60,6 @@ const BookReader = defineAsyncComponent(() =>
 const { theme } = useTheme()
 const flow = useFlow()
 const animation = useAnimation()
-const grayscale = useGrayscale()
 const information = useInfo()
 
 const toc = useToc()
@@ -90,7 +88,7 @@ const onNodeClick = (item) => {
 }
 const style = computed(() => {
   return {
-    filter: grayscale.value ? 'grayscale(100%)' : 'none',
+    filter: theme.grayscale ? 'grayscale(100%)' : 'none',
     color: theme.textColor,
     fontSize: `${theme.fontSize}%`,
     opacity: theme.opacity,
@@ -131,9 +129,6 @@ window.addEventListener('message', ({ data }) => {
         break
       case 'animation':
         animation.value = JSON.parse(data.content)
-        break
-      case 'grayscale':
-        grayscale.value = JSON.parse(data.content)
         break
       case 'disguise':
         disguise.value = JSON.parse(data.content)

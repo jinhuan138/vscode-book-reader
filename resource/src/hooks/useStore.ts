@@ -2,7 +2,7 @@
 import { ref, watch, onBeforeUnmount } from 'vue'
 import { rendition, isEpub, onReady } from './useRendition'
 
-const defaultBook = 'files/梵高手稿（典藏修订版）.azw3' //啼笑因缘.azw3
+const defaultBook = 'files/梵高手稿.azw3' //啼笑因缘.azw3
 const url = ref(import.meta.env.MODE === 'development' ? defaultBook : '')
 const type = ref('')
 

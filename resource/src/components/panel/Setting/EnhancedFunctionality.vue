@@ -1,7 +1,7 @@
 <template>
   <el-form label-width="auto" style="max-width: 100%">
     <el-form-item label="Grayscale Mode">
-      <el-switch v-model="grayscale" />
+      <el-switch v-model="theme.grayscale" />
     </el-form-item>
     <el-form-item label="Disguise">
       <el-tooltip content="Space → Toggle Disguise" placement="top">
@@ -24,10 +24,10 @@
   </el-form>
 </template>
 <script setup>
-import useGrayscale from '@/hooks/useGrayscale'
 import useDisguise from '@/hooks/useDisguise'
 import useSpeak from '@/hooks/useSpeak'
+import useTheme from '@/hooks/useTheme'
 const { isReading, voiceIndex, voices, speed, speedList } = useSpeak()
-const grayscale = useGrayscale()
+const { theme } = useTheme()
 const { disguise } = useDisguise()
 </script>

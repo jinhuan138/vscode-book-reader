@@ -33,7 +33,6 @@ import useChapter from '@/hooks/useChapter'
 import useProgress from '@/hooks/useProgress'
 import useLocation from '@/hooks/useLocation'
 import useDisguise from '@/hooks/useDisguise'
-import useGrayscale from '@/hooks/useGrayscale'
 import useProcessDisplay from '@/hooks/useProcessDisplay'
 import '@/hooks/useKeyboard'
 const { url, type } = useStore()
@@ -44,14 +43,13 @@ const BookReader = defineAsyncComponent(() =>
 const { showBook } = useDisguise()
 const { theme, defaultBackgroundColor, defaultTextColor } = useTheme()
 
-const grayscale = useGrayscale()
 const bookStyle = computed(() => {
   const style = {
     height: '100%',
-    filter: grayscale.value ? 'grayscale(100%)' : 'none',
+    filter: theme.grayscale ? 'grayscale(100%)' : 'none',
     fontSize: `${theme.fontSize}%`,
     // opacity: theme.opacity,
-    '--book-filter': grayscale.value ? 'grayscale(100%)' : 'none',
+    '--book-filter': theme.grayscale ? 'grayscale(100%)' : 'none',
     '--book-font-size': `${theme.fontSize}%`,
     '--book-text-color': defaultTextColor,
     '--book-background-color': defaultBackgroundColor,
@@ -78,6 +76,7 @@ const { progress, changeProgress, goBack } = useProgress()
 :deep(.readerArea) {
   background: var(--book-background-color, #fff) !important;
   filter: var(--book-filter);
+
   .titleArea {
     font-size: var(--book-font-size);
     color: var(--book-text-color, #000) !important;

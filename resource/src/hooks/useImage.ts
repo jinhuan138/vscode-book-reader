@@ -64,7 +64,6 @@ export default function useImage() {
     })
   }
   const handleImage = () => {
-    console.log(imageList.value)
     imageList.value.forEach((img) => {
       if (imageDisplayMode.value === 'Mini') {
         img.style.width = `${miniMediaScale.value}%`
@@ -84,33 +83,32 @@ export default function useImage() {
 
   onReady(() => {
     if (isEpub()) {
-      rendition.value.themes.default({
-        img: {
-          cursor: 'pointer',
-        },
-        image: {
-          cursor: 'pointer',
-        },
+      setTimeout(() => {
+        rendition.value.themes.default({
+          img: {
+            cursor: 'pointer',
+          },
+          image: {
+            cursor: 'pointer',
+          },
+        })
       })
       rendition.value.hooks.content.register((content: { document: Document }) => {
-        const imgs = [...document.querySelectorAll('img'), ...document.querySelectorAll('image')] as HTMLImageElement[]
+        const imgs = [
+          ...content.document.querySelectorAll('img'),
+          ...content.document.querySelectorAll('image'),
+        ] as HTMLImageElement[]
         imageList.value = imgs
-        console.log(imageList.value)
         initImage()
       })
     } else {
-        rendition.value.renderer?.setStyles([
-          `img, image {
-           cursor: pointer;
-        }`])
-        rendition.value.addEventListener('load', () => {
-          const docs = rendition.value.renderer.getContents()
-          docs.forEach(({ doc }) => {
-            const imgs = [...doc.querySelectorAll('img'), ...doc.querySelectorAll('image')]
-            imageList.value = imgs
-            console.log(imageList.value)
-            initImage()
-          })
+      rendition.value.addEventListener('load', () => {
+        const docs = rendition.value.renderer.getContents()
+        docs.forEach(({ doc }) => {
+          const imgs = [...doc.querySelectorAll('img'), ...doc.querySelectorAll('image')] as HTMLImageElement[]
+          imageList.value = imgs
+          initImage()
+        })
       })
     }
   })

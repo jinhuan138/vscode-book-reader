@@ -37,7 +37,7 @@ const flipPage = (direction: string) => {
         keyListener(iframe.document, flipPage)
       })
     } else {
-      rendition.value.addEventListener('load', (event:any) => {
+      rendition.value.addEventListener('load', (event: any) => {
         const doc = event.detail.doc
         rendition.value.renderer.focus()
         keyListener(doc, flipPage)
