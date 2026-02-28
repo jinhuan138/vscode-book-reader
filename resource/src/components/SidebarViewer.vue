@@ -1,6 +1,6 @@
 <template>
   <div v-show="showBook" :style="style">
-    <book-view :url="url" :getRendition="(val) => (rendition = val)" />
+    <book-reader :url="url" :getRendition="(val) => (rendition = val)" />
     <!-- menu tree -->
     <el-popover placement="bottom" :popper-style="{ height: '80%' }" :width="300">
       <template #reference>
@@ -34,7 +34,7 @@
   </div>
 </template>
 <script setup>
-import { computed, watch } from 'vue'
+import { computed, watch, defineAsyncComponent } from 'vue'
 import { Back, Close, Menu } from '@element-plus/icons-vue'
 import useStore from '@/hooks/useStore'
 import { createInstance } from 'localforage'
@@ -53,8 +53,15 @@ import useDisguise from '@/hooks/useDisguise'
 const vscode = useVscode()
 
 const { url, type } = useStore()
-const BookReader = defineAsyncComponent(() =>
-  type.value === 'epub' ? import('vue-reader').EpubView : import('vue-book-reader').BookView,
+const BookReader = defineAsyncComponent(async () => {
+  if (type.value === 'epub') {
+    const lib = await import('vue-reader')
+    return lib.EpubView
+  } else {
+    const lib = await import('vue-book-reader')
+    return lib.BookView
+  }
+}
 )
 
 const { theme } = useTheme()

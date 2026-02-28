@@ -10,7 +10,7 @@
     "type": "git"
   },
   "engines": {
-    "vscode": "^1.85.2"
+    "vscode": "^1.109.0"
   },
   "keywords": [
     "reader",
