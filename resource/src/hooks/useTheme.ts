@@ -63,8 +63,8 @@ const defaultTheme = {
   fontSize: 100,
   fontFamily: 'invalid-hack',
   lineHeight: 1.5,
-  textColor: '',
-  backgroundColor: '',
+  textColor: defaultTextColor,
+  backgroundColor: defaultBackgroundColor,
   writingMode: 'horizontal-tb',
   textAlign: '',
   opacity: 100, //透明度
@@ -151,11 +151,8 @@ const updatedTheme = (newTheme: { [key: string]: any }) => {
     if (lineHeight) {
       rendition.value.themes.override('line-height', lineHeight)
     }
-    rendition.value.themes.default({
-      html: {
-        filter: grayscale ? 'grayscale(100%)' : 'none',
-      },
-    })
+    rendition.value.themes.override('filter', grayscale ? 'grayscale(100%)' : 'none')
+    rendition.value.reportLocation()
   } else {
     rendition.value.renderer?.setStyles?.(getCSS(newTheme))
   }

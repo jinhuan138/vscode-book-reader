@@ -1,18 +1,49 @@
-import { ref, onBeforeUnmount } from 'vue'
+import { ref, onBeforeUnmount, watch } from 'vue'
 import { rendition, isEpub, onReady } from './useRendition'
+import useToc from '@/hooks/useToc'
+
+const toc = useToc()
 
 export default function useProgress() {
   const progress = ref<number>(0)
   const history = ref<string[]>([])
+  const flattenedToc = ref([])
 
   const changeProgress = (val: number) => {
     if (isEpub()) {
       const cfi = rendition.value.book.locations.cfiFromPercentage(val / 100)
       rendition.value.display(cfi)
-      history.value.push(cfi)
     } else {
       rendition.value.goToFraction(parseFloat(String(val / 100)))
     }
+  }
+
+  watch(toc, (_toc) => {
+    if (isEpub()) {
+      flattenedToc.value = (function flatten(items) {
+        return [].concat(...items.map((item) => [item].concat(...flatten(item.children))))
+      })(_toc)
+    }
+  })
+
+  const tocFromPercentage = (percent: number) => {
+    if (!flattenedToc.value) return {}
+
+    percent /= 100
+
+    for (let i = 0; i < flattenedToc.value.length; i += 1) {
+      if (flattenedToc.value[i].percentage > percent) {
+        return flattenedToc.value[i - 1]
+      }
+    }
+
+    return null
+  }
+
+  const labelFromPercentage = (percent: number) => {
+    let toc = tocFromPercentage(percent)
+    if (toc) return toc.label
+    return ''
   }
 
   const onRelocate = ({ detail }) => {
@@ -48,6 +79,7 @@ export default function useProgress() {
             const percent = book.locations.percentageFromCfi(location.start.cfi)
             const percentage = Number((percent * 100).toFixed(2))
             progress.value = percentage
+            history.value.push(location.start.cfi)
           })
           if (stored) {
             const percent = book.locations.percentageFromCfi(stored)
@@ -66,5 +98,5 @@ export default function useProgress() {
     }
   })
 
-  return { progress, changeProgress, goBack }
+  return { progress, changeProgress, labelFromPercentage, goBack }
 }

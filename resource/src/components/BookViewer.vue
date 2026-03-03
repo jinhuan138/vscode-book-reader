@@ -14,7 +14,8 @@
         <el-icon title="back" class="back-icon" @click="goBack">
           <Back />
         </el-icon>
-        <el-slider class="slider" v-model="progress" :step="0.01" @change="changeProgress"></el-slider>
+        <el-slider class="slider" v-model="progress" :step="0.01" @change="changeProgress"
+          :format-tooltip="labelFromPercentage"></el-slider>
       </div>
     </div>
   </div>
@@ -69,7 +70,7 @@ const bookStyle = computed(() => {
 const { progressDisplay } = useProcessDisplay()
 const chapter = useChapter()
 const location = useLocation()
-const { progress, changeProgress, goBack } = useProgress()
+const { progress, changeProgress, labelFromPercentage, goBack } = useProgress()
 </script>
 <style scoped lang="scss">
 /* book reader */
@@ -117,7 +118,7 @@ const { progress, changeProgress, goBack } = useProgress()
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-  font: 14px;
+  font-size: 14px;
 }
 
 .footer-slider {
