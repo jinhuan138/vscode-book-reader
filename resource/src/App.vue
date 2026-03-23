@@ -2,32 +2,8 @@
   <div v-if="url" :class="[isSidebar ? 'sidebar-reader' : 'book-reader']">
     <!-- viewer -->
     <book-viewer />
-    <!-- image preview -->
-    <el-image-viewer
-      v-if="showPreview"
-      :url-list="srcList"
-      show-progress
-      :initial-index="indexRef"
-      hide-on-click-modal
-      @close="showPreview = false"
-    >
-      <template #toolbar="{ actions }">
-        <el-icon @click="actions('zoomOut')">
-          <ZoomOut />
-        </el-icon>
-        <el-icon @click="actions('zoomIn', { enableTransition: false, zoomRate: 2 })">
-          <ZoomIn />
-        </el-icon>
-        <el-icon @click="actions('clockwise', { rotateDeg: 180, enableTransition: false })">
-          <RefreshRight />
-        </el-icon>
-        <el-icon @click="actions('anticlockwise')">
-          <RefreshLeft />
-        </el-icon>
-        <el-icon @click="downloadImage(indexRef)">
-          <Download />
-        </el-icon> </template
-    ></el-image-viewer>
+    <!--image viewer  -->
+    <image-viewer />
   </div>
   <!-- import -->
   <div v-else class="import">
@@ -52,12 +28,13 @@
 //http://element-plus.org/zh-CN/component/overview.html
 //https://www.npmjs.com/package/bing-translate-api
 //https://marketplace.visualstudio.com/manage/publishers/
-import { Download, RefreshLeft, RefreshRight, ZoomIn, ZoomOut, Search } from '@element-plus/icons-vue'
+import ImageViewer from './components/panel/ImageViewer'
+import { Search } from '@element-plus/icons-vue'
 import * as pdfjsLib from 'pdfjs-dist/build/pdf.min.mjs'
 import { createInstance } from 'localforage'
 import { ref, watch, defineAsyncComponent } from 'vue'
 import useStore from '@/hooks/useStore'
-import useImage from '@/hooks/useImage'
+
 import useVscode from '@/hooks/useVscode'
 import { isSidebar } from '@/hooks/useSidebar'
 import pkg from '../../package.json'
@@ -75,7 +52,6 @@ console.log(
   'background: skyblue; padding: 1px; border-radius: 0 3px 3px 0; color: #fff',
 )
 const inputUrl = ref('')
-const { srcList, showPreview, indexRef, downloadImage } = useImage()
 
 const { url, type } = useStore()
 
@@ -118,11 +94,3 @@ watch(isSidebar, async (value) => {
   }
 })
 </script>
-<style scoped>
-.download-image {
-  position: absolute;
-  cursor: pointer;
-  right: 10px;
-  bottom: 20px;
-}
-</style>

@@ -1,4 +1,5 @@
-import { reactive, watch, toRaw } from 'vue'
+import { watch, toRaw } from 'vue'
+import { useLocalStorage } from '@vueuse/core'
 import { rendition, isEpub, onReady } from './useRendition'
 import { isSidebar } from './useSidebar'
 import useVscode from './useVscode'
@@ -70,10 +71,7 @@ const defaultTheme = {
   opacity: 100, //透明度
   grayscale: false, //灰色模式
 }
-
-const theme = reactive<Record<string, any>>(
-  localStorage.getItem('theme') ? JSON.parse(localStorage.getItem('theme')!) : defaultTheme,
-)
+const theme = useLocalStorage('theme', defaultTheme)
 
 // ============ CSS 生成函数 ============
 const commonTags =
@@ -167,22 +165,19 @@ const updatedTheme = (newTheme: { [key: string]: any }) => {
 // ============ 监听器 ============
 watch(theme, (val) => {
   updatedTheme(val)
-  localStorage.setItem('theme', JSON.stringify(val))
 })
 
 // ============ 导出函数 ============
 export default function useTheme() {
   const restore = () => {
-    Object.keys(defaultTheme).forEach((key) => {
-      theme[key] = defaultTheme[key]
-    })
+    theme.value = defaultTheme
   }
 
   const updateThemeOpacity = (opacity: number) => {
-    theme.textColor = updateRgbaOpacity(theme.textColor, opacity, 3)
+    theme.value.textColor = updateRgbaOpacity(theme.value.textColor, opacity, 3)
   }
 
-  watch(() => theme.opacity, updateThemeOpacity)
+  watch(() => theme.value.opacity, updateThemeOpacity)
 
   onReady(() => {
     const rawTheme = toRaw(theme)

@@ -1,41 +1,8 @@
-import ColorThief from 'colorthief'
+import { getColorSync, Color } from 'colorthief'
 import { ref } from 'vue'
 import useVscode from './useVscode'
 import { rendition, isEpub, onReady } from './useRendition'
 const vscode = useVscode()
-
-const colorThief = new ColorThief()
-
-const rgbToHex = (r: number, g: number, b: number): string =>
-  '#' +
-  [r, g, b]
-    .map((x) => {
-      const hex = x.toString(16)
-      return hex.length === 1 ? '0' + hex : hex
-    })
-    .join('')
-
-const getCoverColor = (src: string): Promise<string> => {
-  return new Promise((resolve) => {
-    const img = document.createElement('img')
-    img.crossOrigin = 'Anonymous' // 防止跨域问题
-    img.src = src
-
-    if (img.complete) {
-      const rgb = colorThief.getColor(img) as [number, number, number]
-      resolve(rgbToHex(...rgb))
-    } else {
-      img.addEventListener(
-        'load',
-        () => {
-          const rgb = colorThief.getColor(img) as [number, number, number]
-          resolve(rgbToHex(...rgb))
-        },
-        { once: true },
-      )
-    }
-  })
-}
 
 const postMessage = (title: string) => {
   if (vscode) {
@@ -45,10 +12,24 @@ const postMessage = (title: string) => {
     })
   }
 }
+const getColorFromUrl = async (url: string): Promise<Color | null> => {
+  try {
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const img = new Image()
+      img.crossOrigin = 'Anonymous'
+      img.src = url
+      img.onload = () => resolve(img)
+      img.onerror = () => reject(new Error(`Failed to load image: ${url}`))
+    })
+    return getColorSync(img)
+  } catch (error) {
+    console.error('Error getting color from URL:', error)
+    return null
+  }
+}
 
 export default function useInfo() {
   const information = ref<any>(null)
-
   onReady(() => {
     if (isEpub()) {
       const { book } = rendition.value
@@ -56,7 +37,7 @@ export default function useInfo() {
         book.loaded.metadata.then(async (metadata: any) => {
           const cover = await book.coverUrl()
           information.value = { ...metadata, cover }
-          information.value.color = await getCoverColor(cover)
+          information.value.color = await getColorFromUrl(cover)
           postMessage(metadata?.title || '')
         })
       })
@@ -66,7 +47,7 @@ export default function useInfo() {
       book.getCover?.().then(async (blob: Blob) => {
         const cover = URL.createObjectURL(blob)
         information.value.cover = cover
-        information.value.color = await getCoverColor(cover)
+        information.value.color = await getColorFromUrl(cover)
       })
       const bookName = book.metadata?.title || ''
       postMessage(bookName)
