@@ -72,6 +72,7 @@ export default function useProgress() {
         .then((locations) => {
           displayed.then(function () {
             var currentLocation = rendition.value.currentLocation()
+            if (!currentLocation.start) return
             const currentPage = book.locations.percentageFromCfi(currentLocation.start.cfi)
             progress.value = Number((currentPage * 100).toFixed(2))
           })

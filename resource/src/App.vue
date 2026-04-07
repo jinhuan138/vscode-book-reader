@@ -13,12 +13,8 @@
           <el-button :icon="Search" @click="url = inputUrl" />
         </template>
       </el-input>
-      <el-upload
-        class="select-button"
-        :on-change="onchange"
-        :auto-upload="false"
-        accept=".epub,.mobi,.fk8,.azw3,.fb2,.cbz,.pdf"
-      >
+      <el-upload class="select-button" :on-change="onchange" :auto-upload="false"
+        accept=".epub,.mobi,.fk8,.azw3,.fb2,.cbz,.pdf">
         <el-button type="primary">select file</el-button>
       </el-upload>
     </div>
@@ -28,13 +24,11 @@
 //http://element-plus.org/zh-CN/component/overview.html
 //https://www.npmjs.com/package/bing-translate-api
 //https://marketplace.visualstudio.com/manage/publishers/
-import ImageViewer from './components/panel/ImageViewer'
+import ImageViewer from './components/panel/ImageViewer.vue'
 import { Search } from '@element-plus/icons-vue'
 import * as pdfjsLib from 'pdfjs-dist/build/pdf.min.mjs'
-import { createInstance } from 'localforage'
-import { ref, watch, defineAsyncComponent } from 'vue'
+import { ref, defineAsyncComponent } from 'vue'
 import useStore from '@/hooks/useStore'
-
 import useVscode from '@/hooks/useVscode'
 import { isSidebar } from '@/hooks/useSidebar'
 import pkg from '../../package.json'
@@ -53,7 +47,7 @@ console.log(
 )
 const inputUrl = ref('')
 
-const { url, type } = useStore()
+const { url } = useStore()
 
 const vscode = useVscode()
 vscode && vscode.postMessage({ type: 'init' })
@@ -63,7 +57,6 @@ window.addEventListener('message', ({ data }) => {
     switch (data.type) {
       case 'open':
         url.value = data.content
-        type.value = fileType(data.content)
         break
       case 'type':
         isSidebar.value = data.content === 'sidebar'
@@ -72,25 +65,7 @@ window.addEventListener('message', ({ data }) => {
   }
 })
 
-//Import file
-const bookDB = createInstance({
-  name: 'bookList',
-})
-const fileType = (path) => {
-  return path.split('.').pop().toLocaleLowerCase()
-}
 const onchange = (file) => {
-  type.value = fileType(file.name)
   url.value = file.raw
-  isSidebar.value && bookDB.setItem('lastBook', url.value)
-  if (isSidebar.value) {
-    bookDB.setItem('lastBookType', type.value)
-  }
 }
-watch(isSidebar, async (value) => {
-  if (value && !url.value) {
-    type.value = (await bookDB.getItem('lastBookType')) || ''
-    url.value = (await bookDB.getItem('lastBook')) || ''
-  }
-})
 </script>

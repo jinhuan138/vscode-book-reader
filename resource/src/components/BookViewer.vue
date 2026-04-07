@@ -36,10 +36,10 @@ import useLocation from '@/hooks/useLocation'
 import useDisguise from '@/hooks/useDisguise'
 import useProcessDisplay from '@/hooks/useProcessDisplay'
 import '@/hooks/useKeyboard'
-const { url, type } = useStore()
+const { url, bookInfo } = useStore()
 
 const BookReader = defineAsyncComponent(() =>
-  type.value === 'epub' ? import('vue-reader') : import('vue-book-reader'),
+  bookInfo.value.fileType === 'epub' ? import('vue-reader') : import('vue-book-reader'),
 )
 const { showBook } = useDisguise()
 const { theme, defaultBackgroundColor, defaultTextColor } = useTheme()

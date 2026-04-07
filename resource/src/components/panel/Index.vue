@@ -3,6 +3,7 @@
   <div class="panel-box">
     <Info />
     <Search />
+    <Bookmark />
     <Setting />
   </div>
 </template>
@@ -11,7 +12,7 @@
 import Search from './Search.vue'
 import Info from './Info.vue'
 import Setting from './Setting/Index.vue'
-
+import Bookmark from './Bookmark.vue'
 </script>
 <style scoped>
 /* panel */

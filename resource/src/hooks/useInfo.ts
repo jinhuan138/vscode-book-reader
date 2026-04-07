@@ -1,8 +1,10 @@
+import useStore from '@/hooks/useStore'
 import { getColorSync, Color } from 'colorthief'
 import { ref } from 'vue'
 import useVscode from './useVscode'
 import { rendition, isEpub, onReady } from './useRendition'
 const vscode = useVscode()
+const { bookInfo } = useStore()
 
 const postMessage = (title: string) => {
   if (vscode) {
@@ -38,6 +40,7 @@ export default function useInfo() {
           const cover = await book.coverUrl()
           information.value = { ...metadata, cover }
           information.value.color = await getColorFromUrl(cover)
+          bookInfo.value.title = metadata?.title || ''
           postMessage(metadata?.title || '')
         })
       })
@@ -49,8 +52,9 @@ export default function useInfo() {
         information.value.cover = cover
         information.value.color = await getColorFromUrl(cover)
       })
-      const bookName = book.metadata?.title || ''
-      postMessage(bookName)
+      const bookTitle = book.metadata?.title || ''
+      bookInfo.value.title = bookTitle
+      postMessage(bookTitle)
     }
   })
   return information

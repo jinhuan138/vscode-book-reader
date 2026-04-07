@@ -53,9 +53,9 @@ import useDisguise from '@/hooks/useDisguise'
 
 const vscode = useVscode()
 
-const { url, type } = useStore()
+const { url, bookInfo } = useStore()
 const BookReader = defineAsyncComponent(async () => {
-  if (type.value === 'epub') {
+  if (bookInfo.value.fileType === 'epub') {
     const lib = await import('vue-reader')
     return lib.EpubView
   } else {
