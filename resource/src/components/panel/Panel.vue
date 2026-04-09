@@ -11,7 +11,7 @@
 <script setup>
 import Search from './Search.vue'
 import Info from './Info.vue'
-import Setting from './Setting/Index.vue'
+import Setting from './Setting/Setting.vue'
 import Bookmark from './Bookmark.vue'
 </script>
 <style scoped>

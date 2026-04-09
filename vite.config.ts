@@ -29,7 +29,7 @@ export default defineConfig({
   base: './resource',
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './resource/src'),
+      '@': path.resolve(__dirname, 'resource/src'),
     },
   },
   build: {

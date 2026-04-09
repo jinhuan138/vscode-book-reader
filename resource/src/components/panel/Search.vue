@@ -31,7 +31,7 @@
   </el-drawer>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { Search } from '@element-plus/icons-vue'
 import useSearch from '@/hooks/useSearch'
 import { rendition, isEpub } from '@/hooks/useRendition'

@@ -20,13 +20,15 @@
     </div>
   </div>
   <Panel />
+  <BubbleMenu ref="bubbleMenu" v-if="rendition" @highlight-btn-click="highlightSelection" />
   <CodeInterface />
 </template>
-<script setup>
-import { computed, defineAsyncComponent } from 'vue'
+<script setup lang="ts">
+import { computed, defineAsyncComponent, ref, CSSProperties } from 'vue'
 import { Back } from '@element-plus/icons-vue'
-import CodeInterface from './CodeInterface/Index.vue'
-import Panel from './panel/Index.vue'
+import CodeInterface from './CodeInterface/CodeInterface.vue'
+import BubbleMenu from '../components/panel/BubbleMenu.vue'
+import Panel from './panel/Panel.vue'
 import { rendition } from '@/hooks/useRendition'
 import useTheme from '@/hooks/useTheme'
 import useStore from '@/hooks/useStore'
@@ -39,29 +41,29 @@ import '@/hooks/useKeyboard'
 const { url, bookInfo } = useStore()
 
 const BookReader = defineAsyncComponent(() =>
-  bookInfo.value.fileType === 'epub' ? import('vue-reader') : import('vue-book-reader'),
+  bookInfo.value!.fileType === 'epub' ? import('vue-reader') : import('vue-book-reader') ,
 )
 const { showBook } = useDisguise()
 const { theme, defaultBackgroundColor, defaultTextColor } = useTheme()
 
 const bookStyle = computed(() => {
-  const style = {
+  const style: CSSProperties = {
     height: '100%',
-    filter: theme.grayscale ? 'grayscale(100%)' : 'none',
-    fontSize: `${theme.fontSize}%`,
+    filter: theme.value.grayscale ? 'grayscale(100%)' : 'none',
+    fontSize: `${theme.value.fontSize}%`,
     // opacity: theme.opacity,
-    '--book-filter': theme.grayscale ? 'grayscale(100%)' : 'none',
-    '--book-font-size': `${theme.fontSize}%`,
+    '--book-filter': theme.value.grayscale ? 'grayscale(100%)' : 'none',
+    '--book-font-size': `${theme.value.fontSize}%`,
     '--book-text-color': defaultTextColor,
     '--book-background-color': defaultBackgroundColor,
   }
-  if (theme.textColor) {
-    style['color'] = theme.textColor
-    style['--book-text-color'] = theme.textColor
+  if (theme.value.textColor) {
+    style['color'] = theme.value.textColor
+    style['--book-text-color'] = theme.value.textColor
   }
-  if (theme.backgroundColor) {
-    style['background-color'] = theme.backgroundColor
-    style['--book-background-color'] = theme.backgroundColor
+  if (theme.value.backgroundColor) {
+    style['background-color'] = theme.value.backgroundColor
+    style['--book-background-color'] = theme.value.backgroundColor
   }
   return style
 })
@@ -71,6 +73,11 @@ const { progressDisplay } = useProcessDisplay()
 const chapter = useChapter()
 const location = useLocation()
 const { progress, changeProgress, labelFromPercentage, goBack } = useProgress()
+// bubble menu
+const bubbleMenu = ref(null)
+const highlightSelection = (cfiRange) => {
+  console.log(cfiRange)
+}
 </script>
 <style scoped lang="scss">
 /* book reader */

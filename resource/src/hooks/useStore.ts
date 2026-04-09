@@ -1,21 +1,27 @@
 /// <reference types="vite/client" />
 import { useLocalStorage } from '@vueuse/core'
 import { ref, watch, computed, onBeforeUnmount } from 'vue'
-import { rendition, isEpub, onReady } from './useRendition'
-const defaultBook = 'files/alice.epub' //啼笑因缘.azw3
-const url = ref<File | string>(import.meta.env.MODE === 'development' ? defaultBook : '')
+import { rendition, isEpub, onReady } from './useRendition.ts'
+const defaultBook = 'files/alice.azw3' //啼笑因缘.azw3
+const url = ref<ArrayBuffer | string>(import.meta.env.MODE === 'development' ? defaultBook : '')
+
+export interface Bookmark {
+  label: string
+  cfi: string
+  href?: string
+}
 const bookKey = ref('')
 
-interface BookInfoItem {
+export interface BookInfo {
   key: string
   fileType: string
   title: string
   cfi: string | number
-  bookmarks: any[]
+  bookmarks: Bookmark[]
 }
-const bookList = useLocalStorage<BookInfoItem[]>('bookListInfo', [])
+const bookList = useLocalStorage<BookInfo[]>('bookListInfo', [])
 
-const bookInfo = computed<BookInfoItem | null>({
+const bookInfo = computed<BookInfo | null>({
   get: () => {
     if (!bookKey.value) return null
     return bookList.value.find((item) => item.key === bookKey.value) || null
