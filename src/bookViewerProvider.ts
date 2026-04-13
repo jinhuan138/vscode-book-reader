@@ -2,6 +2,7 @@ import * as vscode from 'vscode'
 import { readFileSync } from 'fs'
 import { resolve, join } from 'path'
 import { homedir } from 'os'
+import { translate } from 'bing-translate-api'
 
 export class BookViewerProvider implements vscode.CustomReadonlyEditorProvider {
   private extensionPath: string
@@ -12,10 +13,8 @@ export class BookViewerProvider implements vscode.CustomReadonlyEditorProvider {
     this.emitter = _emitter
   }
 
-  public openCustomDocument(
-    uri: vscode.Uri,
-  ): vscode.CustomDocument | Thenable<vscode.CustomDocument> {
-    return { uri, dispose: (): void => { } }
+  public openCustomDocument(uri: vscode.Uri): vscode.CustomDocument | Thenable<vscode.CustomDocument> {
+    return { uri, dispose: (): void => {} }
   }
 
   public resolveCustomEditor(
@@ -58,6 +57,22 @@ export class BookViewerProvider implements vscode.CustomReadonlyEditorProvider {
           break
         case 'disguise':
           this.emitter.emit('disguise', message.content)
+          break
+        case 'translate':
+          translate(message.content, 'auto', message.to)
+            .then((res) => {
+              webview.postMessage({
+                type: 'translate',
+                content: res.translation,
+              })
+            })
+            .catch((err) => {
+              console.error(err)
+              webview.postMessage({
+                type: 'translate',
+                content: 'translate error',
+              })
+            })
           break
       }
     })

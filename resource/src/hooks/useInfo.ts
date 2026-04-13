@@ -40,7 +40,7 @@ export default function useInfo() {
           const cover = await book.coverUrl()
           information.value = { ...metadata, cover }
           information.value.color = await getColorFromUrl(cover)
-          bookInfo.value.title = metadata?.title || ''
+          bookInfo.value!.title = metadata?.title || ''
           postMessage(metadata?.title || '')
         })
       })
@@ -53,7 +53,7 @@ export default function useInfo() {
         information.value.color = await getColorFromUrl(cover)
       })
       const bookTitle = book.metadata?.title || ''
-      bookInfo.value.title = bookTitle
+      bookInfo.value!.title = bookTitle
       postMessage(bookTitle)
     }
   })

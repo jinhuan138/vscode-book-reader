@@ -34,7 +34,7 @@
     </div>
   </div>
 </template>
-<script setup>
+<script setup lang="ts">
 import { computed, watch, defineAsyncComponent } from 'vue'
 import { Back, Close, Menu } from '@element-plus/icons-vue'
 import useStore from '@/hooks/useStore'
@@ -55,12 +55,12 @@ const vscode = useVscode()
 
 const { url, bookInfo } = useStore()
 const BookReader = defineAsyncComponent(async () => {
-  if (bookInfo.value.fileType === 'epub') {
+  if (bookInfo.value!.fileType === 'epub') {
     const lib = await import('vue-reader')
     return lib.EpubView
   } else {
     const lib = await import('vue-book-reader')
-    return lib.BookView
+    return (lib as any).BookView
   }
 }
 )
