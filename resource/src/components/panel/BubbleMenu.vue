@@ -27,7 +27,7 @@ import { Brush, CopyDocument, Collection } from '@element-plus/icons-vue'
 import { ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import 'element-plus/es/components/message/style/css'
-import { rendition, isEpub } from '@/hooks/useRendition'
+import { rendition } from '@/hooks/useRendition'
 import useStore from '@/hooks/useStore'
 import { Overlayer } from 'vue-book-reader/dist/overlayer.js'
 import useVscode from '@/hooks/useVscode'
@@ -54,42 +54,22 @@ const init = (win: Window) => {
   win.addEventListener('scroll', hide)
 }
 
-if (isEpub()) {
-  rendition.value.themes.default({
-    body: {
-      '-webkit-touch-callout': 'none' /* iOS Safari */,
-      '-webkit-user-select': 'none' /* Safari */,
-      '-khtml-user-select': 'none' /* Konqueror HTML */,
-      '-moz-user-select': 'none' /* Firefox */,
-      '-ms-user-select': 'none' /* Internet Explorer/Edge */,
-      'user-select': 'none',
-    },
-  })
-  bookInfo.value!.highlights?.forEach((annotation) => {
-    rendition.value.annotations.highlight(annotation.value)
-  })
-  rendition.value.on('rendered', (e: Event, iframe: any) => {
-    const win = iframe?.iframe?.contentWindow
-    init(win)
-  })
-} else {
-  bookInfo.value!.highlights?.forEach((annotation) => {
-    rendition.value.addAnnotation(annotation)
-  })
-  rendition.value.addEventListener('load', (e) => {
-    const { doc, index } = e.detail
-    const win = doc.defaultView
-    currentIndex = index
-    init(win)
-  })
-  rendition.value.addEventListener('draw-annotation', (e) => {
-    const { draw, annotation } = e.detail
-    const { color, type } = annotation
-    if (type === 'highlight') draw(Overlayer.highlight, { color })
-    else if (type === 'underline') draw(Overlayer.underline, { color })
-    else if (type === 'squiggly') draw(Overlayer.squiggly, { color })
-  })
-}
+bookInfo.value!.highlights?.forEach((annotation) => {
+  rendition.value.addAnnotation(annotation)
+})
+rendition.value.addEventListener('load', (e) => {
+  const { doc, index } = e.detail
+  const win = doc.defaultView
+  currentIndex = index
+  init(win)
+})
+rendition.value.addEventListener('draw-annotation', (e) => {
+  const { draw, annotation } = e.detail
+  const { color, type } = annotation
+  if (type === 'highlight') draw(Overlayer.highlight, { color })
+  else if (type === 'underline') draw(Overlayer.underline, { color })
+  else if (type === 'squiggly') draw(Overlayer.squiggly, { color })
+})
 const copyText = () => {
   copy(text.value).then(() => {
     ElMessage({
@@ -100,9 +80,7 @@ const copyText = () => {
   })
 }
 const setProps = (react: DOMRect, cfiRangeValue: Range[]) => {
-  const viewRect = isEpub()
-    ? rendition.value.manager.container.getBoundingClientRect()
-    : rendition.value.renderer.getBoundingClientRect()
+  const viewRect = rendition.value.renderer.getBoundingClientRect()
   const reference = popRef.value
 
   reference!.style.left = `${react.x + viewRect.x - (rendition.value.manager.scrollLeft || 0)}px`
@@ -123,26 +101,15 @@ const onHLBtn = () => {
   if (!bookInfo.value!.highlights) {
     bookInfo.value!.highlights = []
   }
-  if (isEpub()) {
-    const [contents] = rendition.value.getContents()
-    const cfi = contents.cfiFromRange(cfiRange.value![0])
-    const annotation = {
-      value: cfi,
-      note: text.value,
-    }
-    rendition.value.annotations.highlight(cfi)
-    bookInfo.value!.highlights.push(annotation)
-  } else {
-    const cfi = rendition.value.getCFI(currentIndex, cfiRange.value)
-    const annotation = {
-      value: cfi,
-      type: 'highlight',
-      color: 'red',
-      note: text.value,
-    }
-    rendition.value.addAnnotation(annotation)
-    bookInfo.value!.highlights.push(annotation)
+  const cfi = rendition.value.getCFI(currentIndex, cfiRange.value)
+  const annotation = {
+    value: cfi,
+    type: 'highlight',
+    color: 'red',
+    note: text.value,
   }
+  rendition.value.addAnnotation(annotation)
+  bookInfo.value!.highlights.push(annotation)
 }
 
 const translateTo = ref('en')

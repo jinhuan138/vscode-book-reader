@@ -1,7 +1,7 @@
 /// <reference types="vite/client" />
 import { useLocalStorage } from '@vueuse/core'
 import { ref, watch, computed, onBeforeUnmount } from 'vue'
-import { rendition, isEpub, onReady } from './useRendition.ts'
+import { rendition, onReady } from './useRendition.ts'
 const defaultBook = 'files/alice.epub' //啼笑因缘.azw3
 const url = ref<ArrayBuffer | string>(import.meta.env.MODE === 'development' ? defaultBook : '')
 
@@ -87,21 +87,12 @@ const onRelocate = (event: any) => {
   bookInfo.value!.cfi = event.detail.cfi
 }
 onReady(() => {
-  if (isEpub()) {
-    rendition.value.on('relocated', (event: any) => {
-      bookInfo.value!.cfi = event.start.cfi
-    })
-    rendition.value.display(bookInfo.value!.cfi || 0)
-  } else {
-    rendition.value?.goTo(bookInfo.value!.cfi || 0)
-    rendition.value.addEventListener('relocate', onRelocate)
-  }
+  rendition.value?.goTo(bookInfo.value!.cfi || 0)
+  rendition.value.addEventListener('relocate', onRelocate)
 })
 
 onBeforeUnmount(() => {
-  if (!isEpub()) {
-    rendition.value.removeEventListener('relocate', onRelocate)
-  }
+  rendition.value.removeEventListener('relocate', onRelocate)
 })
 
 export default function useStore() {

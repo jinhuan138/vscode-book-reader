@@ -1,8 +1,6 @@
 import { ref, onBeforeUnmount } from 'vue'
-import { rendition, isEpub, onReady } from './useRendition'
-import useToc from './useToc'
+import { rendition, onReady } from './useRendition'
 
-const toc = useToc()
 const getLabel = (toc, href) => {
   let label = 'n/a'
   toc.some((item) => {
@@ -27,23 +25,11 @@ export default function useChapter() {
   }
 
   onReady(() => {
-    if (isEpub()) {
-      rendition.value.on('locationChanged', () => {
-        const { displayed, href } = rendition.value.location.start
-        if (href !== 'titlepage.xhtml') {
-          const label = getLabel(toc.value, href)
-          page.value = `${displayed.page}/${displayed.total} ${label}`
-        }
-      })
-    } else {
-      rendition.value.addEventListener('relocate', onRelocate)
-    }
+    rendition.value.addEventListener('relocate', onRelocate)
   })
 
   onBeforeUnmount(() => {
-    if (!isEpub) {
-      rendition.value.removeEventListener('relocate', onRelocate)
-    }
+    rendition.value.removeEventListener('relocate', onRelocate)
   })
   return page
 }

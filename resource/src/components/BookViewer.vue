@@ -1,6 +1,6 @@
 <template>
   <div v-show="showBook" :style="bookStyle">
-    <book-reader :url="url" :getRendition="(val) => (rendition = val)" />
+    <vue-reader :url="url" :getRendition="(val) => (rendition = val)" />
     <!-- footer -->
     <div class="footer">
       <div v-if="progressDisplay === 'chapter'" class="chapter" :title="chapter">
@@ -24,7 +24,8 @@
   <CodeInterface />
 </template>
 <script setup lang="ts">
-import { computed, defineAsyncComponent, ref, CSSProperties } from 'vue'
+import VueReader from 'vue-book-reader'
+import { computed, ref, CSSProperties } from 'vue'
 import { Back } from '@element-plus/icons-vue'
 import CodeInterface from './CodeInterface/CodeInterface.vue'
 import BubbleMenu from '../components/panel/BubbleMenu.vue'
@@ -38,11 +39,8 @@ import useLocation from '@/hooks/useLocation'
 import useDisguise from '@/hooks/useDisguise'
 import useProcessDisplay from '@/hooks/useProcessDisplay'
 import '@/hooks/useKeyboard'
-const { url, bookInfo } = useStore()
+const { url } = useStore()
 
-const BookReader = defineAsyncComponent(() =>
-  bookInfo.value!.fileType === 'epub' ? import('vue-reader') : import('vue-book-reader') ,
-)
 const { showBook } = useDisguise()
 const { theme, defaultBackgroundColor, defaultTextColor } = useTheme()
 

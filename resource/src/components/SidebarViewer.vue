@@ -1,6 +1,6 @@
 <template>
   <div v-show="showBook" :style="style">
-    <book-reader :url="url" :getRendition="(val) => (rendition = val)" />
+    <BookView :url="url" :getRendition="(val) => (rendition = val)" />
     <!-- menu tree -->
     <el-popover placement="bottom" :popper-style="{ height: '80%' }" :width="300">
       <template #reference>
@@ -35,11 +35,12 @@
   </div>
 </template>
 <script setup lang="ts">
-import { computed, watch, defineAsyncComponent } from 'vue'
+import { BookView  } from 'vue-book-reader'
+import { computed, watch } from 'vue'
 import { Back, Close, Menu } from '@element-plus/icons-vue'
 import useStore from '@/hooks/useStore'
 import { createInstance } from 'localforage'
-import { rendition, isEpub } from '@/hooks/useRendition'
+import { rendition } from '@/hooks/useRendition'
 import useTheme from '@/hooks/useTheme'
 import useToc from '@/hooks/useToc'
 import useProgress from '@/hooks/useProgress'
@@ -54,16 +55,6 @@ import useDisguise from '@/hooks/useDisguise'
 const vscode = useVscode()
 
 const { url, bookInfo } = useStore()
-const BookReader = defineAsyncComponent(async () => {
-  if (bookInfo.value!.fileType === 'epub') {
-    const lib = await import('vue-reader')
-    return lib.EpubView
-  } else {
-    const lib = await import('vue-book-reader')
-    return (lib as any).BookView
-  }
-}
-)
 
 const { theme } = useTheme()
 const flow = useFlow()
@@ -88,11 +79,7 @@ const close = () => {
 }
 
 const onNodeClick = (item) => {
-  if (isEpub()) {
-    rendition.value?.display(item.cfi || item.href)
-  } else {
-    rendition.value?.goTo(item.href)
-  }
+  rendition.value?.goTo(item.href)
 }
 const style = computed(() => {
   return {

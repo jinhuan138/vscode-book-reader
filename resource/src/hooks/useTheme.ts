@@ -1,6 +1,6 @@
 import { watch, toRaw } from 'vue'
 import { useLocalStorage } from '@vueuse/core'
-import { rendition, isEpub, onReady } from './useRendition'
+import { rendition, onReady } from './useRendition'
 import { isSidebar } from './useSidebar'
 import useVscode from './useVscode'
 
@@ -123,37 +123,7 @@ const updatedTheme = (newTheme: { [key: string]: any }) => {
   if (!rendition.value) {
     return
   }
-  if (isEpub()) {
-    // rendition.value.getContents().forEach((content) => {
-    //   content.addStylesheetRules(getRule(newTheme))
-    // })
-    const { fontFamily, fontSize, textColor, backgroundColor, writingMode, textAlign, lineHeight, grayscale } = newTheme
-    if (textColor) {
-      rendition.value.themes.override('color', textColor)
-    }
-    if (backgroundColor) {
-      rendition.value.themes.override('background', backgroundColor)
-    }
-    if (fontFamily) {
-      rendition.value.themes.font(fontFamily)
-    }
-    if (fontSize) {
-      rendition.value.themes.fontSize(`${fontSize}%`)
-    }
-    if (writingMode) {
-      rendition.value.themes.override('writing-mode', writingMode)
-    }
-    if (textAlign) {
-      rendition.value.themes.override('text-align', textAlign)
-    }
-    if (lineHeight) {
-      rendition.value.themes.override('line-height', lineHeight)
-    }
-    rendition.value.themes.override('filter', grayscale ? 'grayscale(100%)' : 'none')
-    rendition.value.reportLocation()
-  } else {
-    rendition.value.renderer?.setStyles?.(getCSS(newTheme))
-  }
+  rendition.value.renderer?.setStyles?.(getCSS(newTheme))
 
   if (!isSidebar.value && vscode) {
     vscode.postMessage({
@@ -181,11 +151,7 @@ export default function useTheme() {
 
   onReady(() => {
     const rawTheme = toRaw(theme)
-    if (isEpub()) {
-      updatedTheme(rawTheme)
-    } else {
-      rendition.value.renderer?.setStyles?.(getCSS(rawTheme))
-    }
+    rendition.value.renderer?.setStyles?.(getCSS(rawTheme))
   })
 
   return {
