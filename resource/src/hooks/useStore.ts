@@ -1,10 +1,13 @@
 /// <reference types="vite/client" />
 import { useLocalStorage } from '@vueuse/core'
-import { ref, watch, computed, onBeforeUnmount } from 'vue'
-import { rendition, isEpub, onReady } from './useRendition.ts'
-const defaultBook = 'files/alice.epub' //啼笑因缘.azw3
-const url = ref<ArrayBuffer | string>(import.meta.env.MODE === 'development' ? defaultBook : '')
-
+import { ref, computed, onBeforeUnmount } from 'vue'
+import { rendition, onReady } from './useRendition.ts'
+import { createInstance } from 'localforage'
+import { ElMessage } from 'element-plus'
+import type { UploadFile } from 'element-plus'
+const bookFile = createInstance({
+  name: 'bookFileList',
+})
 export interface Bookmark {
   label: string
   cfi: string
@@ -17,93 +20,112 @@ export interface Highlight {
   color?: string
   note: string
 }
-const bookKey = ref('')
+const bookKey = ref<null | string>(null)
+
+const url = computed(async () => {
+  if (bookKey.value) return await bookFile.getItem(bookKey.value).file
+  else return null
+})
 
 export interface BookInfo {
-  key: string
+  id: string
+  lastOpen: number
+  size: number
   fileType: string
-  title: string
-  cfi: string | number
   bookmarks: Bookmark[]
   highlights: Highlight[]
+  title?: string
+  cover?: string
+  color?: string
+  cfi?: string | number
 }
 const bookList = useLocalStorage<BookInfo[]>('bookListInfo', [])
 
 const bookInfo = computed<BookInfo | null>({
   get: () => {
     if (!bookKey.value) return null
-    return bookList.value.find((item) => item.key === bookKey.value) || null
+    return bookList.value.find((item) => item.id === bookKey.value) || null
   },
   set: (info) => {
     if (!bookKey.value) return
-    const index = bookList.value.findIndex((item) => item.key === bookKey.value)
+    const index = bookList.value.findIndex((item) => item.id === bookKey.value)
     if (index > -1) {
       bookList.value[index] = info!
     }
   },
 })
 
-const hashFile = async (file: File | string): Promise<string> => {
-  let buffer: ArrayBuffer
-
-  if (typeof file === 'string') {
-    // URL 字符串：先 fetch 获取数据
-    const response = await fetch(file)
-    if (!response.ok) {
-      throw new Error(`Failed to fetch: ${file}`)
-    }
-    buffer = await response.arrayBuffer()
-  } else {
-    // File 对象：直接获取 arrayBuffer
-    buffer = await file.arrayBuffer()
-  }
-
+async function generateBookId(file: Blob): Promise<string> {
+  const buffer = await file.arrayBuffer()
   const hashBuffer = await crypto.subtle.digest('SHA-256', buffer)
   const hashArray = Array.from(new Uint8Array(hashBuffer))
   return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('')
 }
 
-watch(
-  url,
-  async (u) => {
-    if (!u) return
-    bookKey.value = await hashFile(u)
-    if (!bookList.value.find((item) => item.key === bookKey.value)) {
-      const pathName = typeof u === 'string' ? u : u.name
-      bookList.value.push({
-        key: bookKey.value,
-        title: '',
-        fileType: pathName.split('.').pop()!.toLowerCase(),
-        cfi: 0,
-        bookmarks: [],
-        highlights: [],
-      })
+const addBook = async (book: UploadFile | string) => {
+  let bookId: string
+  let file: File | Blob | null = null
+  let size: number = 0
+  let type: string = ''
+
+  if (typeof book === 'string') {
+    try {
+      const response = await fetch(book)
+      size = Number(response.headers.get('content-length'))
+      const lastDotIndex = book.lastIndexOf('.')
+      type = lastDotIndex > -1 ? book.substring(lastDotIndex + 1).toLowerCase() : ''
+      file = await response.blob()
+      bookId = await generateBookId(file)
+    } catch (error) {
+      ElMessage.error('Failed to add book: ' + (error as Error).message)
+      return
     }
-  },
-  { immediate: true },
-)
+  } else {
+    file = book.raw!
+    bookId = await generateBookId(file)
+    size = file.size
+    type = book.name.split('.').pop()?.toLowerCase() || ''
+  }
+  const existingBook = bookList.value.find((item) => item.id === bookId)
+
+  if (existingBook) {
+    bookKey.value = bookId
+  } else {
+    bookKey.value = bookId
+    await bookFile.setItem(bookId, {
+      file: bookFile,
+    })
+    bookList.value.push({
+      id: bookId,
+      lastOpen: Date.now(),
+      size,
+      fileType: type,
+      bookmarks: [],
+      highlights: [],
+    })
+  }
+}
+
+const removeBook = (id: string) => {
+  bookFile.removeItem(id)
+  const index = bookList.value.findIndex((item) => item.id === id)
+  if (index > -1) {
+    bookList.value.splice(index, 1)
+  }
+}
 
 const onRelocate = (event: any) => {
   bookInfo.value!.cfi = event.detail.cfi
 }
 onReady(() => {
-  if (isEpub()) {
-    rendition.value.on('relocated', (event: any) => {
-      bookInfo.value!.cfi = event.start.cfi
-    })
-    rendition.value.display(bookInfo.value!.cfi || 0)
-  } else {
-    rendition.value?.goTo(bookInfo.value!.cfi || 0)
-    rendition.value.addEventListener('relocate', onRelocate)
-  }
+  rendition.value?.goTo(bookInfo.value!.cfi || 0)
+  rendition.value.addEventListener('relocate', onRelocate)
 })
 
 onBeforeUnmount(() => {
-  if (!isEpub()) {
-    rendition.value.removeEventListener('relocate', onRelocate)
-  }
+  rendition.value.removeEventListener('relocate', onRelocate)
 })
 
 export default function useStore() {
-  return { url, bookKey, bookInfo }
+  return { url, bookKey, bookList, bookInfo, addBook, removeBook }
 }

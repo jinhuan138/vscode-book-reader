@@ -25,11 +25,9 @@
 <script setup>
 import useFlow from '@/hooks/useFlow'
 import useAnimation from '@/hooks/useAnimation'
-import useSpread from '@/hooks/useSpread'
 import useProcessDisplay from '@/hooks/useProcessDisplay'
 
 const flow = useFlow()
 const animation = useAnimation()
 const { displayType, progressDisplay } = useProcessDisplay()
-const spread = useSpread()
 </script>

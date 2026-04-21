@@ -1,6 +1,6 @@
 <template>
   <div v-show="showBook" :style="style">
-    <book-reader :url="url" :getRendition="(val) => (rendition = val)" />
+    <book-view :url="url" :getRendition="(val) => (rendition = val)" />
     <!-- menu tree -->
     <el-popover placement="bottom" :popper-style="{ height: '80%' }" :width="300">
       <template #reference>
@@ -35,11 +35,11 @@
   </div>
 </template>
 <script setup lang="ts">
-import { computed, watch, defineAsyncComponent } from 'vue'
+import { BookView } from 'vue-book-reader'
+import { computed, watch } from 'vue'
 import { Back, Close, Menu } from '@element-plus/icons-vue'
 import useStore from '@/hooks/useStore'
-import { createInstance } from 'localforage'
-import { rendition, isEpub } from '@/hooks/useRendition'
+import { rendition } from '@/hooks/useRendition'
 import useTheme from '@/hooks/useTheme'
 import useToc from '@/hooks/useToc'
 import useProgress from '@/hooks/useProgress'
@@ -53,17 +53,7 @@ import useDisguise from '@/hooks/useDisguise'
 
 const vscode = useVscode()
 
-const { url, bookInfo } = useStore()
-const BookReader = defineAsyncComponent(async () => {
-  if (bookInfo.value!.fileType === 'epub') {
-    const lib = await import('vue-reader')
-    return lib.EpubView
-  } else {
-    const lib = await import('vue-book-reader')
-    return (lib as any).BookView
-  }
-}
-)
+const {  bookKey, url } = useStore()
 
 const { theme } = useTheme()
 const flow = useFlow()
@@ -77,38 +67,29 @@ const { progress, changeProgress, labelFromPercentage, goBack } = useProgress()
 const chapter = useChapter()
 
 //store last book
-const bookDB = createInstance({
-  name: 'bookList',
-})
 const close = () => {
-  url.value = ''
-  bookDB.removeItem('lastBookType')
-  bookDB.removeItem('lastBook')
+  bookKey.value = null
   vscode && vscode.postMessage({ type: 'title', content: '' })
 }
 
 const onNodeClick = (item) => {
-  if (isEpub()) {
-    rendition.value?.display(item.cfi || item.href)
-  } else {
-    rendition.value?.goTo(item.href)
-  }
+   rendition.value?.goTo(item.href)
 }
 const style = computed(() => {
   return {
-    filter: theme.grayscale ? 'grayscale(100%)' : 'none',
-    color: theme.textColor,
-    fontSize: `${theme.fontSize}%`,
-    opacity: theme.opacity,
+    filter: theme.value.grayscale ? 'grayscale(100%)' : 'none',
+    color: theme.value.textColor,
+    fontSize: `${theme.value.fontSize}%`,
+    opacity: theme.value.opacity,
     width: '100%',
     height: '100vh',
-    position: 'reactive',
+    position: 'relative' as const,
   }
 })
 
 //Disguise
 const { showBook, disguise } = useDisguise()
-const postMessage = (title) => {
+const postMessage = (title: string) => {
   if (vscode) {
     vscode.postMessage({
       type: 'title',
@@ -129,7 +110,9 @@ window.addEventListener('message', ({ data }) => {
       case 'style':
         const newTheme = JSON.parse(data.content)
         Object.keys(newTheme).forEach((key) => {
-          theme[key] = newTheme[key]
+          if (key in theme.value) {
+            theme.value[key] = newTheme[key]
+          }
         })
         break
       case 'flow':
@@ -146,7 +129,7 @@ window.addEventListener('message', ({ data }) => {
 })
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 /* sidebar */
 .sidebar-reader .reader {
   inset: 0 !important;

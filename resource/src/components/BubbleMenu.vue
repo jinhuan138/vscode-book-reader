@@ -27,15 +27,15 @@
 </template>
 
 <script setup lang="ts">
-import { useClipboard, useTextSelection } from '@vueuse/core'
-import { Brush, Delete, CopyDocument, Collection } from '@element-plus/icons-vue'
 import { ref } from 'vue'
 import { ElMessage } from 'element-plus'
-import 'element-plus/es/components/message/style/css'
-import { rendition, isEpub } from '@/hooks/useRendition'
-import useStore from '@/hooks/useStore'
+import { Brush, Delete, CopyDocument, Collection } from '@element-plus/icons-vue'
 import { Overlayer } from 'vue-book-reader/dist/overlayer.js'
+import { useClipboard, useTextSelection } from '@vueuse/core'
+import { rendition } from '@/hooks/useRendition'
+import useStore, { type Highlight } from '@/hooks/useStore'
 import useVscode from '@/hooks/useVscode'
+
 const { bookInfo } = useStore()
 const vscode = useVscode()
 const text = ref('')
@@ -51,62 +51,40 @@ const { copy } = useClipboard({ source: text })
 
 const init = (win: Window) => {
   if (!win) return
-  const { text: t, rects, ranges } = useTextSelection({ window: win })
+  const { text: t, ranges } = useTextSelection({ window: win })
   win.addEventListener('mouseup', () => {
     if (t.value === '') return
     text.value = t.value
-    setProps(rects.value[0], ranges.value)
-    isVisible.value = true
+    cfiRange.value = ranges.value
+    setProps(cfiRange.value[0].getBoundingClientRect())
   })
   win.addEventListener('mousedown', hide)
   win.addEventListener('scroll', hide)
 }
 
-if (isEpub()) {
-  rendition.value.themes.default({
-    body: {
-      '-webkit-touch-callout': 'none' /* iOS Safari */,
-      '-webkit-user-select': 'none' /* Safari */,
-      '-khtml-user-select': 'none' /* Konqueror HTML */,
-      '-moz-user-select': 'none' /* Firefox */,
-      '-ms-user-select': 'none' /* Internet Explorer/Edge */,
-      'user-select': 'none',
-    },
-    '::selection': {
-      cursor: 'pointer'
-    }
-  })
+rendition.value.addEventListener("create-overlay", (e) => {
   bookInfo.value!.highlights?.forEach((annotation) => {
     addAnnotation(annotation)
   })
-  rendition.value.on('rendered', (e: Event, iframe: any) => {
-    const win = iframe?.iframe?.contentWindow
-    init(win)
-  })
-} else {
-  bookInfo.value!.highlights?.forEach((annotation) => {
-    addAnnotation(annotation)
-  })
-  rendition.value.addEventListener('load', (e) => {
-    const { doc, index } = e.detail
-    const win = doc.defaultView
-    currentIndex = index
-    init(win)
-  })
-  rendition.value.addEventListener('draw-annotation', (e) => {
-    const { draw, annotation } = e.detail
-    const { color, type } = annotation
-    if (type === 'highlight') draw(Overlayer.highlight, { color })
-    else if (type === 'underline') draw(Overlayer.underline, { color })
-    else if (type === 'squiggly') draw(Overlayer.squiggly, { color })
-  })
-  rendition.value.addEventListener("show-annotation", (e) => {
-    console.log("show-annotation");
-    // const annotation = this.annotationsByValue.get(e.detail.value);
-    // const pos = getPosition(e.detail.range);
-    // onAnnotationClick({ annotation, pos });
-  });
-}
+});
+
+rendition.value.addEventListener('load', (e) => {
+  const { doc, index } = e.detail
+  const win = doc.defaultView
+  currentIndex = index
+  init(win)
+})
+rendition.value.addEventListener('draw-annotation', (e) => {
+  const { draw, annotation } = e.detail
+  const { color, type } = annotation
+  if (type === 'highlight') draw(Overlayer.highlight, { color })
+  else if (type === 'underline') draw(Overlayer.underline, { color })
+  else if (type === 'squiggly') draw(Overlayer.squiggly, { color })
+})
+rendition.value.addEventListener("show-annotation", (e) => {
+  const annotation = bookInfo.value!.highlights.find((h) => h.value === e.detail.value)!
+  highlightClick(annotation, e.detail.range.getBoundingClientRect())
+});
 const copyText = () => {
   copy(text.value).then(() => {
     ElMessage({
@@ -116,17 +94,15 @@ const copyText = () => {
     })
   })
 }
-const setProps = (react: DOMRect, cfiRangeValue: Range[]) => {
-  const viewRect = isEpub()
-    ? rendition.value.manager.container.getBoundingClientRect()
-    : rendition.value.renderer.getBoundingClientRect()
+const setProps = (react: DOMRect) => {
+  const viewRect = rendition.value.renderer.getBoundingClientRect()
   const reference = popRef.value
 
   reference!.style.left = `${react.x + viewRect.x - (rendition.value.manager?.scrollLeft || 0)}px`
   reference!.style.top = `${react.y + viewRect.y}px`
   reference!.style.width = react.width + 'px'
   reference!.style.height = react.height + 'px'
-  cfiRange.value = cfiRangeValue
+  isVisible.value = true
   translateText()
 }
 
@@ -135,55 +111,31 @@ const hide = () => {
   text.value = ''
   translatedText.value = 'No Data'
   cfiRange.value = null
+  editAnnotation.value = null
 }
 
-const editAnnotation = ref(null)
-const highlightClick = (annotation, react) => {
-  console.log(react.width)
-  console.log(react.y)
+const editAnnotation = ref<Highlight | null>(null)
+const highlightClick = (annotation: Highlight, react: DOMRect) => {
   editAnnotation.value = annotation
   const { note } = annotation
   text.value = note
-  const viewRect = isEpub()
-    ? rendition.value.manager.container.getBoundingClientRect()
-    : rendition.value.renderer.getBoundingClientRect()
-  const reference = popRef.value
-  reference!.style.left = `${react.x + viewRect.x - (rendition.value.manager?.scrollLeft || 0)}px`
-  reference!.style.top = `${react.y + viewRect.y}px`
-  reference!.style.width = react.width + 'px'
-  reference!.style.height = react.height + 'px'
-  isVisible.value = true
+  setProps(react)
 }
-function addAnnotation(annotation) {
-  if (isEpub()) {
-    const { color, value } = annotation
-    rendition.value.annotations.add("highlight", value, {}, (e: MouseEvent) => highlightClick(annotation, (e.target as HTMLElement).getBoundingClientRect()), "hl", { "fill": color, "fill-opacity": "0.3", "mix-blend-mode": "multiply" })
-  } else {
-    rendition.value.addAnnotation(annotation)
-  }
+function addAnnotation(annotation: Highlight) {
+  rendition.value.addAnnotation(annotation)
 }
 
 function removeAnnotation() {
-  if (isEpub()) {
-    const { value } = editAnnotation.value!
-    rendition.value.annotations.remove(value, 'highlight')
-    bookInfo.value!.highlights = bookInfo.value!.highlights.filter(i => i.value == value)
-    hide()
-  } else {
-    // rendition.value.addAnnotation(annotation)
-  }
+  const { value } = editAnnotation.value!
+  rendition.value.addAnnotation(editAnnotation.value!, true)
+  hide()
+  bookInfo.value!.highlights = bookInfo.value!.highlights.filter(h => h.value !== value)
 }
 const onHLBtn = () => {
   if (!bookInfo.value!.highlights) {
     bookInfo.value!.highlights = []
   }
-  let cfi = ''
-  if (isEpub()) {
-    const [contents] = rendition.value.getContents()
-    cfi = contents.cfiFromRange(cfiRange.value![0])
-  } else {
-    cfi = rendition.value.getCFI(currentIndex, cfiRange.value)
-  }
+  const  cfi = rendition.value.getCFI(currentIndex, cfiRange.value![0])
   const annotation = {
     value: cfi,
     type: 'highlight',

@@ -1,20 +1,12 @@
 import useStore from '@/hooks/useStore'
-import { getColorSync, Color } from 'colorthief'
+import { getColorSync } from 'colorthief'
 import { ref } from 'vue'
 import useVscode from './useVscode'
-import { rendition, isEpub, onReady } from './useRendition'
+import { rendition, onReady } from './useRendition'
 const vscode = useVscode()
 const { bookInfo } = useStore()
 
-const postMessage = (title: string) => {
-  if (vscode) {
-    vscode.postMessage({
-      type: 'title',
-      content: title,
-    })
-  }
-}
-const getColorFromUrl = async (url: string): Promise<Color | null> => {
+const getColorFromUrl = async (url: string): Promise<string | null> => {
   try {
     const img = await new Promise<HTMLImageElement>((resolve, reject) => {
       const img = new Image()
@@ -23,39 +15,38 @@ const getColorFromUrl = async (url: string): Promise<Color | null> => {
       img.onload = () => resolve(img)
       img.onerror = () => reject(new Error(`Failed to load image: ${url}`))
     })
-    return getColorSync(img)
+    return getColorSync(img)!.hex()
   } catch (error) {
     console.error('Error getting color from URL:', error)
     return null
   }
 }
-
+const updateBookInfo = (info) => {
+  const { title, cover, color } = info
+  bookInfo.value = {
+    ...bookInfo.value,
+    title,
+    color,
+    lastOpen: Date.now(),
+  }
+  if (vscode) {
+    vscode.postMessage({
+      type: 'title',
+      content: title,
+    })
+  }
+}
 export default function useInfo() {
   const information = ref<any>(null)
   onReady(() => {
-    if (isEpub()) {
-      const { book } = rendition.value
-      book.ready.then(() => {
-        book.loaded.metadata.then(async (metadata: any) => {
-          const cover = await book.coverUrl()
-          information.value = { ...metadata, cover }
-          information.value.color = await getColorFromUrl(cover)
-          bookInfo.value!.title = metadata?.title || ''
-          postMessage(metadata?.title || '')
-        })
-      })
-    } else {
-      const { book } = rendition.value
-      information.value = book.metadata
-      book.getCover?.().then(async (blob: Blob) => {
-        const cover = URL.createObjectURL(blob)
-        information.value.cover = cover
-        information.value.color = await getColorFromUrl(cover)
-      })
-      const bookTitle = book.metadata?.title || ''
-      bookInfo.value!.title = bookTitle
-      postMessage(bookTitle)
-    }
+    const { book } = rendition.value
+    information.value = book.metadata
+    book.getCover?.().then(async (blob: Blob) => {
+      const cover = URL.createObjectURL(blob)
+      information.value.cover = cover
+      information.value.color = await getColorFromUrl(cover)
+    })
+    updateBookInfo(information.value)
   })
   return information
 }

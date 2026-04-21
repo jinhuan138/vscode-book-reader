@@ -21,50 +21,27 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { Plus, Close, CollectionTag } from '@element-plus/icons-vue'
-import { rendition, isEpub } from '@/hooks/useRendition'
-import useProgress from '@/hooks/useProgress'
+import { rendition } from '@/hooks/useRendition'
 import useStore, { type Bookmark } from '@/hooks/useStore'
-const { progress, labelFromPercentage } = useProgress()
 const showBookmark = ref(false)
 const { bookInfo } = useStore()
 
 const addBookmark = () => {
-	if (isEpub()) {
-		const location = rendition.value.currentLocation()
-		const { href, cfi, percentage } = location.start;
-		// TODO : find more minigful name for bookmark
-		const label = `${labelFromPercentage(percentage * 100)} : At ${progress.value}%`;
-
-		if (bookInfo.value!.bookmarks.some((bookmark) => bookmark.cfi === cfi)) {
-			return
-		}
-
-		bookInfo.value!.bookmarks.push({
-			label,
-			cfi,
-			href,
-		});
-	} else {
-		const { lastLocation } = rendition.value
-		const { cfi, fraction, tocItem } = lastLocation;
-		const label = `${tocItem?.label || ''} : At ${(fraction * 100).toFixed(2)}%`;
-		bookInfo.value!.bookmarks.push({
-			label,
-			cfi,
-		});
-	}
+	const { lastLocation } = rendition.value
+	const { cfi, fraction, tocItem } = lastLocation;
+	const label = `${tocItem?.label || ''} : At ${(fraction * 100).toFixed(2)}%`;
+	bookInfo.value!.bookmarks.push({
+		label,
+		cfi,
+	});
 }
 
-const removeBookmark = (node : Bookmark) => {
+const removeBookmark = (node: Bookmark) => {
 	bookInfo.value!.bookmarks = bookInfo.value!.bookmarks.filter((bookmark) => bookmark.cfi !== node.cfi)
 }
 
-const onNodeClick = (item:Bookmark) => {
-	if (isEpub()) {
-		rendition.value.display(item.cfi || item.href)
-	} else {
-		rendition.value.goTo?.(item.cfi)
-	}
+const onNodeClick = (item: Bookmark) => {
+	rendition.value.goTo?.(item.cfi)
 }
 </script>
 

@@ -1,5 +1,5 @@
 import { ref, watch, onBeforeMount, onBeforeUnmount } from 'vue'
-import { rendition, isEpub, onReady } from './useRendition'
+import { rendition, onReady } from './useRendition'
 
 let isAudioOn = false
 let text = ''
@@ -63,39 +63,17 @@ export default function useSpeak() {
     }
     msg.onend = async (event) => {
       if (!isReading.value && !isAudioOn) return
-      if (isEpub()) {
-        rendition.value.next()
-      } else {
-        rendition.value.renderer.next()
-      }
+      rendition.value.renderer.next()
     }
   }
   onReady(() => {
-    if (isEpub()) {
-      rendition.value.on('locationChanged', () => {
-        const range = rendition.value.getRange(rendition.value.currentLocation().start.cfi)
-        const endRange = rendition.value.getRange(rendition.value.currentLocation().end.cfi)
-        range.setEnd(endRange.startContainer, endRange.startOffset)
-        text = range
-          .toString()
-          .replace(/\s\s/g, '')
-          .replace(/\r/g, '')
-          .replace(/\n/g, '')
-          .replace(/\t/g, '')
-          .replace(/\f/g, '')
-        isReading.value && speak(true)
-      })
-    } else {
-      rendition.value.addEventListener('relocate', onRelocate)
-    }
+    rendition.value.addEventListener('relocate', onRelocate)
   })
   watch(isReading, (flag) => {
     speak(flag)
   })
   onBeforeUnmount(() => {
-    if (!isEpub()) {
-      rendition.value.removeEventListener('relocate', onRelocate)
-    }
+    rendition.value.removeEventListener('relocate', onRelocate)
   })
   return { isReading, voiceIndex, voices, speed, speedList }
 }

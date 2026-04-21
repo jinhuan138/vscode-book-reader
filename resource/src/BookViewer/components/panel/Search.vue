@@ -34,16 +34,12 @@
 <script setup lang="ts">
 import { Search } from '@element-plus/icons-vue'
 import useSearch from '@/hooks/useSearch'
-import { rendition, isEpub } from '@/hooks/useRendition'
+import { rendition } from '@/hooks/useRendition'
 
 const { searching, searchText, searchingLoading, searchResult, search } = useSearch()
 
 const onNodeClick = (item) => {
-  if (isEpub()) {
-    rendition.value.display(item.cfi || item.href)
-  } else {
-    rendition.value.goTo?.(item.cfi)
-  }
+  rendition.value.goTo?.(item.cfi)
 }
 </script>
 

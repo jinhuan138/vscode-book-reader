@@ -1,5 +1,5 @@
 <template>
-  <div v-show="showBook" :style="bookStyle">
+  <div v-if="url" v-show="showBook" class="book-viewer" :style="bookStyle" >
     <book-reader :url="url" :getRendition="(val) => (rendition = val)" />
     <!-- footer -->
     <div class="footer">
@@ -20,15 +20,19 @@
     </div>
   </div>
   <Panel />
-  <BubbleMenu ref="bubbleMenu" v-if="rendition" @highlight-btn-click="highlightSelection" />
+  <BubbleMenu />
   <CodeInterface />
+  <ImageViewer />
 </template>
 <script setup lang="ts">
-import { computed, defineAsyncComponent, ref, CSSProperties } from 'vue'
+import { BookReader } from 'vue-book-reader'
+import { computed, defineAsyncComponent, CSSProperties } from 'vue'
+import { useRoute } from 'vue-router'
 import { Back } from '@element-plus/icons-vue'
-import CodeInterface from './CodeInterface/CodeInterface.vue'
-import BubbleMenu from '../components/panel/BubbleMenu.vue'
-import Panel from './panel/Panel.vue'
+import CodeInterface from './components/CodeInterface/CodeInterface.vue'
+import Panel from './components/panel/Panel.vue'
+import ImageViewer from '@/components/ImageViewer.vue'
+import BubbleMenu from '@/components/BubbleMenu.vue'
 import { rendition } from '@/hooks/useRendition'
 import useTheme from '@/hooks/useTheme'
 import useStore from '@/hooks/useStore'
@@ -38,11 +42,13 @@ import useLocation from '@/hooks/useLocation'
 import useDisguise from '@/hooks/useDisguise'
 import useProcessDisplay from '@/hooks/useProcessDisplay'
 import '@/hooks/useKeyboard'
-const { url, bookInfo } = useStore()
-
-const BookReader = defineAsyncComponent(() =>
-  bookInfo.value!.fileType === 'epub' ? import('vue-reader') : import('vue-book-reader') ,
-)
+const { url, bookKey } = useStore()
+ const route = useRoute()
+const init = async () => {
+  const id = route.query.id as string
+  bookKey.value = id
+}
+init()
 const { showBook } = useDisguise()
 const { theme, defaultBackgroundColor, defaultTextColor } = useTheme()
 
@@ -73,32 +79,45 @@ const { progressDisplay } = useProcessDisplay()
 const chapter = useChapter()
 const location = useLocation()
 const { progress, changeProgress, labelFromPercentage, goBack } = useProgress()
-// bubble menu
-const bubbleMenu = ref(null)
-const highlightSelection = (cfiRange) => {
-  console.log(cfiRange)
-}
 </script>
-<style scoped lang="scss">
+<style lang="scss" scoped>
+/* book viewer */
+.book-viewer .reader {
+  inset: 50px 0 32px;
+}
+
+.book-viewer .reader .epub-container {
+  overflow-x: hidden !important;
+}
+
+.book-viewer .arrow {
+  display: none;
+}
+
 /* book reader */
 :deep(.readerArea) {
   background: var(--book-background-color, #fff) !important;
   filter: var(--book-filter);
 
+  .epub-container {
+    overflow-x: hidden !important;
+  }
+
+  .arrow {
+    display: none;
+  }
+
   .titleArea {
-    font-size: var(--book-font-size);
     color: var(--book-text-color, #000) !important;
   }
 }
 
 :deep(.tocArea) {
   background: var(--book-background-color, #ccc);
-  font-size: var(--book-font-size);
   color: var(--book-text-color, #000) !important;
 
   .tocAreaButton {
     background: var(--book-background-color, #ccc);
-    font-size: var(--book-font-size);
     color: var(--book-text-color, #000) !important;
   }
 }

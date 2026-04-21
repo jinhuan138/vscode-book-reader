@@ -1,6 +1,6 @@
 import { ref, computed, watch } from 'vue'
 import useVscode from './useVscode'
-import { rendition, isEpub, onReady } from './useRendition'
+import { rendition, onReady } from './useRendition'
 
 const vscode = useVscode()
 const imageUrlToUint8Array = async (url: string) => {
@@ -82,35 +82,14 @@ export default function useImage() {
   })
 
   onReady(() => {
-    if (isEpub()) {
-      setTimeout(() => {
-        rendition.value.themes.default({
-          img: {
-            cursor: 'pointer',
-          },
-          image: {
-            cursor: 'pointer',
-          },
-        })
-      })
-      rendition.value.hooks.content.register((content: { document: Document }) => {
-        const imgs = [
-          ...content.document.querySelectorAll('img'),
-          ...content.document.querySelectorAll('image'),
-        ] as HTMLImageElement[]
+    rendition.value.addEventListener('load', () => {
+      const docs = rendition.value.renderer.getContents()
+      docs.forEach(({ doc }) => {
+        const imgs = [...doc.querySelectorAll('img'), ...doc.querySelectorAll('image')] as HTMLImageElement[]
         imageList.value = imgs
         initImage()
       })
-    } else {
-      rendition.value.addEventListener('load', () => {
-        const docs = rendition.value.renderer.getContents()
-        docs.forEach(({ doc }) => {
-          const imgs = [...doc.querySelectorAll('img'), ...doc.querySelectorAll('image')] as HTMLImageElement[]
-          imageList.value = imgs
-          initImage()
-        })
-      })
-    }
+    })
   })
 
   return { indexRef, showPreview, srcList, downloadImage, imageDisplayModeOptions, imageDisplayMode, miniMediaScale }
