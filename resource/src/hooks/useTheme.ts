@@ -140,7 +140,6 @@ const getCSS = ({
 `
 
 const updatedTheme = (newTheme: { [key: string]: any }) => {
-  console.log('updatedTheme————————', newTheme)
   if (!rendition.value) {
     return
   }

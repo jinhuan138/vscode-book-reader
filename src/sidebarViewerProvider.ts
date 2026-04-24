@@ -1,7 +1,7 @@
 import * as vscode from 'vscode'
 import { readFileSync } from 'fs'
 import { join } from 'path'
-import { Util } from './until'
+import { Util } from './util'
 import { homedir } from 'os'
 
 export class SidebarViewerProvider implements vscode.WebviewViewProvider {
@@ -28,9 +28,7 @@ export class SidebarViewerProvider implements vscode.WebviewViewProvider {
           webviewView.title = message.content
           break
         case 'download':
-          const filePath = vscode.Uri.file(
-            join(homedir(), '.bookReader', Date.now() + '.jpg'),
-          )
+          const filePath = vscode.Uri.file(join(homedir(), '.bookReader', Date.now() + '.jpg'))
           await vscode.workspace.fs.writeFile(filePath, message.content)
           vscode.commands.executeCommand('vscode.open', filePath, {
             forceNewWindow: true,

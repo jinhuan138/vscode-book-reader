@@ -63,7 +63,7 @@ export class BookViewerProvider implements vscode.CustomReadonlyEditorProvider {
             .then((res) => {
               webview.postMessage({
                 type: 'translate',
-                content: res.translation,
+                content: res!.translation,
               })
             })
             .catch((err) => {

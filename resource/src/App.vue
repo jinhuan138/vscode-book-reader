@@ -8,6 +8,9 @@ import * as pdfjsLib from 'pdfjs-dist/build/pdf.min.mjs'
 import useVscode from '@/hooks/useVscode'
 import { isSidebar } from '@/hooks/useSidebar'
 import pkg from '../../package.json'
+import useStore from '@/hooks/useStore'
+const { bookKey, addBook } = useStore()
+
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
   'pdfjs-dist/legacy/build/pdf.worker.min.mjs',
@@ -26,6 +29,9 @@ window.addEventListener('message', ({ data }) => {
     switch (data.type) {
       case 'open':
         url.value = data.content
+        addBook(data.content).then((id) => {
+          bookKey.value = id
+        })
         break
       case 'type':
         isSidebar.value = data.content === 'sidebar'

@@ -89,17 +89,16 @@
     ]
   },
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
+    "dev": "pnpm -F ./resource dev",
+    "build": "pnpm -F ./resource build",
+    "preview": "pnpm -F ./resource preview",
     "vscode:prepublish": "pnpm run compile",
     "package": "pnpm vsce package",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "pretest": "pnpm run compile && pnpm run lint",
     "lint": "eslint src --ext ts",
-    "test": "vscode-test",
-    "format": "prettier --write resource/**/*.{ts,vue}"
+    "test": "vscode-test"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.10",
@@ -107,31 +106,13 @@
     "@types/vscode": "^1.109.0",
     "@typescript-eslint/eslint-plugin": "^7.18.0",
     "@typescript-eslint/parser": "^7.18.0",
-    "@vitejs/plugin-vue": "^5.2.4",
     "@vscode/test-cli": "^0.0.8",
     "@vscode/test-electron": "^2.5.2",
     "eslint": "^8.57.1",
-    "prettier": "^3.8.1",
-    "rollup-plugin-visualizer": "^6.0.5",
-    "sass-embedded": "^1.97.3",
-    "typescript": "^5.9.3",
-    "unplugin-auto-import": "^20.3.0",
-    "unplugin-vue-components": "^30.0.0",
-    "vite": "^8.0.8",
-    "vite-plugin-singlefile": "^2.3.0"
+    "typescript": "^6.0.3"
   },
   "dependencies": {
-    "@element-plus/icons-vue": "^2.3.2",
-    "@vueuse/core": "^14.2.1",
-    "bing-translate-api": "^4.2.0",
-    "colorthief": "^3.0.0",
-    "element-plus": "^2.13.6",
-    "localforage": "^1.10.0",
-    "magic-grid": "^3.4.7",
-    "pdfjs-dist": "^5.4.624",
-    "vue": "^3.5.29",
-    "vue-book-reader": "^1.2.7",
-    "vue-router": "4"
+    "bing-translate-api": "^4.2.0"
   },
   "vsce": {
     "dependencies": false,

@@ -1,7 +1,7 @@
 import * as vscode from 'vscode'
 import { BookViewerProvider } from './bookViewerProvider'
 import { SidebarViewerProvider } from './sidebarViewerProvider'
-import { emitter } from './until'
+import { emitter } from './util'
 
 //https://rackar.github.io/vscode-ext-doccn
 //https://code.visualstudio.com/api

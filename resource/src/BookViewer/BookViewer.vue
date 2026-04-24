@@ -55,9 +55,9 @@ const init = async () => {
   if (id) {
     bookKey.value = id
   }
-  addBook('/files/梵高手稿.azw3').then((id) => {
-    bookKey.value = id
-  })
+  // addBook('/files/梵高手稿.azw3').then((id) => {
+  //   bookKey.value = id
+  // })
 }
 init()
 const { showBook } = useDisguise()

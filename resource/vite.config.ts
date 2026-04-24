@@ -6,7 +6,7 @@ import { visualizer } from 'rollup-plugin-visualizer'
 import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
-import { version } from './package.json'
+import { version } from '../package.json'
 // https://cn.vitejs.dev/
 export default defineConfig({
   plugins: [
@@ -25,11 +25,9 @@ export default defineConfig({
   server: {
     port: 8025,
   },
-  root: './resource',
-  base: './resource',
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, 'resource/src'),
+      '@': path.resolve(__dirname, 'src'),
     },
   },
   build: {

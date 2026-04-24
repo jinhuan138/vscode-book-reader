@@ -6,18 +6,22 @@ import { type BookInfo } from './useInfo.ts'
 import { createInstance } from 'localforage'
 import { dayjs, type UploadFile } from 'element-plus'
 import { getColorSync } from 'colorthief'
+interface BookFileData {
+  file: Blob
+  cover: Blob
+}
 const bookFile = createInstance({
   name: 'bookFileList',
 })
 const bookKey = ref<null | string>(null)
-const url = ref<null>(null)
+const url = ref<null | Blob>(null)
 watch(
   bookKey,
   async (newKey) => {
     if (newKey) {
       try {
-        const item = await bookFile.getItem(newKey)
-        url.value = item?.file || null
+        const item = await bookFile.getItem<BookFileData>(newKey)
+        url.value = item?.file ?? null
       } catch (error) {
         console.error('Failed to get book file:', error)
         url.value = null
