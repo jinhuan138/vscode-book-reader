@@ -1,19 +1,16 @@
 import { ref, watch } from 'vue'
+import { useLocalStorage } from '@vueuse/core'
 import useStore from './useStore'
 
-// const bookDB = createInstance({
-//   name: 'bookList',
-// })
-const { url, type } = useStore()
+const { bookKey } = useStore()
+const lastBook = useLocalStorage<string>('lastBook', '')
 
 export const isSidebar = ref(false)
-
 watch(isSidebar, async (is) => {
-  // if (is) {
-  //   bookDB.setItem('lastBookType', type.value)
-  // }
-  // if (is && !url.value) {
-  //   type.value = (await bookDB.getItem('lastBookType')) || ''
-  //   url.value = (await bookDB.getItem('lastBook')) || ''
-  // }
+  if (is) {
+    lastBook.value = bookKey.value
+  }
+  if (is && !bookKey.value) {
+    bookKey.value = lastBook.value
+  }
 })

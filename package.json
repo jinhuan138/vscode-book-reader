@@ -130,7 +130,7 @@
     "magic-grid": "^3.4.7",
     "pdfjs-dist": "^5.4.624",
     "vue": "^3.5.29",
-    "vue-book-reader": "^1.2.5",
+    "vue-book-reader": "^1.2.7",
     "vue-router": "4"
   },
   "vsce": {

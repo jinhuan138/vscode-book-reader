@@ -2,17 +2,17 @@ import { ref, watch, computed } from 'vue'
 import useVscode from './useVscode'
 import useInfo from './useInfo'
 import { isSidebar } from './useSidebar'
+import { useLocalStorage } from '@vueuse/core'
 
 const lineCount = ref(100)
 const fileType = ref('')
 const vscode = useVscode()
-const information = useInfo()
-const defaultDisguise = JSON.parse(localStorage.getItem('disguise') || 'false')
-const disguise = ref<boolean>(defaultDisguise)
+const info = useInfo()
+const disguise = useLocalStorage<boolean>('disguise', false)
 const active = ref<boolean>(true)
 const showBook = ref(true)
 const title = computed(() => {
-  return active.value ? information.value.title : fileName
+  return active.value ? info.value!.title : fileName
 })
 
 window.addEventListener('message', ({ data }) => {
@@ -35,7 +35,6 @@ export default function useDisguise() {
     if (!enabled) {
       showBook.value = true
     }
-    localStorage.setItem('disguise', String(enabled))
     if (!isSidebar.value && vscode) {
       vscode.postMessage({
         type: 'disguise',

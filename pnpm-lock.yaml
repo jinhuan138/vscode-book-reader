@@ -36,8 +36,8 @@ importers:
         specifier: ^3.5.29
         version: 3.5.29(typescript@5.9.3)
       vue-book-reader:
-        specifier: ^1.2.5
-        version: 1.2.5
+        specifier: ^1.2.7
+        version: 1.2.7
       vue-router:
         specifier: '4'
         version: 4.6.4(vue@3.5.29(typescript@5.9.3))
@@ -2310,8 +2310,8 @@ packages:
       yaml:
         optional: true
 
-  vue-book-reader@1.2.5:
-    resolution: {integrity: sha512-rPheC8RYr/5a5QJWjG2Km79fYCd6qbVhaPgYeMAYnP0v13DcljHBEDtbGTwKjb8qDM2/hb9b8d//ulR1p+jrCA==}
+  vue-book-reader@1.2.7:
+    resolution: {integrity: sha512-2zQVGnVSoPrzvy3dMqrVuIAbM5zK+N5oD7W+E4Dq2zXrSojgnEnm9fOUTuGrt/AGwMi8GxbvLFAnQk0UqwAsgA==}
 
   vue-component-type-helpers@3.2.6:
     resolution: {integrity: sha512-O02tnvIfOQVmnvoWwuSydwRoHjZVt8UEBR+2p4rT35p8GAy5VTlWP8o5qXfJR/GWCN0nVZoYWsVUvx2jwgdBmQ==}
@@ -4423,7 +4423,7 @@ snapshots:
       sass: 1.97.3
       sass-embedded: 1.97.3
 
-  vue-book-reader@1.2.5:
+  vue-book-reader@1.2.7:
     dependencies:
       core-js: 3.48.0
 

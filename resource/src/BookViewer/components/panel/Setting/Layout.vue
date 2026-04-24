@@ -9,12 +9,12 @@
     <el-form-item label="Paging Animation">
       <el-switch v-model="animation" />
     </el-form-item>
-    <el-form-item label="View Spread">
+    <!-- <el-form-item label="View Spread">
       <el-radio-group v-model="spread" size="small" style="flex-wrap: nowrap">
         <el-radio-button value="auto" border> auto </el-radio-button>
         <el-radio-button value="none" border> none </el-radio-button>
       </el-radio-group>
-    </el-form-item>
+    </el-form-item> -->
     <el-form-item label="Process Display">
       <el-select class="font-select" width="50" size="small" v-model="progressDisplay">
         <el-option v-for="item in displayType" :key="item" :label="item" :value="item"> </el-option>

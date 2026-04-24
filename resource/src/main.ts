@@ -9,8 +9,8 @@ import 'element-plus/es/components/message/style/css'
 //https://johnfactotum.github.io/foliate
 
 const routes = [
-  { path: '/', component: () => import('@/BookViewer/Home.vue') },
-  { path: '/Viewer', component: () => import('@/BookViewer/BookViewer.vue') },
+  { path: '/', component: () => import('@/BookViewer/BookViewer.vue') },
+  { path: '/Home', component: () => import('@/BookViewer/Home.vue') },
 ]
 
 const router = createRouter({

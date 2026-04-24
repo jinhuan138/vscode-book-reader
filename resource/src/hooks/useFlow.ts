@@ -1,17 +1,17 @@
-import { ref, watch, onMounted, onUnmounted } from 'vue'
+import { watch, onMounted, onUnmounted } from 'vue'
 import useVscode from './useVscode'
 import { rendition, onReady } from './useRendition'
 import { isSidebar } from './useSidebar'
+import { useLocalStorage } from '@vueuse/core'
 
 const vscode = useVscode()
-type Flow = 'paginated' | 'scrolled-doc'
+type Flow = 'paginated' | 'scrolled'
 export default function useFlow() {
-  const defaultFlow: Flow = (localStorage.getItem('flow') as Flow | null) || 'paginated'
-  const flow = ref<Flow>(defaultFlow)
+  const flow = useLocalStorage<Flow>('flow', 'paginated')
 
   const handleSetFlow = (e: KeyboardEvent) => {
     if (e.key === 's') {
-      flow.value = flow.value === 'paginated' ? 'scrolled-doc' : 'paginated'
+      flow.value = flow.value === 'paginated' ? 'scrolled' : 'paginated'
     }
   }
 
@@ -22,10 +22,10 @@ export default function useFlow() {
     window.removeEventListener('keydown', handleSetFlow)
   })
   const setFlow = (flow: string) => {
-    rendition.value?.renderer.setAttribute('flow', flow === 'paginated' ? 'paginated' : 'scrolled')
+    rendition.value?.renderer.setAttribute('flow', flow)
   }
   onReady(() => {
-    setFlow(defaultFlow)
+    setFlow(flow.value)
     // if (isSidebar.value && isEpub()) {
     //   rendition.value.hooks.content.register(({ document }) => {
     //     const annotation = Array.from(document.querySelectorAll('a')) as HTMLAnchorElement[]
@@ -52,7 +52,6 @@ export default function useFlow() {
         content: f,
       })
     }
-    localStorage.setItem('flow', f)
   })
   return flow
 }

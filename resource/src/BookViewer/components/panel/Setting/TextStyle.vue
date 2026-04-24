@@ -7,7 +7,7 @@
       </el-radio-group>
     </el-form-item>
     <el-form-item label="Text Color">
-      <el-color-picker v-model="theme.textColor" show-alpha />
+      <el-color-picker v-model="theme.textColor" show-alpha color-format="rgb" />
       <li
         class="color-circle"
         v-for="color in textList"
@@ -17,7 +17,7 @@
       ></li>
     </el-form-item>
     <el-form-item label="Background Color">
-      <el-color-picker v-model="theme.backgroundColor" show-alpha />
+      <el-color-picker v-model="theme.backgroundColor" show-alpha color-format="rgb" @change="e=>console.log(e)"/>
       <li
         class="color-circle"
         v-for="color in backgroundList"
@@ -64,7 +64,7 @@
 import useTheme from '@/hooks/useTheme'
 
 const { theme, textList, backgroundList, fontFamilyList, textAlignList, restore } = useTheme()
-const formatOpacity = (val: number):string => {
+const formatOpacity = (val: number): string => {
   return val + '%'
 }
 </script>

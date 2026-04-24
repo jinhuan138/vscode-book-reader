@@ -1,6 +1,7 @@
 import { ref, computed, watch } from 'vue'
 import useVscode from './useVscode'
 import { rendition, onReady } from './useRendition'
+import { useLocalStorage } from '@vueuse/core'
 
 const vscode = useVscode()
 const imageUrlToUint8Array = async (url: string) => {
@@ -32,8 +33,8 @@ export default function useImage() {
   const indexRef = ref<number>(0)
   const showPreview = ref<boolean>(false)
   const imageDisplayModeOptions = ['Normal', 'Mini', 'Hide']
-  const imageDisplayMode = ref(localStorage.getItem('imageDisplayMode') || 'Normal')
-  const miniMediaScale = ref<number>(Number(localStorage.getItem('miniMediaScale') || 100))
+  const imageDisplayMode = useLocalStorage<'Normal' | 'Mini' | 'Hide'>('imageDisplayMode', 'Normal')
+  const miniMediaScale = useLocalStorage<number>('miniMediaScale', 100)
   const downloadImage = (index: number) => {
     if (vscode) {
       imageUrlToUint8Array(srcList.value[index]).then((data) => {
@@ -75,11 +76,7 @@ export default function useImage() {
       }
     })
   }
-  watch([imageDisplayMode, miniMediaScale], ([mode, scale]) => {
-    localStorage.setItem('imageDisplayMode', mode)
-    localStorage.setItem('miniMediaScale', scale.toString())
-    handleImage()
-  })
+  watch([imageDisplayMode, miniMediaScale], handleImage)
 
   onReady(() => {
     rendition.value.addEventListener('load', () => {

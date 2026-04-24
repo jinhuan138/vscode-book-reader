@@ -2,19 +2,13 @@ import { ref, onBeforeUnmount } from 'vue'
 import { rendition, onReady } from './useRendition'
 export default function useProgress() {
   const progress = ref<number>(0)
-  // const flattenedToc = ref([])
-
   const changeProgress = (val: number) => {
     rendition.value.goToFraction(parseFloat(String(val / 100)))
   }
-
-  // watch(toc, (_toc) => {
-  //   if (isEpub()) {
-  //     flattenedToc.value = (function flatten(items) {
-  //       return [].concat(...items.map((item) => [item].concat(...flatten(item.children))))
-  //     })(_toc)
-  //   }
-  // })
+  const labelFromPercentage = (percent: number) => {
+    const label = rendition.value?.getLabelByFraction(percent / 100)
+    return label ? label : `${Math.floor(percent)}%`
+  }
 
   const onRelocate = ({ detail }) => {
     const { fraction } = detail
@@ -34,5 +28,5 @@ export default function useProgress() {
     rendition.value.removeEventListener('relocate', onRelocate)
   })
 
-  return { progress, changeProgress, goBack }
+  return { progress, changeProgress, labelFromPercentage, goBack }
 }

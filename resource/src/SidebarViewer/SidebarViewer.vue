@@ -1,6 +1,6 @@
 <template>
   <div v-show="showBook" :style="style">
-    <book-view :url="url" :getRendition="(val) => (rendition = val)" />
+    <book-view :url="url" :getRendition="(val) => (rendition = val)"  :initOption="{lastLocation: info!.lastLocation}"/>
     <!-- menu tree -->
     <el-popover placement="bottom" :popper-style="{ height: '80%' }" :width="300">
       <template #reference>
@@ -28,7 +28,7 @@
         <el-icon title="back" class="back-icon" @click="goBack">
           <Back />
         </el-icon>
-        <el-slider class="slider" v-model="progress" :step="0.01" @change="changeProgress" size="small"
+        <el-slider class="slider" v-model="progress" @change="changeProgress" size="small"
           :format-tooltip="labelFromPercentage"></el-slider>
       </div>
     </div>
@@ -58,7 +58,7 @@ const {  bookKey, url } = useStore()
 const { theme } = useTheme()
 const flow = useFlow()
 const animation = useAnimation()
-const information = useInfo()
+const info = useInfo()
 
 const toc = useToc()
 
@@ -99,7 +99,7 @@ const postMessage = (title: string) => {
 }
 watch(showBook, (show) => {
   if (show) {
-    postMessage(information.value.title)
+    postMessage(info.value!.title)
   } else {
     postMessage('')
   }

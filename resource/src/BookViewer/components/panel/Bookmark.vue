@@ -9,7 +9,7 @@
 		</el-text>
 		<el-tree :data="bookInfo!.bookmarks" node-key="id" @node-click="onNodeClick">
 			<template #default="{ node }">
-				<span class="custom-tree-node">
+				<span class="custom-tree-node" :title="node.label">
 					<span>{{ node.label }}</span>
 					<el-button type="primary" link :icon="Close" @click.stop="removeBookmark(node.data)" />
 				</span>
@@ -21,10 +21,10 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { Plus, Close, CollectionTag } from '@element-plus/icons-vue'
-import { rendition } from '@/hooks/useRendition'
-import useStore, { type Bookmark } from '@/hooks/useStore'
+import { rendition } from '@/hooks/useRendition.ts'
+import useInfo, { type Bookmark } from '@/hooks/useInfo.ts'
 const showBookmark = ref(false)
-const { bookInfo } = useStore()
+const bookInfo = useInfo()
 
 const addBookmark = () => {
 	const { lastLocation } = rendition.value
@@ -67,5 +67,15 @@ const onNodeClick = (item: Bookmark) => {
 	font-size: 14px;
 	padding-right: 8px;
 	margin: 5px;
+	min-width: 0;
+
+	span {
+		flex: 1;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		min-width: 0;
+		margin-right: 8px;
+	}
 }
 </style>

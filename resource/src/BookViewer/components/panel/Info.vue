@@ -1,31 +1,38 @@
 <template>
   <!-- info -->
-  <el-icon class="setting-icon" color="#ccc" @click="info = true">
+  <el-icon class="setting-icon" color="#ccc" @click="showInfo = true">
     <WarningFilled />
   </el-icon>
-  <el-drawer v-model="info" title="search" :with-header="false" :size="400"
-    :style="{ backgroundColor: information?.color }">
-    <div v-if="information" class="information">
-      <el-image :src="information.cover" :alt="information.title" :preview-src-list="[information.cover]" />
-      <p v-if="information.title">标题:{{ information.title }}</p>
-      <p v-if="information.creator">作者:{{ information.creator }}</p>
-      <p v-if="information.publisher">出版社:{{ information.publisher }}</p>
-      <p v-if="information.language">语言:{{ information.language }}</p>
-      <p v-if="information.pubdate">出版日期:{{ information.pubdate }}</p>
-      <p v-if="information.modified_date">修改日期:{{ information.modified_date }}</p>
-      <p v-if="information.description">介绍:{{ information.description }}</p>
+  <el-drawer v-model="showInfo" title="search" :with-header="false" :size="400">
+    <div v-if="info" class="information">
+      <el-image class="el-image" :src="coverUrls[info.id]" :alt="info.title" :preview-src-list="[coverUrls[info.id]]">
+        <template #error>
+          <div class="image-slot">
+            <el-icon>
+              <Picture />
+            </el-icon>
+          </div>
+        </template></el-image>
+      <p v-if="info.title">title:{{ info.title }}</p>
+      <p v-if="info.author.name">author:{{ info.author.name }}</p>
+      <p v-if="info.published">publisher:{{ info.published }}</p>
+      <p v-if="info.language">language:{{ info.language }}</p>
+      <p v-if="info.modified">modified:{{ info.modified }}</p>
+      <p v-if="info.description">description:{{ info.description }}</p>
     </div>
   </el-drawer>
 </template>
 <script setup>
 import { ref } from 'vue'
-import { WarningFilled } from '@element-plus/icons-vue'
+import { WarningFilled, Picture } from '@element-plus/icons-vue'
 import useInfo from '@/hooks/useInfo'
+import useStore from '@/hooks/useStore'
 
-const info = ref(false)
-const information = useInfo()
+const { coverUrls } = useStore()
+const showInfo = ref(false)
+const info = useInfo()
 </script>
-<style scoped>
+<style scoped lang="scss">
 .setting-icon {
   cursor: pointer;
   z-index: 5;
@@ -37,5 +44,18 @@ const information = useInfo()
 
 .information {
   color: #000;
+}
+
+.el-image {
+  width: 100%;
+
+  .image-slot {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 400px;
+    font-size: 30px;
+  }
 }
 </style>

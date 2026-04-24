@@ -1,12 +1,12 @@
-import { ref, watch } from 'vue'
+import { watch } from 'vue'
+import { useLocalStorage } from '@vueuse/core'
 import useVscode from './useVscode'
 import { rendition, onReady } from './useRendition'
 import { isSidebar } from './useSidebar'
 
 const vscode = useVscode()
 export default function useAnimation() {
-  const defaultAnimation = JSON.parse(localStorage.getItem('animation') || 'false')
-  const animation = ref<boolean>(defaultAnimation)
+  const animation = useLocalStorage('animation', false)
   const setAnimation = (animated: boolean) => {
     if (animated) {
       rendition.value.renderer.setAttribute('animated', '')
@@ -14,7 +14,7 @@ export default function useAnimation() {
       rendition.value.renderer.removeAttribute('animated')
     }
   }
-  onReady(() => setAnimation(defaultAnimation))
+  onReady(() => setAnimation(animation.value))
   watch(animation, (a) => {
     setAnimation(a)
     if (!isSidebar.value && vscode) {
@@ -23,7 +23,6 @@ export default function useAnimation() {
         content: String(a),
       })
     }
-    localStorage.setItem('animation', String(a))
   })
   return animation
 }

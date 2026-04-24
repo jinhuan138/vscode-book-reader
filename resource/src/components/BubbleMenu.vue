@@ -32,11 +32,11 @@ import { ElMessage } from 'element-plus'
 import { Brush, Delete, CopyDocument, Collection } from '@element-plus/icons-vue'
 import { Overlayer } from 'vue-book-reader/dist/overlayer.js'
 import { useClipboard, useTextSelection } from '@vueuse/core'
-import { rendition } from '@/hooks/useRendition'
-import useStore, { type Highlight } from '@/hooks/useStore'
+import { rendition, onReady } from '@/hooks/useRendition'
+import useInfo, { type Highlight } from '@/hooks/useInfo.ts'
 import useVscode from '@/hooks/useVscode'
 
-const { bookInfo } = useStore()
+const bookInfo = useInfo()
 const vscode = useVscode()
 const text = ref('')
 const colorOption = ["#FBF1D1", "#EFEEB0", "#CAEFC9", "#76BEE9"]
@@ -49,42 +49,41 @@ const popRef = ref<null | HTMLElement>(null)
 const translatePop = ref<null | HTMLElement>(null)
 const { copy } = useClipboard({ source: text })
 
-const init = (win: Window) => {
-  if (!win) return
-  const { text: t, ranges } = useTextSelection({ window: win })
-  win.addEventListener('mouseup', () => {
-    if (t.value === '') return
-    text.value = t.value
-    cfiRange.value = ranges.value
-    setProps(cfiRange.value[0].getBoundingClientRect())
-  })
-  win.addEventListener('mousedown', hide)
-  win.addEventListener('scroll', hide)
-}
+onReady(() => {
+  rendition.value.addEventListener("create-overlay", (e) => {
+    bookInfo.value!.highlights?.forEach((annotation) => {
+      addAnnotation(annotation)
+    })
+  });
 
-rendition.value.addEventListener("create-overlay", (e) => {
-  bookInfo.value!.highlights?.forEach((annotation) => {
-    addAnnotation(annotation)
+  rendition.value.addEventListener('load', (e) => {
+    const { doc, index } = e.detail
+    const win = doc.defaultView
+    currentIndex = index
+    const { text: t, ranges } = useTextSelection({ window: win })
+    win.addEventListener('mouseup', () => {
+      if (t.value === '') return
+      text.value = t.value
+      cfiRange.value = ranges.value
+      setProps(cfiRange.value[0].getBoundingClientRect())
+    })
+    win.addEventListener('mousedown', hide)
+    win.addEventListener('scroll', hide)
   })
-});
+  rendition.value.addEventListener('draw-annotation', (e) => {
+    console.log('draw-annotation',e)
+    const { draw, annotation } = e.detail
+    const { color, type } = annotation
+    if (type === 'highlight') draw(Overlayer.highlight, { color })
+    else if (type === 'underline') draw(Overlayer.underline, { color })
+    else if (type === 'squiggly') draw(Overlayer.squiggly, { color })
+  })
+  rendition.value.addEventListener("show-annotation", (e) => {
+    const annotation = bookInfo.value!.highlights.find((h) => h.value === e.detail.value)!
+    highlightClick(annotation, e.detail.range.getBoundingClientRect())
+  });
+})
 
-rendition.value.addEventListener('load', (e) => {
-  const { doc, index } = e.detail
-  const win = doc.defaultView
-  currentIndex = index
-  init(win)
-})
-rendition.value.addEventListener('draw-annotation', (e) => {
-  const { draw, annotation } = e.detail
-  const { color, type } = annotation
-  if (type === 'highlight') draw(Overlayer.highlight, { color })
-  else if (type === 'underline') draw(Overlayer.underline, { color })
-  else if (type === 'squiggly') draw(Overlayer.squiggly, { color })
-})
-rendition.value.addEventListener("show-annotation", (e) => {
-  const annotation = bookInfo.value!.highlights.find((h) => h.value === e.detail.value)!
-  highlightClick(annotation, e.detail.range.getBoundingClientRect())
-});
 const copyText = () => {
   copy(text.value).then(() => {
     ElMessage({
@@ -98,7 +97,8 @@ const setProps = (react: DOMRect) => {
   const viewRect = rendition.value.renderer.getBoundingClientRect()
   const reference = popRef.value
 
-  reference!.style.left = `${react.x + viewRect.x - (rendition.value.manager?.scrollLeft || 0)}px`
+  console.log('scrollLeft',rendition.value.scrollLeft)
+  reference!.style.left = `${react.x + viewRect.x}px`
   reference!.style.top = `${react.y + viewRect.y}px`
   reference!.style.width = react.width + 'px'
   reference!.style.height = react.height + 'px'
@@ -135,7 +135,7 @@ const onHLBtn = () => {
   if (!bookInfo.value!.highlights) {
     bookInfo.value!.highlights = []
   }
-  const  cfi = rendition.value.getCFI(currentIndex, cfiRange.value![0])
+  const cfi = rendition.value.getCFI(currentIndex, cfiRange.value![0])
   const annotation = {
     value: cfi,
     type: 'highlight',

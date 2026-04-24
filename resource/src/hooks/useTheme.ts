@@ -59,7 +59,6 @@ const fontFamilyList = [
 ]
 const textAlignList = ['left', 'center', 'right', 'justify']
 
-// ============ 默认主题 ============
 const defaultTheme = {
   fontSize: 100,
   fontFamily: 'invalid-hack',
@@ -73,9 +72,6 @@ const defaultTheme = {
 }
 const theme = useLocalStorage('theme', defaultTheme)
 
-// ============ CSS 生成函数 ============
-const commonTags =
-  'section, aside, blockquote, article, nav, header, footer, main, figure,div, p, font, h1, h2, h3, h4, h5, h6, li, span'
 const getCSS = ({
   fontFamily,
   fontSize,
@@ -88,7 +84,9 @@ const getCSS = ({
 }: {
   [key: string]: any
 }) => `
+  @namespace epub "http://www.idpf.org/2007/ops";
   html {
+    filter: ${grayscale ? 'grayscale(100%)' : 'none'};
     --theme-text-color: ${textColor};
     --theme-bg-color: ${backgroundColor};
     --theme-font-family: ${fontFamily};
@@ -97,12 +95,20 @@ const getCSS = ({
     --theme-text-align: ${textAlign};
     --theme-line-height: ${lineHeight};
   }
-  html,body {
-    filter: ${grayscale ? 'grayscale(100%)' : 'none'};
-    ${textColor ? 'color: var(--theme-text-color, transparent) !important;' : ''}
-    ${backgroundColor ? 'background: var(--theme-bg-color, transparent) !important;' : ''}
+  body {
+    background: none !important;
+    background-color: transparent;
   }
-  ${commonTags} {
+  @media (prefers-color-scheme: dark) {
+    a:link {
+       color: lightblue;
+    }
+  }
+  * {
+    line-height: ${lineHeight}em !important;
+    font-family: ${fontFamily} !important;
+  }
+  h1, h2, h3, h4, h5,p, li, blockquote, dd, div, font {
     ${textColor ? 'color: var(--theme-text-color, transparent) !important;' : ''}
     ${backgroundColor ? 'background: var(--theme-bg-color, transparent) !important;' : ''}
     ${fontFamily ? 'font-family: var(--theme-font-family) !important;' : ''}
@@ -115,11 +121,26 @@ const getCSS = ({
     background-color: transparent !important;
     mix-blend-mode: multiply;
     cursor: pointer;
-  },
+  }
+  /* prevent the above from overriding the align attribute */
+  [align="left"] { text-align: left; }
+  [align="right"] { text-align: right; }
+  [align="center"] { text-align: center; }
+  [align="justify"] { text-align: justify; }
+
+  pre {
+    white-space: pre-wrap !important;
+  }
+  aside[epub|type~="endnote"],
+  aside[epub|type~="footnote"],
+  aside[epub|type~="note"],
+  aside[epub|type~="rearnote"] {
+    display: none;
+  }
 `
 
-// ============ 主题更新函数 ============
 const updatedTheme = (newTheme: { [key: string]: any }) => {
+  console.log('updatedTheme————————', newTheme)
   if (!rendition.value) {
     return
   }
@@ -132,12 +153,11 @@ const updatedTheme = (newTheme: { [key: string]: any }) => {
     })
   }
 }
-// ============ 监听器 ============
-watch(theme, (val) => {
-  updatedTheme(val)
+watch(theme, (val) => updatedTheme(val), {
+  immediate: true,
+  deep: true,
 })
 
-// ============ 导出函数 ============
 export default function useTheme() {
   const restore = () => {
     theme.value = defaultTheme
@@ -150,7 +170,7 @@ export default function useTheme() {
   watch(() => theme.value.opacity, updateThemeOpacity)
 
   onReady(() => {
-    const rawTheme = toRaw(theme)
+    const rawTheme = toRaw(theme.value)
     rendition.value.renderer?.setStyles?.(getCSS(rawTheme))
   })
 

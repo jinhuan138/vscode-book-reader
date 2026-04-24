@@ -1,108 +1,125 @@
 /// <reference types="vite/client" />
 import { useLocalStorage } from '@vueuse/core'
-import { ref, computed, onBeforeUnmount } from 'vue'
-import { rendition, onReady } from './useRendition.ts'
+import { ref, watch } from 'vue'
+import { type BookInfo } from './useInfo.ts'
+//TODO https://vueuse.org/integrations/useIDBKeyval/#useidbkeyval
 import { createInstance } from 'localforage'
-import { ElMessage } from 'element-plus'
-import type { UploadFile } from 'element-plus'
+import { dayjs, type UploadFile } from 'element-plus'
+import { getColorSync } from 'colorthief'
 const bookFile = createInstance({
   name: 'bookFileList',
 })
-export interface Bookmark {
-  label: string
-  cfi: string
-  href?: string
-}
-
-export interface Highlight {
-  value: string
-  type?: string
-  color?: string
-  note: string
-}
 const bookKey = ref<null | string>(null)
-
-const url = computed(async () => {
-  if (bookKey.value) return await bookFile.getItem(bookKey.value).file
-  else return null
-})
-
-export interface BookInfo {
-  id: string
-  lastOpen: number
-  size: number
-  fileType: string
-  bookmarks: Bookmark[]
-  highlights: Highlight[]
-  title?: string
-  cover?: string
-  color?: string
-  cfi?: string | number
-}
-const bookList = useLocalStorage<BookInfo[]>('bookListInfo', [])
-
-const bookInfo = computed<BookInfo | null>({
-  get: () => {
-    if (!bookKey.value) return null
-    return bookList.value.find((item) => item.id === bookKey.value) || null
-  },
-  set: (info) => {
-    if (!bookKey.value) return
-    const index = bookList.value.findIndex((item) => item.id === bookKey.value)
-    if (index > -1) {
-      bookList.value[index] = info!
+const url = ref<null>(null)
+watch(
+  bookKey,
+  async (newKey) => {
+    if (newKey) {
+      try {
+        const item = await bookFile.getItem(newKey)
+        url.value = item?.file || null
+      } catch (error) {
+        console.error('Failed to get book file:', error)
+        url.value = null
+      }
+    } else {
+      url.value = null
     }
   },
-})
+  { immediate: true },
+)
 
-async function generateBookId(file: Blob): Promise<string> {
+const bookList = useLocalStorage<BookInfo[]>('bookListInfo', [])
+const coverUrls = ref<Record<string, string>>({})
+
+const getCoverById = async (id: string): Promise<Blob | null> => {
+  try {
+    const item = await bookFile.getItem<{ cover?: Blob }>(id)
+    return item?.cover || null
+  } catch (error) {
+    console.error('Failed to get cover:', error)
+    return null
+  }
+}
+
+watch(
+  () => bookList.value.length,
+  async (newLength, oldLength) => {
+    if (oldLength && newLength < oldLength) return
+    for (const book of bookList.value) {
+      if (!coverUrls.value[book.id]) {
+        const blob = await getCoverById(book.id)
+        if (blob) {
+          coverUrls.value[book.id] = URL.createObjectURL(blob)
+        }
+      }
+    }
+  },
+  { immediate: true },
+)
+
+async function getMd5(file: Blob): Promise<string> {
   const buffer = await file.arrayBuffer()
   const hashBuffer = await crypto.subtle.digest('SHA-256', buffer)
   const hashArray = Array.from(new Uint8Array(hashBuffer))
   return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('')
 }
-
+const getBookInfo = async (file) => {
+  const view = document.createElement('foliate-view') as any
+  let info = null
+  await view.open(file)
+  const { book } = view
+  info = book.metadata
+  const coverBlob = await book.getCover?.()
+  info.color = await getColorFromUrl(coverBlob!)
+  info.cover = coverBlob
+  return info
+}
+const getColorFromUrl = async (blob: Blob): Promise<string | null> => {
+  try {
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const img = new Image()
+      img.crossOrigin = 'Anonymous'
+      img.src = URL.createObjectURL(blob)
+      img.onload = () => resolve(img)
+      img.onerror = () => reject(new Error(`Failed to load image: ${url}`))
+    })
+    return getColorSync(img)!.hex()
+  } catch (error) {
+    console.error('Error getting color from URL:', error)
+    return null
+  }
+}
 const addBook = async (book: UploadFile | string) => {
-  let bookId: string
-  let file: File | Blob | null = null
-  let size: number = 0
-  let type: string = ''
-
+  let file: File
   if (typeof book === 'string') {
-    try {
-      const response = await fetch(book)
-      size = Number(response.headers.get('content-length'))
-      const lastDotIndex = book.lastIndexOf('.')
-      type = lastDotIndex > -1 ? book.substring(lastDotIndex + 1).toLowerCase() : ''
-      file = await response.blob()
-      bookId = await generateBookId(file)
-    } catch (error) {
-      ElMessage.error('Failed to add book: ' + (error as Error).message)
-      return
-    }
+    file = await fetch(book).then(async (res) => new File([await res.blob()], new URL(res.url).pathname))
   } else {
     file = book.raw!
-    bookId = await generateBookId(file)
-    size = file.size
-    type = book.name.split('.').pop()?.toLowerCase() || ''
   }
-  const existingBook = bookList.value.find((item) => item.id === bookId)
-
+  const md5 = await getMd5(file)
+  const existingBook = bookList.value.find((item) => item.md5 === md5)
   if (existingBook) {
-    bookKey.value = bookId
+    return existingBook.id
   } else {
-    bookKey.value = bookId
-    await bookFile.setItem(bookId, {
-      file: bookFile,
+    const bookInfo = await getBookInfo(file)
+    const { cover, ...info } = bookInfo
+    const id = crypto.randomUUID()
+    await bookFile.setItem(id, {
+      file,
+      cover,
     })
     bookList.value.push({
-      id: bookId,
-      lastOpen: Date.now(),
-      size,
-      fileType: type,
+      id,
+      lastOpen: dayjs().format('YYYY-MM-DD HH:mm:ss'),
+      cfi: 0,
+      md5,
+      size: file.size,
       bookmarks: [],
       highlights: [],
+      ...info,
     })
+    return id
   }
 }
 
@@ -114,18 +131,6 @@ const removeBook = (id: string) => {
   }
 }
 
-const onRelocate = (event: any) => {
-  bookInfo.value!.cfi = event.detail.cfi
-}
-onReady(() => {
-  rendition.value?.goTo(bookInfo.value!.cfi || 0)
-  rendition.value.addEventListener('relocate', onRelocate)
-})
-
-onBeforeUnmount(() => {
-  rendition.value.removeEventListener('relocate', onRelocate)
-})
-
 export default function useStore() {
-  return { url, bookKey, bookList, bookInfo, addBook, removeBook }
+  return { url, bookKey, bookList, coverUrls, addBook, removeBook }
 }
