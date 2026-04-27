@@ -1,7 +1,7 @@
 /// <reference types="vite/client" />
 import { useLocalStorage } from '@vueuse/core'
 import { ref, watch } from 'vue'
-import { type BookInfo } from './useInfo.ts'
+import { type BookInfo } from './useInfo'
 //TODO https://vueuse.org/integrations/useIDBKeyval/#useidbkeyval
 import { createInstance } from 'localforage'
 import { dayjs, type UploadFile } from 'element-plus'

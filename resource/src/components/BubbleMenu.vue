@@ -33,7 +33,7 @@ import { Brush, Delete, CopyDocument, Collection } from '@element-plus/icons-vue
 import { Overlayer } from 'vue-book-reader/dist/overlayer.js'
 import { useClipboard, useTextSelection } from '@vueuse/core'
 import { rendition, onReady } from '@/hooks/useRendition'
-import useInfo, { type Highlight } from '@/hooks/useInfo.ts'
+import useInfo, { type Highlight } from '@/hooks/useInfo'
 import useVscode from '@/hooks/useVscode'
 
 const bookInfo = useInfo()

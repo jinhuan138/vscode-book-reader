@@ -32,5 +32,8 @@ export default defineConfig({
   },
   build: {
     copyPublicDir: false,
+    output: {
+      codeSplitting: false,
+    },
   },
 })

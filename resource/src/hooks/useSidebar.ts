@@ -6,6 +6,7 @@ const { bookKey } = useStore()
 const lastBook = useLocalStorage<string>('lastBook', '')
 
 export const isSidebar = ref(false)
+//store last book
 watch(isSidebar, async (is) => {
   if (is) {
     lastBook.value = bookKey.value

@@ -11,11 +11,11 @@
             <el-icon>
               <Picture />
             </el-icon>
-          </div>
-        </template></el-image>
+          </div> </template
+      ></el-image>
       <p v-if="info.title">title:{{ info.title }}</p>
       <p v-if="info.author.name">author:{{ info.author.name }}</p>
-      <p v-if="info.published">publisher:{{ info.published }}</p>
+      <p v-if="info.published">publisher:{{ format(info.published) }}</p>
       <p v-if="info.language">language:{{ info.language }}</p>
       <p v-if="info.modified">modified:{{ info.modified }}</p>
       <p v-if="info.description">description:{{ info.description }}</p>
@@ -25,12 +25,17 @@
 <script setup>
 import { ref } from 'vue'
 import { WarningFilled, Picture } from '@element-plus/icons-vue'
+import { dayjs } from 'element-plus'
 import useInfo from '@/hooks/useInfo'
 import useStore from '@/hooks/useStore'
 
 const { coverUrls } = useStore()
 const showInfo = ref(false)
 const info = useInfo()
+const format = (time) => {
+  if(!time) return ''
+  dayjs(time).format('YYYY-MM-DD')
+}
 </script>
 <style scoped lang="scss">
 .setting-icon {

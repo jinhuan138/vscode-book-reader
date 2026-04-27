@@ -20,8 +20,8 @@ export class SidebarViewerProvider implements vscode.WebviewViewProvider {
       switch (message.type) {
         case 'init':
           webview.postMessage({
-            type: 'type',
-            content: 'sidebar',
+            type: 'isSidebar',
+            content: 'true',
           })
           break
         case 'title':

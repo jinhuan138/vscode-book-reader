@@ -1,6 +1,7 @@
 <template>
-  <div v-show="showBook" :style="style">
-    <book-view :url="url" :getRendition="(val) => (rendition = val)"  :initOption="{lastLocation: info!.lastLocation}"/>
+  <div v-if="url" :style="style">
+    <book-view :url="url" :getRendition="(val) => (rendition = val)"
+      :initOption="{ lastLocation: info!.lastLocation }" />
     <!-- menu tree -->
     <el-popover placement="bottom" :popper-style="{ height: '80%' }" :width="300">
       <template #reference>
@@ -36,44 +37,33 @@
 </template>
 <script setup lang="ts">
 import { BookView } from 'vue-book-reader'
-import { computed, watch } from 'vue'
+import { computed } from 'vue'
 import { Back, Close, Menu } from '@element-plus/icons-vue'
 import useStore from '@/hooks/useStore'
 import { rendition } from '@/hooks/useRendition'
 import useTheme from '@/hooks/useTheme'
 import useToc from '@/hooks/useToc'
 import useProgress from '@/hooks/useProgress'
-import useFlow from '@/hooks/useFlow'
 import useVscode from '@/hooks/useVscode'
 import useChapter from '@/hooks/useChapter'
-import useAnimation from '@/hooks/useAnimation'
 import useInfo from '@/hooks/useInfo'
 import '@/hooks/useKeyboard'
-import useDisguise from '@/hooks/useDisguise'
 
 const vscode = useVscode()
-
-const {  bookKey, url } = useStore()
-
-const { theme } = useTheme()
-const flow = useFlow()
-const animation = useAnimation()
+const { bookKey, url } = useStore()
 const info = useInfo()
-
 const toc = useToc()
-
 const { progress, changeProgress, labelFromPercentage, goBack } = useProgress()
-
 const chapter = useChapter()
+const { theme } = useTheme()
 
-//store last book
 const close = () => {
   bookKey.value = null
   vscode && vscode.postMessage({ type: 'title', content: '' })
 }
 
 const onNodeClick = (item) => {
-   rendition.value?.goTo(item.href)
+  rendition.value?.goTo(item.href)
 }
 const style = computed(() => {
   return {
@@ -84,47 +74,6 @@ const style = computed(() => {
     width: '100%',
     height: '100vh',
     position: 'relative' as const,
-  }
-})
-
-//Disguise
-const { showBook, disguise } = useDisguise()
-const postMessage = (title: string) => {
-  if (vscode) {
-    vscode.postMessage({
-      type: 'title',
-      content: title,
-    })
-  }
-}
-watch(showBook, (show) => {
-  if (show) {
-    postMessage(info.value!.title)
-  } else {
-    postMessage('')
-  }
-})
-window.addEventListener('message', ({ data }) => {
-  if (data) {
-    switch (data.type) {
-      case 'style':
-        const newTheme = JSON.parse(data.content)
-        Object.keys(newTheme).forEach((key) => {
-          if (key in theme.value) {
-            theme.value[key] = newTheme[key]
-          }
-        })
-        break
-      case 'flow':
-        flow.value = data.content
-        break
-      case 'animation':
-        animation.value = JSON.parse(data.content)
-        break
-      case 'disguise':
-        disguise.value = JSON.parse(data.content)
-        break
-    }
   }
 })
 </script>

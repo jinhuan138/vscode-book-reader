@@ -59,7 +59,7 @@ export class BookViewerProvider implements vscode.CustomReadonlyEditorProvider {
           this.emitter.emit('disguise', message.content)
           break
         case 'translate':
-          translate(message.content, 'auto', message.to)
+          translate(message.content, null, message.to)
             .then((res) => {
               webview.postMessage({
                 type: 'translate',
