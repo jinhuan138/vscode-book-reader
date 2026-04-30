@@ -6,11 +6,9 @@ import { translate } from 'bing-translate-api'
 
 export class BookViewerProvider implements vscode.CustomReadonlyEditorProvider {
   private extensionPath: string
-  private emitter: any
 
-  constructor(context: vscode.ExtensionContext, _emitter: any) {
+  constructor(context: vscode.ExtensionContext) {
     this.extensionPath = context.extensionPath
-    this.emitter = _emitter
   }
 
   public openCustomDocument(uri: vscode.Uri): vscode.CustomDocument | Thenable<vscode.CustomDocument> {
@@ -21,8 +19,8 @@ export class BookViewerProvider implements vscode.CustomReadonlyEditorProvider {
     document: vscode.CustomDocument,
     webviewPanel: vscode.WebviewPanel,
   ): void | Thenable<void> {
-    const uri = document.uri
     const webview = webviewPanel.webview
+    const uri = document.uri
     const folderPath = vscode.Uri.file(resolve(uri.fsPath, '..'))
     webview.options = {
       enableScripts: true,
@@ -31,20 +29,28 @@ export class BookViewerProvider implements vscode.CustomReadonlyEditorProvider {
     webview.onDidReceiveMessage(async (message) => {
       switch (message.type) {
         case 'init':
-          webview.postMessage({
-            type: 'open',
-            content: webview.asWebviewUri(uri).toString(),
-          })
-          this.emitter.emit('open', webview.asWebviewUri(uri).toString())
+          if (typeof document === 'string') {
+            webview.postMessage({
+              type: 'openBook',
+              content: document,
+            })
+          } else {
+            webview.postMessage({
+              type: 'open',
+              content: webview.asWebviewUri(document.uri).toString(),
+            })
+            // this.emitter.emit('open', webview.asWebviewUri(document.uri).toString())
+          }
+
           break
         case 'style':
-          this.emitter.emit('style', message.content)
+          // this.emitter.emit('style', message.content)
           break
         case 'flow':
-          this.emitter.emit('flow', message.content)
+          // this.emitter.emit('flow', message.content)
           break
         case 'animation':
-          this.emitter.emit('animation', message.content)
+          // this.emitter.emit('animation', message.content)
           break
         case 'download':
           const filePath = vscode.Uri.file(join(homedir(), '.bookReader', Date.now() + '.jpg'))
@@ -56,7 +62,7 @@ export class BookViewerProvider implements vscode.CustomReadonlyEditorProvider {
           webviewPanel.title = message.content
           break
         case 'disguise':
-          this.emitter.emit('disguise', message.content)
+          // this.emitter.emit('disguise', message.content)
           break
         case 'translate':
           translate(message.content, null, message.to)

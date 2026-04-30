@@ -1,15 +1,13 @@
 import * as vscode from 'vscode'
 import { readFileSync } from 'fs'
 import { join } from 'path'
-import { Util } from './util'
+import { Util } from '../util'
 import { homedir } from 'os'
 
 export class SidebarViewerProvider implements vscode.WebviewViewProvider {
   private extensionPath: string
-  private emitter: any
-  constructor(context: vscode.ExtensionContext, _emitter: any) {
+  constructor(context: vscode.ExtensionContext) {
     this.extensionPath = context.extensionPath
-    this.emitter = _emitter
   }
   resolveWebviewView(webviewView: vscode.WebviewView) {
     const webview = webviewView.webview
@@ -36,36 +34,36 @@ export class SidebarViewerProvider implements vscode.WebviewViewProvider {
           break
       }
     })
-    this.emitter.on('open', (url: string) => {
-      webview.postMessage({
-        type: 'open',
-        content: url,
-      })
-    })
-    this.emitter.on('style', (theme: any) => {
-      webview.postMessage({
-        type: 'style',
-        content: theme,
-      })
-    })
-    this.emitter.on('flow', (content: any) => {
-      webview.postMessage({
-        type: 'flow',
-        content,
-      })
-    })
-    this.emitter.on('disguise', (content: any) => {
-      webview.postMessage({
-        type: 'disguise',
-        content,
-      })
-    })
-    this.emitter.on('animation', (content: any) => {
-      webview.postMessage({
-        type: 'animation',
-        content,
-      })
-    })
+    // this.emitter.on('open', (url: string) => {
+    //   webview.postMessage({
+    //     type: 'open',
+    //     content: url,
+    //   })
+    // })
+    // this.emitter.on('style', (theme: any) => {
+    //   webview.postMessage({
+    //     type: 'style',
+    //     content: theme,
+    //   })
+    // })
+    // this.emitter.on('flow', (content: any) => {
+    //   webview.postMessage({
+    //     type: 'flow',
+    //     content,
+    //   })
+    // })
+    // this.emitter.on('disguise', (content: any) => {
+    //   webview.postMessage({
+    //     type: 'disguise',
+    //     content,
+    //   })
+    // })
+    // this.emitter.on('animation', (content: any) => {
+    //   webview.postMessage({
+    //     type: 'animation',
+    //     content,
+    //   })
+    // })
     webviewView.webview.html = Util.buildPath(
       readFileSync(this.extensionPath + '/resource/dist/index.html', 'utf8'),
       webview,

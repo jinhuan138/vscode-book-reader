@@ -1,4 +1,4 @@
-import { onBeforeMount, onUnmounted } from 'vue'
+import { onUnmounted } from 'vue'
 import useStore from '@/hooks/useStore'
 import useFlow from '@/hooks/useFlow'
 import { isSidebar } from '@/hooks/useSidebar'
@@ -17,6 +17,9 @@ const handleMessage = ({ data }) => {
         addBook(data.content).then((id) => {
           bookKey.value = id
         })
+        break
+      case 'openBook':
+        bookKey.value = data.content
         break
       case 'isSidebar':
         isSidebar.value = true

@@ -1,7 +1,8 @@
 <template>
   <div v-if="url" style="height: 100vh;">
     <div v-show="showBook" class="book-viewer" :style="bookStyle">
-      <vue-reader :url="url" :getRendition="(val) => (rendition = val)" :initOption="{lastLocation: info!.lastLocation}"/>
+      <vue-reader :url="url" :getRendition="(val) => (rendition = val)"
+        :initOption="{ lastLocation: info!.lastLocation }" />
       <!-- footer -->
       <div class="footer">
         <div v-if="progressDisplay === 'chapter'" class="chapter" :title="chapter">
@@ -30,7 +31,6 @@
 <script setup lang="ts">
 import { VueReader } from 'vue-book-reader'
 import { computed, CSSProperties } from 'vue'
-import { useRoute } from 'vue-router'
 import { Back } from '@element-plus/icons-vue'
 import CodeInterface from './components/CodeInterface/CodeInterface.vue'
 import Panel from './components/panel/Panel.vue'
@@ -49,15 +49,10 @@ import useInfo from '@/hooks/useInfo'
 
 const { url, bookKey, addBook } = useStore()
 const info = useInfo()
-const route = useRoute()
 const init = async () => {
-  const id = route.query.id as string
-  if (id) {
+  addBook('/files/alice.epub').then((id) => {
     bookKey.value = id
-  }
-  // addBook('/files/梵高手稿.azw3').then((id) => {
-  //   bookKey.value = id
-  // })
+  })
 }
 init()
 const { showBook } = useDisguise()

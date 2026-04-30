@@ -37,13 +37,17 @@
       {
         "command": "bookReader",
         "title": "book reader"
+      },
+      {
+        "command": "openBook",
+        "title": "book reader"
       }
     ],
     "viewsContainers": {
       "activitybar": [
         {
-          "id": "book-reader",
-          "title": "book-reader",
+          "id": "bookReader",
+          "title": "book reader",
           "icon": "resource/public/icon.svg"
         }
       ]
@@ -51,8 +55,14 @@
     "views": {
       "book-reader": [
         {
-          "id": "book-reader-webview",
-          "name": "view",
+          "id": "bookList",
+          "name": "book list",
+          "icon": "$(home)"
+        },
+        {
+          "id": "bookReaderSidebar",
+          "name": "reader sidebar",
+          "icon": "$(book)",
           "type": "webview"
         }
       ]

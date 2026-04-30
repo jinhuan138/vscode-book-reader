@@ -57,9 +57,6 @@ importers:
       localforage:
         specifier: ^1.10.0
         version: 1.10.0
-      magic-grid:
-        specifier: ^3.4.7
-        version: 3.4.7
       pdfjs-dist:
         specifier: ^5.4.624
         version: 5.4.624
@@ -69,9 +66,6 @@ importers:
       vue-book-reader:
         specifier: ^1.2.7
         version: 1.2.7
-      vue-router:
-        specifier: '4'
-        version: 4.6.4(vue@3.5.29(typescript@5.9.3))
     devDependencies:
       '@vitejs/plugin-vue':
         specifier: ^5.2.4
@@ -929,9 +923,6 @@ packages:
   '@vue/compiler-ssr@3.5.29':
     resolution: {integrity: sha512-Y/ARJZE6fpjzL5GH/phJmsFwx3g6t2KmHKHx5q+MLl2kencADKIrhH5MLF6HHpRMmlRAYBRSvv347Mepf1zVNw==}
 
-  '@vue/devtools-api@6.6.4':
-    resolution: {integrity: sha512-sGhTPMuXqZ1rVOk32RylztWkfXTRhuS7vgAKv0zjqk8gbsHkJ7xfFf+jbySxt7tWObEJwyKaHMikV/WGDiQm8g==}
-
   '@vue/reactivity@3.5.29':
     resolution: {integrity: sha512-zcrANcrRdcLtmGZETBxWqIkoQei8HaFpZWx/GHKxx79JZsiZ8j1du0VUJtu4eJjgFvU/iKL5lRXFXksVmI+5DA==}
 
@@ -1670,9 +1661,6 @@ packages:
   lru-cache@10.4.3:
     resolution: {integrity: sha512-JNAzZcXrCt42VGLuYz0zfAzDfAvJWW6AfYlDBQyDV5DClI2m5sAmK+OIO7s59XfsRsWHp02jAJrRadPRGTt6SQ==}
 
-  magic-grid@3.4.7:
-    resolution: {integrity: sha512-SPy2dmzAzBr8AysPXH6gT9bE9PYIFX/ZQCf/XRojXFnuyFeHkITV2gp6j/7msrcqSDt6Tu+XUtLfQF79Ugc6/g==}
-
   magic-string@0.30.21:
     resolution: {integrity: sha512-vd2F4YUyEXKGcLHoq+TEyCjxueSeHnFxyyjNp80yg0XV4vUhnDer/lvvlqM/arB5bXQN5K2/3oinyCRyx8T2CQ==}
 
@@ -2319,11 +2307,6 @@ packages:
 
   vue-component-type-helpers@3.2.6:
     resolution: {integrity: sha512-O02tnvIfOQVmnvoWwuSydwRoHjZVt8UEBR+2p4rT35p8GAy5VTlWP8o5qXfJR/GWCN0nVZoYWsVUvx2jwgdBmQ==}
-
-  vue-router@4.6.4:
-    resolution: {integrity: sha512-Hz9q5sa33Yhduglwz6g9skT8OBPii+4bFn88w6J+J4MfEo4KRRpmiNG/hHHkdbRFlLBOqxN8y8gf2Fb0MTUgVg==}
-    peerDependencies:
-      vue: ^3.5.0
 
   vue@3.5.29:
     resolution: {integrity: sha512-BZqN4Ze6mDQVNAni0IHeMJ5mwr8VAJ3MQC9FmprRhcBYENw+wOAAjRj8jfmN6FLl0j96OXbR+CjWhmAmM+QGnA==}
@@ -3032,8 +3015,6 @@ snapshots:
     dependencies:
       '@vue/compiler-dom': 3.5.29
       '@vue/shared': 3.5.29
-
-  '@vue/devtools-api@6.6.4': {}
 
   '@vue/reactivity@3.5.29':
     dependencies:
@@ -3800,8 +3781,6 @@ snapshots:
 
   lru-cache@10.4.3: {}
 
-  magic-grid@3.4.7: {}
-
   magic-string@0.30.21:
     dependencies:
       '@jridgewell/sourcemap-codec': 1.5.5
@@ -4426,11 +4405,6 @@ snapshots:
       core-js: 3.48.0
 
   vue-component-type-helpers@3.2.6: {}
-
-  vue-router@4.6.4(vue@3.5.29(typescript@5.9.3)):
-    dependencies:
-      '@vue/devtools-api': 6.6.4
-      vue: 3.5.29(typescript@5.9.3)
 
   vue@3.5.29(typescript@5.9.3):
     dependencies:

@@ -34,11 +34,19 @@
       </div>
     </div>
   </div>
+  <!-- import -->
+  <div v-else class="import">
+    <el-upload class="select-button" :on-change="onchange" :auto-upload="false"
+      accept=".epub,.mobi,.fk8,.azw3,.fb2,.cbz,.pdf" :show-file-list="false">
+      <el-button type="primary">select file</el-button>
+    </el-upload>
+  </div>
 </template>
 <script setup lang="ts">
 import { BookView } from 'vue-book-reader'
 import { computed } from 'vue'
 import { Back, Close, Menu } from '@element-plus/icons-vue'
+import { type UploadFile } from 'element-plus'
 import useStore from '@/hooks/useStore'
 import { rendition } from '@/hooks/useRendition'
 import useTheme from '@/hooks/useTheme'
@@ -50,7 +58,7 @@ import useInfo from '@/hooks/useInfo'
 import '@/hooks/useKeyboard'
 
 const vscode = useVscode()
-const { bookKey, url } = useStore()
+const { bookKey, url, addBook } = useStore()
 const info = useInfo()
 const toc = useToc()
 const { progress, changeProgress, labelFromPercentage, goBack } = useProgress()
@@ -76,6 +84,12 @@ const style = computed(() => {
     position: 'relative' as const,
   }
 })
+
+const onchange = (file: UploadFile) => {
+  addBook(file).then(id => {
+    bookKey.value = id
+  })
+}
 </script>
 
 <style scoped lang="scss">
@@ -195,5 +209,17 @@ const style = computed(() => {
   bottom: 5px;
   right: 5px;
   font-weight: bolder;
+}
+
+.import {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.import .select-button {
+  margin: 5px auto 0;
 }
 </style>
