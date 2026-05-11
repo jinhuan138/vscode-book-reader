@@ -2,13 +2,13 @@
   <BookViewer v-if="!isSidebar" />
   <SidebarViewer v-else />
 </template>
-<script setup>
+<script setup lang="ts">
 //http://element-plus.org/zh-CN/component/overview.html
 //https://marketplace.visualstudio.com/manage/publishers/
 import BookViewer from '@/BookViewer/BookViewer.vue'
 import SidebarViewer from '@/SidebarViewer/SidebarViewer.vue'
 import { isSidebar } from '@/hooks/useSidebar'
-import * as pdfjsLib from 'pdfjs-dist/build/pdf.min.mjs'
+import * as pdfjsLib from 'pdfjs-dist'
 import useVscode from '@/hooks/useVscode'
 import pkg from '../../package.json'
 import '@/hooks/useMessage'

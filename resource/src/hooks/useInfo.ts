@@ -1,7 +1,6 @@
 import { computed } from 'vue'
 import useStore from './useStore'
 import { rendition, onReady } from './useRendition'
-import { dayjs } from 'element-plus'
 const { bookList, bookKey } = useStore()
 
 export interface Bookmark {
@@ -17,21 +16,15 @@ export interface Highlight {
 }
 export interface BookInfo {
   id: string
-  md5: string
   lastLocation: string | number
-  lastOpen: string
-  size: number
-  fileType: string
   bookmarks: Bookmark[]
   highlights: Highlight[]
-  title: string
-  color: string
+  title?: string
 }
 
 onReady(async () => {
   rendition.value.addEventListener('relocate', (event: any) => {
     bookInfo.value!.lastLocation = event.detail.cfi
-    bookInfo.value!.lastOpen = dayjs().format('YYYY-MM-DD HH:mm:ss')
   })
 })
 const bookInfo = computed<BookInfo | null>({

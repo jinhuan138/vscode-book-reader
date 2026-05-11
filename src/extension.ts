@@ -1,7 +1,8 @@
 import * as vscode from 'vscode'
 import { BookViewerProvider } from './core/bookViewerProvider'
 import { SidebarViewerProvider } from './core/sidebar/sidebarViewerProvider'
-import { sidebarBookListProvider } from './core/sidebar/sidebarBookListProvider'
+import { SidebarBookListProvider, type Book } from './core/sidebar/sidebarBookListProvider'
+import { Store } from './core/store'
 
 //https://rackar.github.io/vscode-ext-doccn
 //https://code.visualstudio.com/api
@@ -9,21 +10,28 @@ import { sidebarBookListProvider } from './core/sidebar/sidebarBookListProvider'
 //https://github.com/aooiuu/any-reader.git
 //https://github.com/cteamx/Thief-Book-VSCode
 export function activate(context: vscode.ExtensionContext) {
+  Store.context = context // 保存上下文到全局 Store
   const option = {
     webviewOptions: { retainContextWhenHidden: true, enableFindWidget: true },
   }
-  // 注册自定义编辑器
-  vscode.window.registerCustomEditorProvider('bookReader', new BookViewerProvider(context), option)
-  // 注册侧边栏
+  // 注册自定义书籍编辑器
+  vscode.window.registerCustomEditorProvider('book-reader.openFile', new BookViewerProvider(context), option)
+  // 注册侧边栏阅读
   vscode.window.registerWebviewViewProvider('bookReaderSidebar', new SidebarViewerProvider(context), option)
-  // const disposable = vscode.commands.registerCommand('bookReader.openBook', async (bookId: string) => {
-  //   const panel = vscode.window.createWebviewPanel('bookReaderPanel', 'Book Reader', vscode.ViewColumn.Beside)
-  //   new BookViewerProvider(context).resolveCustomEditor(bookId, panel)
-  // })
-  // context.subscriptions.push(disposable)
   // 侧边栏书籍列表
-  vscode.window.createTreeView('bookList', {
-    treeDataProvider: new sidebarBookListProvider(),
+  const sidebarBookListProvider = new SidebarBookListProvider()
+  vscode.window.createTreeView('bookReaderList', {
+    treeDataProvider: sidebarBookListProvider,
     showCollapseAll: false,
   })
+  const disposable = vscode.commands.registerCommand('book-reader.selectBookFolder', () =>
+    sidebarBookListProvider.selectBookFolder(),
+  )
+  context.subscriptions.push(disposable)
+  // 侧边栏打开书籍命令
+  const openBookCommand = vscode.commands.registerCommand('book-reader.openBook', (book: Book) => {
+    const panel = vscode.window.createWebviewPanel('bookReaderPanel', book.title, vscode.ViewColumn.Active)
+    new BookViewerProvider(context).createBookPanel(book.uri, panel)
+  })
+  context.subscriptions.push(openBookCommand)
 }

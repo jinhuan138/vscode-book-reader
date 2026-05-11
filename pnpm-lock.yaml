@@ -48,9 +48,6 @@ importers:
       '@vueuse/core':
         specifier: ^14.2.1
         version: 14.2.1(vue@3.5.29(typescript@5.9.3))
-      colorthief:
-        specifier: ^3.0.0
-        version: 3.0.0
       element-plus:
         specifier: ^2.13.6
         version: 2.13.6(typescript@5.9.3)(vue@3.5.29(typescript@5.9.3))
@@ -64,8 +61,8 @@ importers:
         specifier: ^3.5.29
         version: 3.5.29(typescript@5.9.3)
       vue-book-reader:
-        specifier: ^1.2.7
-        version: 1.2.7
+        specifier: ^1.2.8
+        version: 1.2.8
     devDependencies:
       '@vitejs/plugin-vue':
         specifier: ^5.2.4
@@ -1108,14 +1105,6 @@ packages:
 
   colorjs.io@0.5.2:
     resolution: {integrity: sha512-twmVoizEW7ylZSN32OgKdXRmo1qg+wT5/6C3xu5b9QsWzSFAhHLn2xd8ro0diCsKfCj1RdaTP/nrcW+vAoQPIw==}
-
-  colorthief@3.0.0:
-    resolution: {integrity: sha512-trWTnTcTg77Ct+KAT9A0AENTT5RkZin20XOIO4i5w5wq2IAdVsFhrgdm0f58P8cPenp27Rajl6pGy4pkKjaRIg==}
-    peerDependencies:
-      sharp: '>=0.33.0'
-    peerDependenciesMeta:
-      sharp:
-        optional: true
 
   concat-map@0.0.1:
     resolution: {integrity: sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==}
@@ -2302,8 +2291,8 @@ packages:
       yaml:
         optional: true
 
-  vue-book-reader@1.2.7:
-    resolution: {integrity: sha512-2zQVGnVSoPrzvy3dMqrVuIAbM5zK+N5oD7W+E4Dq2zXrSojgnEnm9fOUTuGrt/AGwMi8GxbvLFAnQk0UqwAsgA==}
+  vue-book-reader@1.2.8:
+    resolution: {integrity: sha512-AgjOF9jbpN7cCpQufh17o/w4NBvljoPJKMG0X9iV0ehTSHsqy15aqUokFunSw3rNZrgHkxtiqTQfpXn0TrX3Tw==}
 
   vue-component-type-helpers@3.2.6:
     resolution: {integrity: sha512-O02tnvIfOQVmnvoWwuSydwRoHjZVt8UEBR+2p4rT35p8GAy5VTlWP8o5qXfJR/GWCN0nVZoYWsVUvx2jwgdBmQ==}
@@ -3219,8 +3208,6 @@ snapshots:
   color-name@1.1.4: {}
 
   colorjs.io@0.5.2: {}
-
-  colorthief@3.0.0: {}
 
   concat-map@0.0.1: {}
 
@@ -4400,7 +4387,7 @@ snapshots:
       sass: 1.97.3
       sass-embedded: 1.97.3
 
-  vue-book-reader@1.2.7:
+  vue-book-reader@1.2.8:
     dependencies:
       core-js: 3.48.0
 

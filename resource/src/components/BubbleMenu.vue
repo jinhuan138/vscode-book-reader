@@ -29,6 +29,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { ElMessage } from 'element-plus'
+import 'element-plus/es/components/message/style/css'
 import { Brush, Delete, CopyDocument, Collection } from '@element-plus/icons-vue'
 import { Overlayer } from 'vue-book-reader/dist/overlayer.js'
 import { useClipboard, useTextSelection } from '@vueuse/core'
@@ -71,7 +72,7 @@ onReady(() => {
     win.addEventListener('scroll', hide)
   })
   rendition.value.addEventListener('draw-annotation', (e) => {
-    console.log('draw-annotation',e)
+    console.log('draw-annotation', e)
     const { draw, annotation } = e.detail
     const { color, type } = annotation
     if (type === 'highlight') draw(Overlayer.highlight, { color })
@@ -97,7 +98,7 @@ const setProps = (react: DOMRect) => {
   const viewRect = rendition.value.renderer.getBoundingClientRect()
   const reference = popRef.value
 
-  console.log('scrollLeft',rendition.value.scrollLeft)
+  console.log('scrollLeft', rendition.value.scrollLeft)
   reference!.style.left = `${react.x + viewRect.x}px`
   reference!.style.top = `${react.y + viewRect.y}px`
   reference!.style.width = react.width + 'px'

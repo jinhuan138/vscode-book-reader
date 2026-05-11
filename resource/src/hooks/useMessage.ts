@@ -5,7 +5,7 @@ import { isSidebar } from '@/hooks/useSidebar'
 import useAnimation from '@/hooks/useAnimation'
 import useTheme from '@/hooks/useTheme'
 
-const { bookKey, addBook } = useStore()
+const { addBook } = useStore()
 const flow = useFlow()
 const { theme } = useTheme()
 const animation = useAnimation()
@@ -13,13 +13,8 @@ const animation = useAnimation()
 const handleMessage = ({ data }) => {
   if (data) {
     switch (data.type) {
-      case 'open':
-        addBook(data.content).then((id) => {
-          bookKey.value = id
-        })
-        break
       case 'openBook':
-        bookKey.value = data.content
+        addBook(data.content)
         break
       case 'isSidebar':
         isSidebar.value = true

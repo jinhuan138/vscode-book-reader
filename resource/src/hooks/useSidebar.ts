@@ -1,17 +1,20 @@
 import { ref, watch } from 'vue'
-import { useLocalStorage } from '@vueuse/core'
+import { type UploadFile } from 'element-plus'
 import useStore from './useStore'
-
-const { bookKey } = useStore()
-const lastBook = useLocalStorage<string>('lastBook', '')
+import localforage from 'localforage'
+const { addBook, url } = useStore()
 
 export const isSidebar = ref(false)
 //store last book
 watch(isSidebar, async (is) => {
   if (is) {
-    lastBook.value = bookKey.value
-  }
-  if (is && !bookKey.value) {
-    bookKey.value = lastBook.value
+    if (!url.value) {
+      const lastBook = await localforage.getItem('lastBook')
+      if (lastBook) {
+        addBook(lastBook as UploadFile)
+      }
+    } else {
+      localforage.setItem('lastBook', url.value)
+    }
   }
 })

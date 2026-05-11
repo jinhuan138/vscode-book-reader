@@ -3,12 +3,11 @@
     <book-view :url="url" :getRendition="(val) => (rendition = val)"
       :initOption="{ lastLocation: info!.lastLocation }" />
     <!-- menu tree -->
-    <el-popover placement="bottom" :popper-style="{ height: '80%' }" :width="300">
-      <template #reference>
-        <el-icon class="menu-icon" color="#ccc">
-          <Menu />
-        </el-icon>
-      </template>
+    <el-icon ref="menuButtonRef" class="menu-icon" color="#ccc" v-click-outside="onClickOutside">
+      <Menu />
+    </el-icon>
+    <el-popover ref="menuPopoverRef" :virtual-ref="menuButtonRef" placement="bottom" :popper-style="{ height: '80%' }"
+      :width="300">
       <el-tree :data="toc" :props="{ children: 'subitems' }" @node-click="onNodeClick" class="tree" />
     </el-popover>
     <el-icon class="close-icon" color="#ccc" @click="close">
@@ -44,9 +43,9 @@
 </template>
 <script setup lang="ts">
 import { BookView } from 'vue-book-reader'
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
 import { Back, Close, Menu } from '@element-plus/icons-vue'
-import { type UploadFile } from 'element-plus'
+import { ClickOutside as vClickOutside, type UploadFile } from 'element-plus'
 import useStore from '@/hooks/useStore'
 import { rendition } from '@/hooks/useRendition'
 import useTheme from '@/hooks/useTheme'
@@ -70,8 +69,14 @@ const close = () => {
   vscode && vscode.postMessage({ type: 'title', content: '' })
 }
 
+const menuButtonRef = ref()
+const menuPopoverRef = ref()
+const onClickOutside = () => {
+  menuPopoverRef.value?.hide()
+}
 const onNodeClick = (item) => {
   rendition.value?.goTo(item.href)
+  menuPopoverRef.value?.hide()
 }
 const style = computed(() => {
   return {
@@ -84,11 +89,8 @@ const style = computed(() => {
     position: 'relative' as const,
   }
 })
-
 const onchange = (file: UploadFile) => {
-  addBook(file).then(id => {
-    bookKey.value = id
-  })
+  addBook(file)
 }
 </script>
 

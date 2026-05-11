@@ -35,12 +35,17 @@
   "contributes": {
     "commands": [
       {
-        "command": "bookReader",
+        "command": "book-reader.openFile",
         "title": "book reader"
       },
       {
-        "command": "openBook",
+        "command": "book-reader.openBook",
         "title": "book reader"
+      },
+      {
+        "command": "book-reader.selectBookFolder",
+        "title": "select book folder",
+        "icon": "$(folder-opened)"
       }
     ],
     "viewsContainers": {
@@ -53,9 +58,9 @@
       ]
     },
     "views": {
-      "book-reader": [
+      "bookReader": [
         {
-          "id": "bookList",
+          "id": "bookReaderList",
           "name": "book list",
           "icon": "$(home)"
         },
@@ -69,7 +74,7 @@
     },
     "customEditors": [
       {
-        "viewType": "bookReader",
+        "viewType": "book-reader.openFile",
         "displayName": "book reader",
         "selector": [
           {
@@ -95,7 +100,16 @@
           }
         ]
       }
-    ]
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "book-reader.selectBookFolder",
+          "when": "view == bookReaderList",
+          "group": "navigation@1"
+        }
+      ]
+    }
   },
   "scripts": {
     "dev": "pnpm -F ./resource dev",

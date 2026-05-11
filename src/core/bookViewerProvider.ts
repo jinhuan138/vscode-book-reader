@@ -1,56 +1,61 @@
 import * as vscode from 'vscode'
 import { readFileSync } from 'fs'
-import { resolve, join } from 'path'
+import { join } from 'path'
 import { homedir } from 'os'
 import { translate } from 'bing-translate-api'
+import { Store } from '../core/store'
 
 export class BookViewerProvider implements vscode.CustomReadonlyEditorProvider {
-  private extensionPath: string
-
+  private _context: vscode.ExtensionContext
   constructor(context: vscode.ExtensionContext) {
-    this.extensionPath = context.extensionPath
+    this._context = context
   }
 
   public openCustomDocument(uri: vscode.Uri): vscode.CustomDocument | Thenable<vscode.CustomDocument> {
     return { uri, dispose: (): void => {} }
   }
 
+  public updateSliderWebview(type: string, content: any) {
+    const webview = Store.sliderWebview
+    webview!.postMessage({
+      type,
+      content,
+    })
+  }
+
   public resolveCustomEditor(
     document: vscode.CustomDocument,
     webviewPanel: vscode.WebviewPanel,
   ): void | Thenable<void> {
+    this.createBookPanel(document.uri, webviewPanel)
+  }
+
+  public createBookPanel(uri: vscode.Uri, webviewPanel: vscode.WebviewPanel) {
     const webview = webviewPanel.webview
-    const uri = document.uri
-    const folderPath = vscode.Uri.file(resolve(uri.fsPath, '..'))
+    Store.webviews.push(webview)
     webview.options = {
       enableScripts: true,
-      localResourceRoots: [vscode.Uri.file(this.extensionPath), folderPath],
+      localResourceRoots: [vscode.Uri.file(this._context.extensionPath)],
     }
     webview.onDidReceiveMessage(async (message) => {
       switch (message.type) {
         case 'init':
-          if (typeof document === 'string') {
-            webview.postMessage({
-              type: 'openBook',
-              content: document,
-            })
-          } else {
-            webview.postMessage({
-              type: 'open',
-              content: webview.asWebviewUri(document.uri).toString(),
-            })
-            // this.emitter.emit('open', webview.asWebviewUri(document.uri).toString())
-          }
-
+          webview.postMessage({
+            type: 'openBook',
+            content: webview.asWebviewUri(uri).toString(),
+          })
           break
         case 'style':
-          // this.emitter.emit('style', message.content)
+          this._context.globalState.update('style', message.content)
+          this.updateSliderWebview(message.type, message.content)
           break
         case 'flow':
-          // this.emitter.emit('flow', message.content)
+          this._context.globalState.update('flow', message.content)
+          this.updateSliderWebview(message.type, message.content)
           break
         case 'animation':
-          // this.emitter.emit('animation', message.content)
+          this._context.globalState.update('animation', message.content)
+          this.updateSliderWebview(message.type, message.content)
           break
         case 'download':
           const filePath = vscode.Uri.file(join(homedir(), '.bookReader', Date.now() + '.jpg'))
@@ -60,9 +65,6 @@ export class BookViewerProvider implements vscode.CustomReadonlyEditorProvider {
           })
         case 'title':
           webviewPanel.title = message.content
-          break
-        case 'disguise':
-          // this.emitter.emit('disguise', message.content)
           break
         case 'translate':
           translate(message.content, null, message.to)
@@ -89,6 +91,10 @@ export class BookViewerProvider implements vscode.CustomReadonlyEditorProvider {
         content: e.webviewPanel.active,
       })
     })
-    webview.html = readFileSync(this.extensionPath + '/resource/dist/index.html', 'utf8')
+    // 当面板关闭/销毁，从列表中移除
+    webviewPanel.onDidDispose(() => {
+      Store.webviews = Store.webviews.filter((w) => w !== webview)
+    })
+    webview.html = readFileSync(this._context.extensionPath + '/resource/dist/index.html', 'utf8')
   }
 }

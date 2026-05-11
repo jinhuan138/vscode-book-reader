@@ -1,5 +1,5 @@
 <template>
-  <div v-if="url" style="height: 100vh;">
+  <div style="height: 100vh;" v-if="url">
     <div v-show="showBook" class="book-viewer" :style="bookStyle">
       <vue-reader :url="url" :getRendition="(val) => (rendition = val)"
         :initOption="{ lastLocation: info!.lastLocation }" />
@@ -47,14 +47,8 @@ import useProcessDisplay from '@/hooks/useProcessDisplay'
 import '@/hooks/useKeyboard'
 import useInfo from '@/hooks/useInfo'
 
-const { url, bookKey, addBook } = useStore()
+const { url } = useStore()
 const info = useInfo()
-const init = async () => {
-  addBook('/files/alice.epub').then((id) => {
-    bookKey.value = id
-  })
-}
-init()
 const { showBook } = useDisguise()
 const { theme, defaultBackgroundColor, defaultTextColor } = useTheme()
 

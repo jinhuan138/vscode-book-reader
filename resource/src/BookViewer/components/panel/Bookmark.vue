@@ -21,8 +21,8 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { Plus, Close, CollectionTag } from '@element-plus/icons-vue'
-import { rendition } from '@/hooks/useRendition.ts'
-import useInfo, { type Bookmark } from '@/hooks/useInfo.ts'
+import { rendition } from '@/hooks/useRendition'
+import useInfo, { type Bookmark } from '@/hooks/useInfo'
 const showBookmark = ref(false)
 const bookInfo = useInfo()
 

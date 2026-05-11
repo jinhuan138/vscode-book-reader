@@ -1,8 +1,8 @@
 import * as vscode from 'vscode'
 import { readFileSync } from 'fs'
 import { join } from 'path'
-import { Util } from '../util'
 import { homedir } from 'os'
+import { Store } from '../store'
 
 export class SidebarViewerProvider implements vscode.WebviewViewProvider {
   private extensionPath: string
@@ -11,8 +11,10 @@ export class SidebarViewerProvider implements vscode.WebviewViewProvider {
   }
   resolveWebviewView(webviewView: vscode.WebviewView) {
     const webview = webviewView.webview
+    Store.sliderWebview = webview
     webview.options = {
       enableScripts: true,
+      localResourceRoots: [vscode.Uri.file(this.extensionPath)],
     }
     webview.onDidReceiveMessage(async (message) => {
       switch (message.type) {
@@ -34,40 +36,6 @@ export class SidebarViewerProvider implements vscode.WebviewViewProvider {
           break
       }
     })
-    // this.emitter.on('open', (url: string) => {
-    //   webview.postMessage({
-    //     type: 'open',
-    //     content: url,
-    //   })
-    // })
-    // this.emitter.on('style', (theme: any) => {
-    //   webview.postMessage({
-    //     type: 'style',
-    //     content: theme,
-    //   })
-    // })
-    // this.emitter.on('flow', (content: any) => {
-    //   webview.postMessage({
-    //     type: 'flow',
-    //     content,
-    //   })
-    // })
-    // this.emitter.on('disguise', (content: any) => {
-    //   webview.postMessage({
-    //     type: 'disguise',
-    //     content,
-    //   })
-    // })
-    // this.emitter.on('animation', (content: any) => {
-    //   webview.postMessage({
-    //     type: 'animation',
-    //     content,
-    //   })
-    // })
-    webviewView.webview.html = Util.buildPath(
-      readFileSync(this.extensionPath + '/resource/dist/index.html', 'utf8'),
-      webview,
-      this.extensionPath + '/resource/dist',
-    )
+    webviewView.webview.html = readFileSync(this.extensionPath + '/resource/dist/index.html', 'utf8')
   }
 }
