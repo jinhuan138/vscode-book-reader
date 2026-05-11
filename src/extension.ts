@@ -30,8 +30,12 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(disposable)
   // 侧边栏打开书籍命令
   const openBookCommand = vscode.commands.registerCommand('book-reader.openBook', (book: Book) => {
-    const panel = vscode.window.createWebviewPanel('bookReaderPanel', book.title, vscode.ViewColumn.Active)
-    new BookViewerProvider(context).createBookPanel(book.uri, panel)
+    if (Store.webviewMap.has(book.uri.toString())) {
+      Store.webviewMap.get(book.uri.toString())?.reveal()
+    } else {
+      const panel = vscode.window.createWebviewPanel('bookReaderPanel', book.title, vscode.ViewColumn.Active)
+      new BookViewerProvider(context).createBookPanel(book.uri, panel)
+    }
   })
   context.subscriptions.push(openBookCommand)
 }

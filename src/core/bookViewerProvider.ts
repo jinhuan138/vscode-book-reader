@@ -32,7 +32,9 @@ export class BookViewerProvider implements vscode.CustomReadonlyEditorProvider {
 
   public createBookPanel(uri: vscode.Uri, webviewPanel: vscode.WebviewPanel) {
     const webview = webviewPanel.webview
-    Store.webviews.push(webview)
+    if (!Store.webviewMap.has(uri.toString())) {
+      Store.webviewMap.set(uri.toString(), webviewPanel)
+    }
     webview.options = {
       enableScripts: true,
       localResourceRoots: [vscode.Uri.file(this._context.extensionPath)],
@@ -93,7 +95,7 @@ export class BookViewerProvider implements vscode.CustomReadonlyEditorProvider {
     })
     // 当面板关闭/销毁，从列表中移除
     webviewPanel.onDidDispose(() => {
-      Store.webviews = Store.webviews.filter((w) => w !== webview)
+      Store.webviewMap.delete(uri.toString())
     })
     webview.html = readFileSync(this._context.extensionPath + '/resource/dist/index.html', 'utf8')
   }
