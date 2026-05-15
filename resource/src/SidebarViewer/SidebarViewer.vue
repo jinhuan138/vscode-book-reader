@@ -14,23 +14,27 @@
       <Close />
     </el-icon>
     <!-- footer -->
-    <div class="footer">
-      <div class="chapter">
-        <span :title="chapter" class="chapter-text">
+    <div class="footer" @mouseenter="showSlider = true" @mouseleave="showSlider = false">
+      <div v-if="!showSlider" class="chapter">
+        <span class="chapter-text" :title="chapter">
           {{ chapter }}
         </span>
-        <div class="process">
-          {{ progress + '%' }}
-        </div>
+        <span class="process">
+          {{ progress }}%
+        </span>
       </div>
       <!-- process -->
-      <div class="footer-slider">
-        <el-icon title="back" class="back-icon" @click="goBack">
-          <Back />
-        </el-icon>
-        <el-slider class="slider" v-model="progress" @change="changeProgress" size="small"
-          :format-tooltip="labelFromPercentage"></el-slider>
-      </div>
+      <el-row v-else class="footer-slider">
+        <el-col :span="4">
+          <el-icon title="back" class="back-icon" @click="goBack">
+            <Back />
+          </el-icon>
+        </el-col>
+        <el-col :span="20">
+          <el-slider class="slider" v-model="progress" @change="changeProgress" size="small"
+            :format-tooltip="labelFromPercentage"></el-slider>
+        </el-col>
+      </el-row>
     </div>
   </div>
   <!-- import -->
@@ -63,6 +67,7 @@ const toc = useToc()
 const { progress, changeProgress, labelFromPercentage, goBack } = useProgress()
 const chapter = useChapter()
 const { theme } = useTheme()
+const showSlider = ref(false)
 
 const close = () => {
   rendition.value.close()
@@ -110,25 +115,12 @@ const onchange = (file: UploadFile) => {
 .footer {
   position: absolute;
   bottom: 5px;
-  right: 0;
   left: 0;
-  z-index: 22;
-  margin: auto;
+  z-index: 1;
   width: 100%;
-
-  &:hover {
-    .footer-slider {
-      opacity: 1;
-    }
-
-    .chapter {
-      opacity: 0;
-    }
-  }
 
   .footer-slider {
     .slider {
-      width: 80%;
       height: 26px;
     }
 
@@ -139,16 +131,25 @@ const onchange = (file: UploadFile) => {
   }
 
   .chapter {
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    width: 100%;
+
     .chapter-text {
+      flex: 1;
       overflow: hidden;
       white-space: nowrap;
       text-overflow: ellipsis;
-      max-width: 70%;
+      text-align: center;
     }
 
     .process {
-      position: absolute;
-      right: 5px;
+      font-weight: bolder;
+      flex-shrink: 0;
+      white-space: nowrap;
+      margin-left: 8px;
       font-weight: bolder;
     }
   }
@@ -190,13 +191,6 @@ const onchange = (file: UploadFile) => {
       white-space: normal;
     }
   }
-}
-
-.sidebar-process {
-  position: absolute;
-  bottom: 5px;
-  right: 5px;
-  font-weight: bolder;
 }
 
 .import {
