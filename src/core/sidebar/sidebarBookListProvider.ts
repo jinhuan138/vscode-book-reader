@@ -5,29 +5,41 @@ export interface Book {
   /** 书籍ID */
   id: string
   /** 书籍URL */
-  uri: vscode.Uri
+  uri?: vscode.Uri
   /** 书籍的标题 */
   title: string
   /** 书籍的摘要 */
-  excerpt: string
+  excerpt?: string
   /** 书籍的缩略图 */
-  imgUrl: string
+  imgUrl?: string
 }
 
-class TreeItem extends vscode.TreeItem {
+export class TreeItem extends vscode.TreeItem {
   constructor(
     public readonly book: Book,
     public readonly collapsibleState: vscode.TreeItemCollapsibleState,
   ) {
     super(book.title, collapsibleState)
-    this.command = {
-      command: 'book-reader.openBook',
-      title: book.title,
-      arguments: [book],
+    // 如果是文件夹项
+    if (book.id === '__folder__') {
+      this.command = {
+        command: 'book-reader.selectBookFolder',
+        title: 'Select Book Folder',
+      }
+      // 使用文件夹图标
+      this.iconPath = new vscode.ThemeIcon('home')
+    } else {
+      // 如果是书籍项
+      this.command = {
+        command: 'book-reader.openBook',
+        title: book.title,
+        arguments: [book],
+      }
+      // 使用书籍图标
+      this.iconPath = new vscode.ThemeIcon('book')
+      this.tooltip = book.excerpt
+      this.contextValue = 'bookItem'
     }
-    this.tooltip = book.excerpt
-    // 可选：设置图标
-    // this.iconPath = new vscode.ThemeIcon('book')
   }
 }
 
@@ -66,7 +78,17 @@ export class SidebarBookListProvider implements vscode.TreeDataProvider<TreeItem
 
   getChildren(element?: TreeItem): Promise<TreeItem[]> {
     if (!element) {
-      return Promise.resolve(this.bookList.map((book) => new TreeItem(book, vscode.TreeItemCollapsibleState.None)))
+      const folderItem = new TreeItem(
+        {
+          id: '__folder__',
+          title: this.folder ? this.folder.fsPath : 'Select Book Folder',
+        },
+        vscode.TreeItemCollapsibleState.None,
+      )
+      return Promise.resolve([
+        folderItem,
+        ...this.bookList.map((book) => new TreeItem(book, vscode.TreeItemCollapsibleState.None)),
+      ])
     }
     return Promise.resolve([])
   }
@@ -89,7 +111,7 @@ export class SidebarBookListProvider implements vscode.TreeDataProvider<TreeItem
           this.folder = uris[0]
           vscode.window.showInformationMessage(`Book folder set to: ${this.folder.fsPath}`)
           const config = vscode.workspace.getConfiguration('book-reader')
-          config.update('bookFolderPath', this.folder.fsPath)
+          config.update('bookFolderPath', this.folder.fsPath, vscode.ConfigurationTarget.Global)
           this.getBookList()
         }
       })

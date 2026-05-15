@@ -65,7 +65,10 @@ const chapter = useChapter()
 const { theme } = useTheme()
 
 const close = () => {
+  rendition.value.close()
   bookKey.value = null
+  url.value = null
+  rendition.value = null
   vscode && vscode.postMessage({ type: 'title', content: '' })
 }
 
@@ -96,7 +99,7 @@ const onchange = (file: UploadFile) => {
 
 <style scoped lang="scss">
 /* sidebar */
-.sidebar-reader .reader {
+.reader {
   inset: 0 !important;
   top: 0 !important;
   left: 0 !important;
@@ -104,7 +107,7 @@ const onchange = (file: UploadFile) => {
   bottom: 0 !important;
 }
 
-.sidebar-reader .footer {
+.footer {
   position: absolute;
   bottom: 5px;
   right: 0;
@@ -112,60 +115,43 @@ const onchange = (file: UploadFile) => {
   z-index: 22;
   margin: auto;
   width: 100%;
-}
 
-.footer .footer-slider {
-  margin: auto;
-  opacity: 0;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  transition: opacity 0.3s;
-}
+  &:hover {
+    .footer-slider {
+      opacity: 1;
+    }
 
-.footer .footer-slider .slider {
-  width: 80%;
-  height: 26px;
-}
+    .chapter {
+      opacity: 0;
+    }
+  }
 
-.footer-slider .back-icon {
-  cursor: pointer;
-  z-index: 5;
-}
+  .footer-slider {
+    .slider {
+      width: 80%;
+      height: 26px;
+    }
 
-.footer .chapter {
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  transition: opacity 0.3s;
-  opacity: 1;
-  font-size: 14px;
-}
+    .back-icon {
+      cursor: pointer;
+      z-index: 5;
+    }
+  }
 
-.chapter .chapter-text {
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  max-width: 70%;
-}
+  .chapter {
+    .chapter-text {
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      max-width: 70%;
+    }
 
-.footer .process {
-  position: absolute;
-  right: 5px;
-  font-weight: bolder;
-}
-
-.sidebar-reader .footer:hover .footer-slider {
-  opacity: 1;
-}
-
-.sidebar-reader .footer:hover .chapter {
-  opacity: 0;
+    .process {
+      position: absolute;
+      right: 5px;
+      font-weight: bolder;
+    }
+  }
 }
 
 .menu-icon,
@@ -195,15 +181,15 @@ const onchange = (file: UploadFile) => {
   overflow-y: auto;
   overflow-x: hidden;
   word-wrap: wrap;
-}
 
-.tree .el-tree-node__content {
-  min-height: var(--el-tree-node-content-height);
-  height: auto;
-}
+  .el-tree-node__content {
+    min-height: var(--el-tree-node-content-height);
+    height: auto;
 
-.tree .el-tree-node__content .el-tree-node__label {
-  white-space: normal;
+    .el-tree-node__label {
+      white-space: normal;
+    }
+  }
 }
 
 .sidebar-process {
@@ -219,9 +205,9 @@ const onchange = (file: UploadFile) => {
   display: flex;
   justify-content: center;
   align-items: center;
-}
 
-.import .select-button {
-  margin: 5px auto 0;
+  .select-button {
+    margin: 5px auto 0;
+  }
 }
 </style>

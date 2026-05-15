@@ -19,8 +19,8 @@ importers:
         specifier: ~18.19.130
         version: 18.19.130
       '@types/vscode':
-        specifier: ^1.109.0
-        version: 1.109.0
+        specifier: ^1.118.0
+        version: 1.118.0
       '@typescript-eslint/eslint-plugin':
         specifier: ^7.18.0
         version: 7.18.0(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@6.0.3))(eslint@8.57.1)(typescript@6.0.3)
@@ -61,8 +61,8 @@ importers:
         specifier: ^3.5.29
         version: 3.5.29(typescript@5.9.3)
       vue-book-reader:
-        specifier: ^1.2.8
-        version: 1.2.8
+        specifier: ^1.2.9
+        version: 1.2.9
     devDependencies:
       '@vitejs/plugin-vue':
         specifier: ^5.2.4
@@ -823,8 +823,8 @@ packages:
   '@types/responselike@1.0.3':
     resolution: {integrity: sha512-H/+L+UkTV33uf49PH5pCAUBVPNj2nDBXTN+qS1dOwyyg24l3CcicicCA7ca+HMvJBZcFgl5r8e+RR6elsb4Lyw==}
 
-  '@types/vscode@1.109.0':
-    resolution: {integrity: sha512-0Pf95rnwEIwDbmXGC08r0B4TQhAbsHQ5UyTIgVgoieDe4cOnf92usuR5dEczb6bTKEp7ziZH4TV1TRGPPCExtw==}
+  '@types/vscode@1.118.0':
+    resolution: {integrity: sha512-Ah6eTlqDcwIMELEVwQMO++rJAFBRz/oLluLD/vWdYrH1KuI9kfpaM+7pg0OvvascgcJy+ghLCERAYouM4QbzGw==}
 
   '@types/web-bluetooth@0.0.20':
     resolution: {integrity: sha512-g9gZnnXVq7gM7v3tJCWV/qw7w+KeOlSHAhgF9RytFyifW6AF61hdT2ucrYhPq9hLs5JIryeupHV3qGk95dH9ow==}
@@ -2291,8 +2291,8 @@ packages:
       yaml:
         optional: true
 
-  vue-book-reader@1.2.8:
-    resolution: {integrity: sha512-AgjOF9jbpN7cCpQufh17o/w4NBvljoPJKMG0X9iV0ehTSHsqy15aqUokFunSw3rNZrgHkxtiqTQfpXn0TrX3Tw==}
+  vue-book-reader@1.2.9:
+    resolution: {integrity: sha512-P1IGpuyKO32volfP3HBBXmQcs4yV9FX/zzXnlmvuzop+E0SAC6d1+UG8mMvaNpZC3A6B0CnHoWzdeFOj86bMaA==}
 
   vue-component-type-helpers@3.2.6:
     resolution: {integrity: sha512-O02tnvIfOQVmnvoWwuSydwRoHjZVt8UEBR+2p4rT35p8GAy5VTlWP8o5qXfJR/GWCN0nVZoYWsVUvx2jwgdBmQ==}
@@ -2859,7 +2859,7 @@ snapshots:
     dependencies:
       '@types/node': 18.19.130
 
-  '@types/vscode@1.109.0': {}
+  '@types/vscode@1.118.0': {}
 
   '@types/web-bluetooth@0.0.20': {}
 
@@ -4387,7 +4387,7 @@ snapshots:
       sass: 1.97.3
       sass-embedded: 1.97.3
 
-  vue-book-reader@1.2.8:
+  vue-book-reader@1.2.9:
     dependencies:
       core-js: 3.48.0
 

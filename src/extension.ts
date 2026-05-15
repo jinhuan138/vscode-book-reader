@@ -1,7 +1,7 @@
 import * as vscode from 'vscode'
 import { BookViewerProvider } from './core/bookViewerProvider'
 import { SidebarViewerProvider } from './core/sidebar/sidebarViewerProvider'
-import { SidebarBookListProvider, type Book } from './core/sidebar/sidebarBookListProvider'
+import { SidebarBookListProvider, type Book, type TreeItem } from './core/sidebar/sidebarBookListProvider'
 import { Store } from './core/store'
 
 //https://rackar.github.io/vscode-ext-doccn
@@ -28,8 +28,9 @@ export function activate(context: vscode.ExtensionContext) {
     sidebarBookListProvider.selectBookFolder(),
   )
   context.subscriptions.push(disposable)
-  // 侧边栏打开书籍命令
+  //book list打开书籍命令
   const openBookCommand = vscode.commands.registerCommand('book-reader.openBook', (book: Book) => {
+    if (!book.uri) return
     if (Store.webviewMap.has(book.uri.toString())) {
       Store.webviewMap.get(book.uri.toString())?.reveal()
     } else {
@@ -38,4 +39,20 @@ export function activate(context: vscode.ExtensionContext) {
     }
   })
   context.subscriptions.push(openBookCommand)
+  //book list在侧边栏打开书籍命令
+  const openBookInSidebarCommand = vscode.commands.registerCommand(
+    'book-reader.openBookInSidebar',
+    (treeItem: TreeItem) => {
+      const book = treeItem.book
+      if (!book.uri) return
+      const sliderWebview = Store.sliderWebview
+      // 在侧边栏打开书籍
+      sliderWebview!.show(true)
+      sliderWebview!.webview.postMessage({
+        type: 'openBook',
+        content: sliderWebview!.webview.asWebviewUri(book.uri).toString(),
+      })
+    },
+  )
+  context.subscriptions.push(openBookInSidebarCommand)
 }

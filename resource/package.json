@@ -48,6 +48,6 @@
     "localforage": "^1.10.0",
     "pdfjs-dist": "^5.4.624",
     "vue": "^3.5.29",
-    "vue-book-reader": "^1.2.8"
+    "vue-book-reader": "^1.2.9"
   }
 }

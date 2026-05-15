@@ -97,8 +97,6 @@ const copyText = () => {
 const setProps = (react: DOMRect) => {
   const viewRect = rendition.value.renderer.getBoundingClientRect()
   const reference = popRef.value
-
-  console.log('scrollLeft', rendition.value.scrollLeft)
   reference!.style.left = `${react.x + viewRect.x}px`
   reference!.style.top = `${react.y + viewRect.y}px`
   reference!.style.width = react.width + 'px'

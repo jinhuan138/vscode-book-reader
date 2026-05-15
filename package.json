@@ -46,6 +46,11 @@
         "command": "book-reader.selectBookFolder",
         "title": "select book folder",
         "icon": "$(folder-opened)"
+      },
+      {
+        "command": "book-reader.openBookInSidebar",
+        "title": "Open in Sidebar",
+        "icon": "$(open-preview)"
       }
     ],
     "viewsContainers": {
@@ -108,7 +113,24 @@
           "when": "view == bookReaderList",
           "group": "navigation@1"
         }
+      ],
+      "view/item/context": [
+        {
+          "command": "book-reader.openBookInSidebar",
+          "when": "view == bookReaderList && viewItem == 'bookItem'",
+          "group": "inline@1"
+        }
       ]
+    },
+    "configuration": {
+      "title": "Book Reader",
+      "properties": {
+        "book-reader.bookFolderPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to the folder containing books"
+        }
+      }
     }
   },
   "scripts": {
@@ -126,7 +148,7 @@
   "devDependencies": {
     "@types/mocha": "^10.0.10",
     "@types/node": "~18.19.130",
-    "@types/vscode": "^1.109.0",
+    "@types/vscode": "^1.118.0",
     "@typescript-eslint/eslint-plugin": "^7.18.0",
     "@typescript-eslint/parser": "^7.18.0",
     "@vscode/test-cli": "^0.0.8",

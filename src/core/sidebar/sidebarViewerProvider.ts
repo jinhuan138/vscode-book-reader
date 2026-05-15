@@ -1,17 +1,16 @@
 import * as vscode from 'vscode'
 import { readFileSync } from 'fs'
-import { join } from 'path'
-import { homedir } from 'os'
 import { Store } from '../store'
 
 export class SidebarViewerProvider implements vscode.WebviewViewProvider {
   private extensionPath: string
+  private title: string = ''
   constructor(context: vscode.ExtensionContext) {
     this.extensionPath = context.extensionPath
   }
   resolveWebviewView(webviewView: vscode.WebviewView) {
+    Store.sliderWebview = webviewView
     const webview = webviewView.webview
-    Store.sliderWebview = webview
     webview.options = {
       enableScripts: true,
       localResourceRoots: [vscode.Uri.file(this.extensionPath)],
@@ -26,13 +25,37 @@ export class SidebarViewerProvider implements vscode.WebviewViewProvider {
           break
         case 'title':
           webviewView.title = message.content
+          this.title = message.content
           break
         case 'download':
-          const filePath = vscode.Uri.file(join(homedir(), '.bookReader', Date.now() + '.jpg'))
-          await vscode.workspace.fs.writeFile(filePath, message.content)
-          vscode.commands.executeCommand('vscode.open', filePath, {
-            forceNewWindow: true,
-          })
+          const imgName = `${this.title}${Date.now()}.jpg`
+          const workspaceFolders = vscode.workspace.workspaceFolders
+          if (!workspaceFolders || workspaceFolders.length === 0) {
+            // 如果没有工作区，让用户选择保存位置
+            const uri = await vscode.window.showOpenDialog({
+              canSelectFiles: false,
+              canSelectFolders: true,
+              canSelectMany: false,
+              openLabel: 'Select Img Save Folder',
+            })
+
+            if (uri) {
+              const filePath = vscode.Uri.joinPath(uri[0], imgName)
+              await vscode.workspace.fs.writeFile(filePath, message.content)
+              // 打开文件
+              vscode.commands.executeCommand('vscode.open', imgName, {
+                forceNewWindow: true,
+              })
+            }
+          } else {
+            // 保存到工作区根目录
+            const filePath = vscode.Uri.joinPath(workspaceFolders[0].uri, imgName)
+            await vscode.workspace.fs.writeFile(filePath, message.content)
+            // 打开文件
+            vscode.commands.executeCommand('vscode.open', filePath, {
+              forceNewWindow: true,
+            })
+          }
           break
       }
     })

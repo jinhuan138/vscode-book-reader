@@ -1,12 +1,11 @@
 import * as vscode from 'vscode'
 import { readFileSync } from 'fs'
-import { join } from 'path'
-import { homedir } from 'os'
 import { translate } from 'bing-translate-api'
 import { Store } from '../core/store'
 
 export class BookViewerProvider implements vscode.CustomReadonlyEditorProvider {
   private _context: vscode.ExtensionContext
+  private title: string = ''
   constructor(context: vscode.ExtensionContext) {
     this._context = context
   }
@@ -16,7 +15,7 @@ export class BookViewerProvider implements vscode.CustomReadonlyEditorProvider {
   }
 
   public updateSliderWebview(type: string, content: any) {
-    const webview = Store.sliderWebview
+    const webview = Store.sliderWebview!.webview
     webview!.postMessage({
       type,
       content,
@@ -59,15 +58,39 @@ export class BookViewerProvider implements vscode.CustomReadonlyEditorProvider {
           this._context.globalState.update('animation', message.content)
           this.updateSliderWebview(message.type, message.content)
           break
-        case 'download':
-          const filePath = vscode.Uri.file(join(homedir(), '.bookReader', Date.now() + '.jpg'))
-          await vscode.workspace.fs.writeFile(filePath, message.content)
-          vscode.commands.executeCommand('vscode.open', filePath, {
-            forceNewWindow: true,
-          })
         case 'title':
           webviewPanel.title = message.content
+          this.title = message.content
           break
+        case 'download':
+          const imgName = `${this.title}${Date.now()}.jpg`
+          const workspaceFolders = vscode.workspace.workspaceFolders
+          if (!workspaceFolders || workspaceFolders.length === 0) {
+            // 如果没有工作区，让用户选择保存位置
+            const uri = await vscode.window.showOpenDialog({
+              canSelectFiles: false,
+              canSelectFolders: true,
+              canSelectMany: false,
+              openLabel: 'Select Img Save Folder',
+            })
+
+            if (uri) {
+              const filePath = vscode.Uri.joinPath(uri[0], imgName)
+              await vscode.workspace.fs.writeFile(filePath, message.content)
+              // 打开文件
+              vscode.commands.executeCommand('vscode.open', imgName, {
+                forceNewWindow: true,
+              })
+            }
+          } else {
+            // 保存到工作区根目录
+            const filePath = vscode.Uri.joinPath(workspaceFolders[0].uri, imgName)
+            await vscode.workspace.fs.writeFile(filePath, message.content)
+            // 打开文件
+            vscode.commands.executeCommand('vscode.open', filePath, {
+              forceNewWindow: true,
+            })
+          }
         case 'translate':
           translate(message.content, null, message.to)
             .then((res) => {

@@ -6,7 +6,7 @@ export default function useProgress() {
     rendition.value.goToFraction(parseFloat(String(val / 100)))
   }
   const labelFromPercentage = (percent: number) => {
-    const label = rendition.value?.getLabelByFraction(percent / 100)
+    const label = rendition.value?.labelFromPercentage(percent / 100)
     return label ? label : `${Math.floor(percent)}%`
   }
 

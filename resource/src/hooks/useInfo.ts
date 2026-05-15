@@ -1,6 +1,9 @@
 import { computed } from 'vue'
 import useStore from './useStore'
 import { rendition, onReady } from './useRendition'
+import useVscode from './useVscode'
+
+const vscode = useVscode()
 const { bookList, bookKey } = useStore()
 
 export interface Bookmark {
@@ -20,9 +23,22 @@ export interface BookInfo {
   bookmarks: Bookmark[]
   highlights: Highlight[]
   title?: string
+  cover?: string
 }
 
 onReady(async () => {
+  const { book } = rendition.value
+  if (book.metadata.title) {
+    vscode?.postMessage({
+      type: 'title',
+      content: book.metadata.title,
+    })
+  }
+  bookInfo.value = { ...bookInfo.value, ...book.metadata }
+  book.getCover?.().then(async (blob: Blob) => {
+    const cover = URL.createObjectURL(blob)
+    bookInfo.value!.cover = cover
+  })
   rendition.value.addEventListener('relocate', (event: any) => {
     bookInfo.value!.lastLocation = event.detail.cfi
   })
