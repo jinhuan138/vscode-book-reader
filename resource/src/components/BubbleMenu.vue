@@ -7,20 +7,31 @@
       <el-button :icon="Brush" @click="onHLBtn" v-if="!editAnnotation"></el-button>
       <el-button :icon="Delete" @click="removeAnnotation" v-else></el-button>
       <el-button :icon="CopyDocument" @click="copyText"></el-button>
-      <el-button :icon="Collection" ref="translatePop"></el-button>
+      <el-popover width="200" trigger="hover">
+        <template #reference>
+          <el-button :icon="Collection">
+          </el-button>
+        </template>
+        <div class="el-popover__title">
+          <el-select v-model="translateTo" placeholder="translateTo" style="width: 100%" size="small"
+            @change="translateText" :teleported="false">
+            <el-option v-for="(label, code) in lang" :key="code" :label="label" :value="code" />
+          </el-select>
+        </div>
+        {{ translatedText }}
+      </el-popover>
     </el-button-group>
-    <el-popover width="200" trigger="hover" :virtual-ref="translatePop">
-      <div class="el-popover__title">
-        <el-select v-model="translateTo" placeholder="translateTo" style="width: 200px" size="small">
-          <el-option v-for="(label, code) in lang" :key="code" :label="label" :value="code" />
-        </el-select>
-      </div>
-      {{ translatedText }}
-    </el-popover>
-    <div class="color-option-container">
-      <div class="color-option" v-for="color in colorOption"
-        :style="{ backgroundColor: color, border: color === highlightColor ? '2px solid rgba(75, 75, 75, 1)' : 'none' }"
+    <div class="color-option-container" v-if="isVisible && !editAnnotation">
+      <div v-if="!isLine" class="color-option" v-for="color in colorOption"
+        :style="{ backgroundColor: color, border: color === highlightColor ? '' : '0px' }"
         @click="highlightColor = color">
+      </div>
+      <el-icon class="popup-color-more" @click="changeOption">
+        <DCaret />
+      </el-icon>
+      <div v-if="isLine" class="line-option" v-for="color in lineOption"
+        :style="{ border: color === highlightColor ? '' : '2px' }" @click="highlightColor = color">
+        <div className="demo-line" :style="{ borderBottom: `solid 2px ${color}` }"></div>
       </div>
     </div>
   </el-popover>
@@ -28,9 +39,10 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useLocalStorage } from '@vueuse/core'
 import { ElMessage } from 'element-plus'
 import 'element-plus/es/components/message/style/css'
-import { Brush, Delete, CopyDocument, Collection } from '@element-plus/icons-vue'
+import { Brush, Delete, CopyDocument, Collection, DCaret } from '@element-plus/icons-vue'
 import { Overlayer } from 'vue-book-reader/dist/overlayer.js'
 import { useClipboard, useTextSelection } from '@vueuse/core'
 import { rendition, onReady } from '@/hooks/useRendition'
@@ -41,14 +53,20 @@ const bookInfo = useInfo()
 const vscode = useVscode()
 const text = ref('')
 const colorOption = ["#FBF1D1", "#EFEEB0", "#CAEFC9", "#76BEE9"]
-const highlightColor = ref('#FBF1D1')
+const lineOption = ["#FF0000", "#000080", "#0000FF", "#2EFF2E"]
+const isLine = useLocalStorage('isLine', false)
+const highlightColor = useLocalStorage('highlightColor', '#FBF1D1')
 
 const isVisible = ref(false)
 const cfiRange = ref<Range[] | null>(null)
 let currentIndex = 0
 const popRef = ref<null | HTMLElement>(null)
-const translatePop = ref<null | HTMLElement>(null)
 const { copy } = useClipboard({ source: text })
+
+const changeOption = () => {
+  isLine.value = !isLine.value
+  highlightColor.value = isLine.value ? lineOption[0] : colorOption[0]
+}
 
 onReady(() => {
   rendition.value.addEventListener("create-overlay", (e) => {
@@ -72,7 +90,6 @@ onReady(() => {
     win.addEventListener('scroll', hide)
   })
   rendition.value.addEventListener('draw-annotation', (e) => {
-    console.log('draw-annotation', e)
     const { draw, annotation } = e.detail
     const { color, type } = annotation
     if (type === 'highlight') draw(Overlayer.highlight, { color })
@@ -97,8 +114,13 @@ const copyText = () => {
 const setProps = (react: DOMRect) => {
   const viewRect = rendition.value.renderer.getBoundingClientRect()
   const reference = popRef.value
-  reference!.style.left = `${react.x + viewRect.x}px`
-  reference!.style.top = `${react.y + viewRect.y}px`
+  let left = react.left + viewRect.left
+  if (left + 170 > window.innerWidth) {
+    left = window.innerWidth - 170
+  }
+  if (left < 0) left = 0
+  reference!.style.left = `${left}px`
+  reference!.style.top = `${react.y + viewRect.top}px`
   reference!.style.width = react.width + 'px'
   reference!.style.height = react.height + 'px'
   isVisible.value = true
@@ -137,15 +159,16 @@ const onHLBtn = () => {
   const cfi = rendition.value.getCFI(currentIndex, cfiRange.value![0])
   const annotation = {
     value: cfi,
-    type: 'highlight',
+    type: isLine.value ? 'underline' : 'highlight',
     note: text.value,
     color: highlightColor.value,
   }
   addAnnotation(annotation)
   bookInfo.value!.highlights.push(annotation)
+  hide()
 }
 
-const translateTo = ref('en')
+const translateTo = useLocalStorage('translateTo', 'en')
 const translatedText = ref('')
 const lang = {
   af: 'Afrikaans',
@@ -287,7 +310,9 @@ const lang = {
   zu: 'Zulu',
 }
 const translateText = () => {
-  vscode && vscode.postMessage({ type: 'translate', content: text.value, to: translateTo.value })
+  if (vscode && text.value) {
+    vscode.postMessage({ type: 'translate', content: text.value, to: translateTo.value })
+  }
 }
 window.addEventListener('message', ({ data }) => {
   if (data) {
@@ -346,6 +371,40 @@ window.addEventListener('message', ({ data }) => {
       box-sizing: border-box;
       cursor: pointer;
       animation: slide-left 0.2s ease-in-out 0s 1;
+      border: 2px solid rgba(75, 75, 75, 1);
+    }
+
+    .popup-color-more {
+      display: inline-block;
+      width: 10px;
+      position: relative;
+      right: 3px;
+      top: 4px;
+      opacity: 0.7;
+      cursor: pointer;
+    }
+
+    .line-option {
+      width: 25px;
+      margin-right: 5px;
+      margin-top: 5px;
+      height: 25px;
+      border-radius: 50%;
+      opacity: 1;
+      box-sizing: border-box;
+      position: relative;
+      bottom: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      animation: slide-right 0.2s ease-in-out 0s 1;
+      border: 2px solid rgba(75, 75, 75, 1);
+
+      .demo-line {
+        width: 80%;
+        height: 0px;
+      }
     }
   }
 }
