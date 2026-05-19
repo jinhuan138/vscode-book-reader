@@ -10,6 +10,7 @@ import { Store } from './core/store'
 //https://github.com/aooiuu/any-reader.git
 //https://github.com/cteamx/Thief-Book-VSCode
 export function activate(context: vscode.ExtensionContext) {
+  console.log('🐟book reader🐟 已激活！')
   Store.context = context // 保存上下文到全局 Store
   const option = {
     webviewOptions: { retainContextWhenHidden: true, enableFindWidget: true },

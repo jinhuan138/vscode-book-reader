@@ -3,7 +3,7 @@
   "displayName": "book reader",
   "description": "Support reading epub、mobi、azw3、pdf、fk8、fb2、cbz files.",
   "publisher": "lindacong",
-  "version": "1.3.0",
+  "version": "1.3.2",
   "icon": "resource/public/logo.png",
   "repository": {
     "url": "https://github.com/jinhuan138/vscode-book-reader.git",
@@ -28,9 +28,7 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [
-    "onView:book-reader"
-  ],
+  "activationEvents": [],
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [
@@ -139,7 +137,7 @@
     "preview": "pnpm -F ./resource preview",
     "vscode:prepublish": "pnpm compile",
     "package": "pnpm vsce package",
-    "compile": "rimraf dist && tsc -p ./",
+    "compile": "node esbuild.js",
     "watch": "tsc -watch -p ./",
     "pretest": "pnpm compile && pnpm lint",
     "lint": "eslint src --ext ts",
@@ -153,6 +151,7 @@
     "@typescript-eslint/parser": "^7.18.0",
     "@vscode/test-cli": "^0.0.8",
     "@vscode/test-electron": "^2.5.2",
+    "esbuild": "^0.28.0",
     "eslint": "^8.57.1",
     "typescript": "^6.0.3"
   },

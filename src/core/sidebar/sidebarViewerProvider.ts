@@ -8,13 +8,27 @@ export class SidebarViewerProvider implements vscode.WebviewViewProvider {
   constructor(context: vscode.ExtensionContext) {
     this.extensionPath = context.extensionPath
   }
+    private buildLocalResourceRoots(): vscode.Uri[] {
+    const roots = [vscode.Uri.file(this.extensionPath)]
+    const config = vscode.workspace.getConfiguration('book-reader')
+    const bookFolderPath = config.get<string>('bookFolderPath')
+    if (bookFolderPath) roots.push(vscode.Uri.file(bookFolderPath))
+    const workspaceFolders = vscode.workspace.workspaceFolders
+    if (workspaceFolders) roots.push(...workspaceFolders.map((f) => f.uri))
+    return roots
+  }
   resolveWebviewView(webviewView: vscode.WebviewView) {
     Store.sliderWebview = webviewView
     const webview = webviewView.webview
     webview.options = {
       enableScripts: true,
-      localResourceRoots: [vscode.Uri.file(this.extensionPath)],
+      localResourceRoots: this.buildLocalResourceRoots(),
     }
+    vscode.workspace.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration('book-reader.bookFolderPath')) {
+        webview.options = { enableScripts: true, localResourceRoots: this.buildLocalResourceRoots() }
+      }
+    })
     webview.onDidReceiveMessage(async (message) => {
       switch (message.type) {
         case 'init':

@@ -24,7 +24,7 @@
         </span>
       </div>
       <!-- process -->
-      <el-row v-else class="footer-slider">
+      <el-row v-else class="footer-slider" justify="center" align="middle">
         <el-col :span="4">
           <el-icon title="back" class="back-icon" @click="goBack">
             <Back />

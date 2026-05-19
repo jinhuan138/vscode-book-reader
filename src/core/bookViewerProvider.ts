@@ -1,5 +1,6 @@
 import * as vscode from 'vscode'
 import { readFileSync } from 'fs'
+import { dirname } from 'path'
 import { translate } from 'bing-translate-api'
 import { Store } from '../core/store'
 
@@ -36,7 +37,7 @@ export class BookViewerProvider implements vscode.CustomReadonlyEditorProvider {
     }
     webview.options = {
       enableScripts: true,
-      localResourceRoots: [vscode.Uri.file(this._context.extensionPath)],
+      localResourceRoots: [vscode.Uri.file(this._context.extensionPath),vscode.Uri.file(dirname(uri.fsPath))],
     }
     webview.onDidReceiveMessage(async (message) => {
       switch (message.type) {
@@ -91,6 +92,7 @@ export class BookViewerProvider implements vscode.CustomReadonlyEditorProvider {
               forceNewWindow: true,
             })
           }
+          break
         case 'translate':
           translate(message.content, null, message.to)
             .then((res) => {

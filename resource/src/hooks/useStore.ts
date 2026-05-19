@@ -8,7 +8,7 @@ const url = ref<null | UploadFile | string>(null)
 const bookList = useLocalStorage<BookInfo[]>('bookListInfo', [])
 
 const removeBook = (id: string) => {
-  const index = bookList.value.findIndex((item) => item.id === id)
+  const index = bookList.value.findIndex((item: BookInfo) => item.id === id)
   if (index > -1) {
     bookList.value.splice(index, 1)
   }
@@ -30,7 +30,7 @@ const addBook = async (book: UploadFile | string) => {
   const id = await getMd5(file)
   url.value = book
   bookKey.value = id
-  const existingBook = bookList.value.find((item) => item.id === id)
+  const existingBook = bookList.value.find((item: BookInfo) => item.id === id)
   if (!existingBook) {
     bookList.value.push({
       id,

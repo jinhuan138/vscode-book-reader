@@ -1,17 +1,20 @@
 .vscode/**
-.vscode-test/**
 src/**
 .gitignore
-.yarnrc
 **/tsconfig.json
 **/.eslintrc.json
 **/*.map
 **/*.ts
-resource/public/files
-resource/src
-resource/index.html
-resource/stats*.html
-resource/node_modules
 .github
 pnpm-workspace.yaml
 pnpm-lock.yaml
+# 忽略整个 resource 目录及其子内容
+resource/**
+# 但保留 resource/dist
+!resource/dist/**
+# 保留 resource/public 下的图片目录（resource/public/image）
+!resource/public/image/**
+!resource/public/logo.png
+!resource/public/icon.svg
+# 明确排除 resource/public/files 下的所有文件
+resource/public/files/**
