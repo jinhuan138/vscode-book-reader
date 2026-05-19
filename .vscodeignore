@@ -10,6 +10,8 @@ src/**
 resource/public/files
 resource/src
 resource/index.html
-stats*.html
+resource/stats*.html
+resource/node_modules
 .github
+pnpm-workspace.yaml
 pnpm-lock.yaml
