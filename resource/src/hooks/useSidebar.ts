@@ -6,15 +6,15 @@ const { addBook, url } = useStore()
 
 export const isSidebar = ref(false)
 //store last book
-watch(isSidebar, async (is) => {
+watch([isSidebar, url], async ([is, u]) => {
   if (is) {
-    if (!url.value) {
+    if (!u) {
       const lastBook = await localforage.getItem('lastBook')
       if (lastBook) {
-        addBook(lastBook as UploadFile)
+        addBook(lastBook as string | UploadFile)
       }
     } else {
-      localforage.setItem('lastBook', url.value)
+      localforage.setItem('lastBook', u)
     }
   }
 })

@@ -25,7 +25,6 @@
     <Panel />
     <BubbleMenu />
     <CodeInterface />
-    <ImageViewer />
   </div>
 </template>
 <script setup lang="ts">
@@ -34,7 +33,6 @@ import { computed, CSSProperties } from 'vue'
 import { Back } from '@element-plus/icons-vue'
 import CodeInterface from './components/CodeInterface/CodeInterface.vue'
 import Panel from './components/panel/Panel.vue'
-import ImageViewer from '@/components/ImageViewer.vue'
 import BubbleMenu from '@/components/BubbleMenu.vue'
 import { rendition } from '@/hooks/useRendition'
 import useTheme from '@/hooks/useTheme'

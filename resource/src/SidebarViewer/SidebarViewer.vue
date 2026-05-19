@@ -30,7 +30,7 @@
             <Back />
           </el-icon>
         </el-col>
-        <el-col :span="20">
+        <el-col :span="18">
           <el-slider class="slider" v-model="progress" @change="changeProgress" size="small"
             :format-tooltip="labelFromPercentage"></el-slider>
         </el-col>
@@ -59,6 +59,7 @@ import useVscode from '@/hooks/useVscode'
 import useChapter from '@/hooks/useChapter'
 import useInfo from '@/hooks/useInfo'
 import '@/hooks/useKeyboard'
+import localforage from 'localforage'
 
 const vscode = useVscode()
 const { bookKey, url, addBook } = useStore()
@@ -70,11 +71,12 @@ const { theme } = useTheme()
 const showSlider = ref(false)
 
 const close = () => {
-  rendition.value.close()
+  rendition.value?.close()
   bookKey.value = null
   url.value = null
   rendition.value = null
   vscode && vscode.postMessage({ type: 'title', content: '' })
+  localforage.removeItem('lastBook')
 }
 
 const menuButtonRef = ref()

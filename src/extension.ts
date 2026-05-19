@@ -47,10 +47,10 @@ export function activate(context: vscode.ExtensionContext) {
       if (!book.uri) return
       const sliderWebview = Store.sliderWebview
       // 在侧边栏打开书籍
-      sliderWebview!.show(true)
-      sliderWebview!.webview.postMessage({
+      sliderWebview?.show(true)
+      sliderWebview?.webview.postMessage({
         type: 'openBook',
-        content: sliderWebview!.webview.asWebviewUri(book.uri).toString(),
+        content: sliderWebview?.webview.asWebviewUri(book.uri).toString(),
       })
     },
   )
