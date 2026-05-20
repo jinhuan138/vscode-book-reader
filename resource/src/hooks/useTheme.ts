@@ -39,7 +39,7 @@ const updateRgbaOpacity = (rgbaStr: string, opacity: number, decimals: number = 
 
 // ============ 配置常量 ============
 const vscode = useVscode()
-const styles = getComputedStyle(document.documentElement)
+const styles = getComputedStyle(document?.documentElement)
 
 const vscodeBackgroundColor = styles.getPropertyValue('--vscode-editor-background')
 const vscodeTextColor = styles.getPropertyValue('--vscode-editor-foreground')
@@ -145,8 +145,8 @@ const updatedTheme = (newTheme: { [key: string]: any }) => {
   }
   rendition.value.renderer?.setStyles?.(getCSS(newTheme))
 
-  if (!isSidebar.value && vscode) {
-    vscode.postMessage({
+  if (!isSidebar.value) {
+    vscode?.postMessage({
       type: 'style',
       content: JSON.stringify(newTheme),
     })

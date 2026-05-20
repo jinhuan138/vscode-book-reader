@@ -8,25 +8,42 @@ export class SidebarViewerProvider implements vscode.WebviewViewProvider {
   constructor(context: vscode.ExtensionContext) {
     this.extensionPath = context.extensionPath
   }
-    private buildLocalResourceRoots(): vscode.Uri[] {
+
+  private buildLocalResourceRoots(): vscode.Uri[] {
     const roots = [vscode.Uri.file(this.extensionPath)]
     const config = vscode.workspace.getConfiguration('book-reader')
     const bookFolderPath = config.get<string>('bookFolderPath')
-    if (bookFolderPath) roots.push(vscode.Uri.file(bookFolderPath))
+    if (bookFolderPath) {
+      roots.push(vscode.Uri.file(bookFolderPath))
+    }
     const workspaceFolders = vscode.workspace.workspaceFolders
-    if (workspaceFolders) roots.push(...workspaceFolders.map((f) => f.uri))
+    if (workspaceFolders) {
+      roots.push(...workspaceFolders.map((f) => f.uri))
+    }
     return roots
+  }
+
+  private updateLocalResourceRoots(webview: vscode.Webview) {
+    const newRoots = this.buildLocalResourceRoots()
+    const oldRoots = webview.options.localResourceRoots ?? []
+
+    const rootsMap = new Map<string, vscode.Uri>()
+    for (const uri of [...oldRoots, ...newRoots]) {
+      rootsMap.set(uri.toString(), uri)
+    }
+
+    webview.options = {
+      enableScripts: true,
+      localResourceRoots: Array.from(rootsMap.values()),
+    }
   }
   resolveWebviewView(webviewView: vscode.WebviewView) {
     Store.sliderWebview = webviewView
     const webview = webviewView.webview
-    webview.options = {
-      enableScripts: true,
-      localResourceRoots: this.buildLocalResourceRoots(),
-    }
+    this.updateLocalResourceRoots(webview)
     vscode.workspace.onDidChangeConfiguration((e) => {
       if (e.affectsConfiguration('book-reader.bookFolderPath')) {
-        webview.options = { enableScripts: true, localResourceRoots: this.buildLocalResourceRoots() }
+        this.updateLocalResourceRoots(webview)
       }
     })
     webview.onDidReceiveMessage(async (message) => {

@@ -1,4 +1,4 @@
-import { ref, onBeforeUnmount } from 'vue'
+import { ref } from 'vue'
 import { rendition, onReady } from './useRendition'
 
 const getLabel = (toc, href) => {
@@ -26,10 +26,6 @@ export default function useChapter() {
 
   onReady(() => {
     rendition.value.addEventListener('relocate', onRelocate)
-  })
-
-  onBeforeUnmount(() => {
-    rendition.value.removeEventListener('relocate', onRelocate)
   })
   return page
 }

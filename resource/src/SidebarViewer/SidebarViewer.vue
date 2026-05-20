@@ -3,11 +3,12 @@
     <book-view :url="url" :getRendition="(val) => (rendition = val)"
       :initOption="{ lastLocation: info!.lastLocation }" />
     <!-- menu tree -->
-    <el-icon ref="menuButtonRef" class="menu-icon" color="#ccc" v-click-outside="onClickOutside">
-      <Menu />
-    </el-icon>
-    <el-popover ref="menuPopoverRef" :virtual-ref="menuButtonRef" placement="bottom" :popper-style="{ height: '80%' }"
-      :width="300">
+    <el-popover ref="menuPopoverRef" placement="bottom" :popper-style="{ height: '80%' }" :width="300">
+      <template #reference>
+        <el-icon class="menu-icon" color="#ccc">
+          <Menu />
+        </el-icon>
+      </template>
       <el-tree :data="toc" :props="{ children: 'subitems' }" @node-click="onNodeClick" class="tree" />
     </el-popover>
     <el-icon class="close-icon" color="#ccc" @click="close">
@@ -49,20 +50,18 @@
 import { BookView } from 'vue-book-reader'
 import { ref, computed } from 'vue'
 import { Back, Close, Menu } from '@element-plus/icons-vue'
-import { ClickOutside as vClickOutside, type UploadFile } from 'element-plus'
+import { type UploadFile } from 'element-plus'
 import useStore from '@/hooks/useStore'
 import { rendition } from '@/hooks/useRendition'
 import useTheme from '@/hooks/useTheme'
 import useToc from '@/hooks/useToc'
 import useProgress from '@/hooks/useProgress'
-import useVscode from '@/hooks/useVscode'
 import useChapter from '@/hooks/useChapter'
 import useInfo from '@/hooks/useInfo'
 import '@/hooks/useKeyboard'
 import localforage from 'localforage'
 
-const vscode = useVscode()
-const { bookKey, url, addBook } = useStore()
+const { url, addBook, closeBook } = useStore()
 const info = useInfo()
 const toc = useToc()
 const { progress, changeProgress, labelFromPercentage, goBack } = useProgress()
@@ -71,19 +70,11 @@ const { theme } = useTheme()
 const showSlider = ref(false)
 
 const close = () => {
-  rendition.value?.close()
-  bookKey.value = null
-  url.value = null
-  rendition.value = null
-  vscode && vscode.postMessage({ type: 'title', content: '' })
+  closeBook()
   localforage.removeItem('lastBook')
 }
 
-const menuButtonRef = ref()
 const menuPopoverRef = ref()
-const onClickOutside = () => {
-  menuPopoverRef.value?.hide()
-}
 const onNodeClick = (item) => {
   rendition.value?.goTo(item.href)
   menuPopoverRef.value?.hide()

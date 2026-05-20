@@ -2,7 +2,11 @@ import { type UploadFile } from 'element-plus'
 import { useLocalStorage } from '@vueuse/core'
 import { ref } from 'vue'
 import { type BookInfo } from './useInfo'
+import { rendition } from './useRendition'
+import useVscode from '@/hooks/useVscode'
 //TODO https://vueuse.org/integrations/useIDBKeyval/#useidbkeyval
+
+const vscode = useVscode()
 const bookKey = ref<null | string>(null)
 const url = ref<null | UploadFile | string>(null)
 const bookList = useLocalStorage<BookInfo[]>('bookListInfo', [])
@@ -20,7 +24,16 @@ async function getMd5(file: Blob): Promise<string> {
   const hashArray = Array.from(new Uint8Array(hashBuffer))
   return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('')
 }
+
+const closeBook = () => {
+  rendition.value?.close()
+  bookKey.value = null
+  url.value = null
+  rendition.value = null
+  vscode?.postMessage({ type: 'title', content: '' })
+}
 const addBook = async (book: UploadFile | string) => {
+  closeBook()
   let file: File
   if (typeof book === 'string') {
     file = await fetch(book).then(async (res) => new File([await res.blob()], new URL(res.url).pathname))
@@ -41,5 +54,5 @@ const addBook = async (book: UploadFile | string) => {
   }
 }
 export default function useStore() {
-  return { url, bookKey, bookList, addBook, removeBook }
+  return { url, bookKey, bookList, addBook, removeBook, closeBook }
 }

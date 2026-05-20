@@ -8,7 +8,5 @@ export function onReady(callback: () => void) {
 watch(rendition, (r) => {
   if (r) {
     listeners.forEach((cb) => cb())
-  } else {
-    listeners.clear()
   }
 })

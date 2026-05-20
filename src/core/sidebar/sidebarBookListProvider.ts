@@ -98,6 +98,7 @@ export class SidebarBookListProvider implements vscode.TreeDataProvider<TreeItem
   }
 
   selectBookFolder() {
+    const defaultUri = this.folder ?? vscode.workspace.workspaceFolders?.[0]?.uri
     vscode.window
       .showOpenDialog({
         canSelectFiles: false,
@@ -105,6 +106,7 @@ export class SidebarBookListProvider implements vscode.TreeDataProvider<TreeItem
         canSelectMany: false,
         openLabel: 'Select Book Folder',
         title: 'Choose Book Storage Directory',
+        defaultUri,
       })
       .then((uris) => {
         if (uris && uris.length > 0) {

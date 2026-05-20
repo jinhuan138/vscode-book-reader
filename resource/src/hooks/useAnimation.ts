@@ -17,8 +17,8 @@ export default function useAnimation() {
   onReady(() => setAnimation(animation.value))
   watch(animation, (a) => {
     setAnimation(a)
-    if (!isSidebar.value && vscode) {
-      vscode.postMessage({
+    if (!isSidebar.value) {
+      vscode?.postMessage({
         type: 'animation',
         content: String(a),
       })
