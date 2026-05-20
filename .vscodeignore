@@ -18,3 +18,5 @@ resource/**
 !resource/public/icon.svg
 # 明确排除 resource/public/files 下的所有文件
 resource/public/files/**
+esbuild.js
+.prettierignore
