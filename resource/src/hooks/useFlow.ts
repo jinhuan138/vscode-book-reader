@@ -26,23 +26,6 @@ export default function useFlow() {
   }
   onReady(() => {
     setFlow(flow.value)
-    // if (isSidebar.value && isEpub()) {
-    //   rendition.value.hooks.content.register(({ document }) => {
-    //     const annotation = Array.from(document.querySelectorAll('a')) as HTMLAnchorElement[]
-    //     if (annotation.length) {
-    //       const halfLength = Math.floor(annotation.length / 2)
-    //       annotation.slice(0, halfLength).forEach((el) => {
-    //         if (el.href) {
-    //           const id = el.href.split('#')[1]
-    //           const target = annotation.slice(halfLength).find((a: HTMLAnchorElement) => a.id === id)
-    //           if (target && target.parentNode) {
-    //             el.title = target.parentNode.textContent as string
-    //           }
-    //         }
-    //       })
-    //     }
-    //   })
-    // }
   })
   watch(flow, (f) => {
     setFlow(f)

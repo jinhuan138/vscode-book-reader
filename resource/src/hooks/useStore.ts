@@ -8,7 +8,7 @@ import useVscode from '@/hooks/useVscode'
 
 const vscode = useVscode()
 const bookKey = ref<null | string>(null)
-const url = ref<null | UploadFile | string>(null)
+const url = ref<null | UploadFile['raw'] | string>(null)
 const bookList = useLocalStorage<BookInfo[]>('bookListInfo', [])
 
 const removeBook = (id: string) => {
@@ -41,7 +41,7 @@ const addBook = async (book: UploadFile | string) => {
     file = book.raw!
   }
   const id = await getMd5(file)
-  url.value = book
+  url.value = typeof book === 'string' ? book : book.raw!
   bookKey.value = id
   const existingBook = bookList.value.find((item: BookInfo) => item.id === id)
   if (!existingBook) {

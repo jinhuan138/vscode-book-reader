@@ -85,6 +85,20 @@ export default function useImage() {
         const imgs = [...doc.querySelectorAll('img'), ...doc.querySelectorAll('image')] as HTMLImageElement[]
         imageList.value = imgs
         initImage()
+        // 添加注释
+        const annotation = Array.from(doc.querySelectorAll('a')) as HTMLAnchorElement[]
+        if (annotation.length) {
+          const halfLength = Math.floor(annotation.length / 2)
+          annotation.slice(0, halfLength).forEach((el) => {
+            if (el.href) {
+              const id = el.href.split('#')[1]
+              const target = annotation.slice(halfLength).find((a: HTMLAnchorElement) => a.id === id)
+              if (target && target.parentNode) {
+                el.title = target.parentNode.textContent as string
+              }
+            }
+          })
+        }
       })
     })
   })

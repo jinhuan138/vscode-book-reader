@@ -23,3 +23,4 @@ Support reading epub、mobi、azw3、pdf、fk8、fb2、cbz files in vscode.
 | **🔖Bookmark**               | Add and manage bookmarks for the current reading position.                |
 | **🖍️Highlight & Annotation** | Select text to highlight or underline, choose color and save annotations. |
 | **🌐Translate Selection**    | Translate selected text instantly with target language selection.         |
+| **💬Annotation Tooltip**     | Hover on annotations to view the referenced content                       |
