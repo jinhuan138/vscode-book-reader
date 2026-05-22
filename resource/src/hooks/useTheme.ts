@@ -63,8 +63,8 @@ const defaultTheme = {
   fontSize: 100,
   fontFamily: 'invalid-hack',
   lineHeight: 1.5,
-  textColor: defaultTextColor,
-  backgroundColor: defaultBackgroundColor,
+  textColor: '',
+  backgroundColor: '',
   writingMode: 'horizontal-tb',
   textAlign: '',
   opacity: 100, //透明度
