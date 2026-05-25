@@ -26,11 +26,19 @@
     <BubbleMenu />
     <CodeInterface />
   </div>
+  <!-- import -->
+  <div v-else class="import-file">
+    <el-upload class="select-button" :on-change="onchange" :auto-upload="false"
+      accept=".epub,.mobi,.fk8,.azw3,.fb2,.cbz,.pdf" :show-file-list="false">
+      <el-button type="primary">select file</el-button>
+    </el-upload>
+  </div>
 </template>
 <script setup lang="ts">
 import { VueReader } from 'vue-book-reader'
 import { computed, CSSProperties } from 'vue'
 import { Back } from '@element-plus/icons-vue'
+import { type UploadFile } from 'element-plus'
 import CodeInterface from './components/CodeInterface/CodeInterface.vue'
 import Panel from './components/panel/Panel.vue'
 import BubbleMenu from '@/components/BubbleMenu.vue'
@@ -45,7 +53,7 @@ import useProcessDisplay from '@/hooks/useProcessDisplay'
 import '@/hooks/useKeyboard'
 import useInfo from '@/hooks/useInfo'
 
-const { url } = useStore()
+const { url, addBook } = useStore()
 const info = useInfo()
 const { showBook } = useDisguise()
 const { theme, defaultBackgroundColor, defaultTextColor } = useTheme()
@@ -77,6 +85,10 @@ const { progressDisplay } = useProcessDisplay()
 const chapter = useChapter()
 const location = useLocation()
 const { progress, changeProgress, labelFromPercentage, goBack } = useProgress()
+
+const onchange = (file: UploadFile) => {
+  addBook(file)
+}
 </script>
 <style lang="scss" scoped>
 /* book viewer */
@@ -161,5 +173,17 @@ const { progress, changeProgress, labelFromPercentage, goBack } = useProgress()
 .footer-slider .slider {
   width: 80%;
   height: 26px;
+}
+
+.import-file {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  .select-button {
+    margin: 5px auto 0;
+  }
 }
 </style>

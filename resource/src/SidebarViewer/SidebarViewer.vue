@@ -39,7 +39,7 @@
     </div>
   </div>
   <!-- import -->
-  <div v-else class="import">
+  <div v-else class="import-file">
     <el-upload class="select-button" :on-change="onchange" :auto-upload="false"
       accept=".epub,.mobi,.fk8,.azw3,.fb2,.cbz,.pdf" :show-file-list="false">
       <el-button type="primary">select file</el-button>
@@ -186,7 +186,7 @@ const onchange = (file: UploadFile) => {
   }
 }
 
-.import {
+.import-file {
   width: 100%;
   height: 100%;
   display: flex;
