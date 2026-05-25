@@ -5,6 +5,7 @@
   "publisher": "lindacong",
   "version": "1.3.3",
   "icon": "resource/public/logo.png",
+  "license": "MIT",
   "repository": {
     "url": "https://github.com/jinhuan138/vscode-book-reader.git",
     "type": "git"
