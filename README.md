@@ -1,6 +1,6 @@
 [![License](https://badgen.net/badge/License/MIT/red)](https://github.com/jinhuan138/vscode-book-reader/blob/master/LICENSE)
 [![VSCode](https://badgen.net/badge/VSCode/1.109.0+/blue?icon=visualstudio)](https://marketplace.visualstudio.com/items?itemName=lindacong.vscode-book-reader)
-[![Version](https://badgen.net/badge/Version/1.3.3/orange?icon=git)](https://github.com/jinhuan138/vscode-book-reader/releases)
+[![Version](https://badgen.net/badge/Version/1.3.4/orange?icon=git)](https://github.com/jinhuan138/vscode-book-reader/releases)
 [![Platform](https://badgen.net/badge/Platform/Windows|MacOS|Linux/purple?icon=windows)](https://github.com/jinhuan138/vscode-book-reader)
 
 [![Downloads](https://badgen.net/vs-marketplace/d/lindacong.vscode-book-reader?label=Downloads&color=blue)](https://marketplace.visualstudio.com/items?itemName=lindacong.vscode-book-reader)

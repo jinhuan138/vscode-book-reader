@@ -3,7 +3,7 @@
     <book-view :url="url" :getRendition="(val) => (rendition = val)"
       :initOption="{ lastLocation: info!.lastLocation }" />
     <!-- menu tree -->
-    <el-popover ref="menuPopoverRef" placement="bottom" :popper-style="{ height: '80%' }" width="100%" trigger="click">
+    <el-popover ref="menuPopoverRef" placement="bottom" :popper-style="{ height: '80%' }" width="100%">
       <template #reference>
         <el-icon class="menu-icon" color="#ccc">
           <Menu />
