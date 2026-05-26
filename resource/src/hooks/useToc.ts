@@ -1,7 +1,14 @@
 import { ref } from 'vue'
 import { rendition, onReady } from './useRendition'
+
+export type TocItem = {
+  id: number
+  label: string
+  href: string
+  subitems?: TocItem[]
+}
 export default function useToc() {
-  const toc = ref<any[]>([])
+  const toc = ref<TocItem[]>([])
 
   onReady(() => {
     toc.value = rendition.value.book.toc

@@ -3,13 +3,15 @@
     <book-view :url="url" :getRendition="(val) => (rendition = val)"
       :initOption="{ lastLocation: info!.lastLocation }" />
     <!-- menu tree -->
-    <el-popover ref="menuPopoverRef" placement="bottom" :popper-style="{ height: '80%' }" :width="300">
+    <el-popover ref="menuPopoverRef" placement="bottom" :popper-style="{ height: '80%' }" width="100%" trigger="click">
       <template #reference>
         <el-icon class="menu-icon" color="#ccc">
           <Menu />
         </el-icon>
       </template>
-      <el-tree :data="toc" :props="{ children: 'subitems' }" @node-click="onNodeClick" class="tree" />
+      <el-tree :data="toc" :props="{ children: 'subitems' }" @node-click="onNodeClick" class="tree" node-key="id"
+        :current-node-key="currentToc" highlight-current>
+      </el-tree>
     </el-popover>
     <el-icon class="close-icon" color="#ccc" @click="close">
       <Close />
@@ -52,9 +54,9 @@ import { ref, computed } from 'vue'
 import { Back, Close, Menu } from '@element-plus/icons-vue'
 import { type UploadFile } from 'element-plus'
 import useStore from '@/hooks/useStore'
-import { rendition } from '@/hooks/useRendition'
+import { rendition, onReady } from '@/hooks/useRendition'
 import useTheme from '@/hooks/useTheme'
-import useToc from '@/hooks/useToc'
+import useToc, { type TocItem } from '@/hooks/useToc'
 import useProgress from '@/hooks/useProgress'
 import useChapter from '@/hooks/useChapter'
 import useInfo from '@/hooks/useInfo'
@@ -75,7 +77,7 @@ const close = () => {
 }
 
 const menuPopoverRef = ref()
-const onNodeClick = (item) => {
+const onNodeClick = (item: TocItem) => {
   rendition.value?.goTo(item.href)
   menuPopoverRef.value?.hide()
 }
@@ -93,6 +95,18 @@ const style = computed(() => {
 const onchange = (file: UploadFile) => {
   addBook(file)
 }
+
+const currentToc = ref<number | null>(null)
+onReady(() => {
+  rendition.value.addEventListener('relocate', ({ detail }) => {
+    if (detail.tocItem) {
+      currentToc.value = detail.tocItem.id
+    } else {
+      currentToc.value = null
+    }
+  })
+})
+
 </script>
 
 <style scoped lang="scss">
@@ -176,7 +190,7 @@ const onchange = (file: UploadFile) => {
   overflow-x: hidden;
   word-wrap: wrap;
 
-  .el-tree-node__content {
+  :deep(.el-tree-node__content) {
     min-height: var(--el-tree-node-content-height);
     height: auto;
 
