@@ -16,7 +16,7 @@ Support reading epub、mobi、azw3、pdf、fk8、fb2、cbz files in vscode.
 
 ## [Demo](https://jinhuan138.github.io/vscode-book-reader/)
 
-[![demo](./resource/public/image/preview.png)](https://jinhuan138.github.io/vscode-book-reader/)
+[![demo](./renderer/public/image/preview.png)](https://jinhuan138.github.io/vscode-book-reader/)
 
 ## Features
 

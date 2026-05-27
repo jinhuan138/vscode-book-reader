@@ -46,7 +46,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: resource/dist # 打包之后产物的文件夹
+          path: renderer/dist # 打包之后产物的文件夹
 
   # 部署工作
   deploy:
