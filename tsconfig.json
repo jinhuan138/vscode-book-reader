@@ -13,6 +13,6 @@
     "allowJs": true,
     "resolveJsonModule": true
   },
-  "exclude": ["node_modules", "/resource/**/*"],
+  "exclude": ["node_modules", "/renderer/**/*"],
   "include": ["src/**/*"]
 }

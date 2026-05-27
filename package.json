@@ -4,7 +4,7 @@
   "description": "Support reading epub、mobi、azw3、pdf、fk8、fb2、cbz files.支持在vscode中阅读epub、mobi、azw3、pdf、fk8、fb2、cbz电子书。",
   "publisher": "lindacong",
   "version": "1.3.4",
-  "icon": "resource/public/logo.png",
+  "icon": "renderer/public/logo.png",
   "license": "MIT",
   "repository": {
     "url": "https://github.com/jinhuan138/vscode-book-reader.git",
@@ -57,7 +57,7 @@
         {
           "id": "bookReader",
           "title": "book reader",
-          "icon": "resource/public/icon.svg"
+          "icon": "renderer/public/icon.svg"
         }
       ]
     },
@@ -133,9 +133,9 @@
     }
   },
   "scripts": {
-    "dev": "pnpm -F ./resource dev",
-    "build": "pnpm -F ./resource build",
-    "preview": "pnpm -F ./resource preview",
+    "dev": "pnpm -F ./renderer dev",
+    "build": "pnpm -F ./renderer build",
+    "preview": "pnpm -F ./renderer preview",
     "vscode:prepublish": "pnpm compile",
     "package": "pnpm vsce package",
     "compile": "node esbuild.js",

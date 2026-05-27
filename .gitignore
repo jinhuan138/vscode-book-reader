@@ -1,9 +1,9 @@
 out
 dist
-resource/dist
+renderer/dist
 node_modules
 .vscode-test/
 *.vsix
 stats*.html
-resource/auto-imports.d.ts
-resource/components.d.ts
+renderer/auto-imports.d.ts
+renderer/components.d.ts
