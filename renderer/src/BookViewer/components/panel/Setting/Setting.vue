@@ -3,12 +3,20 @@
   <el-icon class="setting-icon" color="#ccc" @click="setting = true">
     <Setting />
   </el-icon>
-  <el-drawer v-model="setting" title="setting" :with-header="false" :size="isVscode ? 460 : 420">
+  <el-drawer v-model="setting" resizable title="setting" :with-header="false" :size="isVscode ? 460 : 420">
     <el-tabs v-model="activeTab" class="setting-tabs">
-      <el-tab-pane label="TextStyle" name="textStyle"><TextStyle /></el-tab-pane>
-      <el-tab-pane label="Image" name="Image"><Image /></el-tab-pane>
-      <el-tab-pane label="Layout" name="layout"><Layout /></el-tab-pane>
-      <el-tab-pane label="EnhancedFunctionality" name="enhancedFunctionality"><EnhancedFunctionality /></el-tab-pane>
+      <el-tab-pane label="TextStyle" name="textStyle">
+        <TextStyle />
+      </el-tab-pane>
+      <el-tab-pane label="Image" name="Image">
+        <Image />
+      </el-tab-pane>
+      <el-tab-pane label="Layout" name="layout">
+        <Layout />
+      </el-tab-pane>
+      <el-tab-pane label="EnhancedFunctionality" name="enhancedFunctionality">
+        <EnhancedFunctionality />
+      </el-tab-pane>
     </el-tabs>
   </el-drawer>
 </template>
@@ -31,10 +39,12 @@ const activeTab = ref('textStyle')
   cursor: pointer;
   z-index: 5;
 }
+
 .setting-icon:hover {
   color: #409efc;
 }
-.setting-tabs > .el-tabs__content {
+
+.setting-tabs>.el-tabs__content {
   padding: 32px;
   color: #6b778c;
   font-size: 32px;

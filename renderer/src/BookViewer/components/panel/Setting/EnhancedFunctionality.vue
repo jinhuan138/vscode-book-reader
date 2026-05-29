@@ -25,9 +25,10 @@
 </template>
 <script setup>
 import useDisguise from '@/hooks/useDisguise'
-import useSpeak from '@/hooks/useSpeak'
+import useTTS from '@/hooks/useTTS'
 import useTheme from '@/hooks/useTheme'
-const { isReading, voiceIndex, voices, speed, speedList } = useSpeak()
+
+const { isReading, voiceIndex, voices, speed, speedList } = useTTS()
 const { theme } = useTheme()
 const { disguise } = useDisguise()
 </script>

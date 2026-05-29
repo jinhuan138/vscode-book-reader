@@ -3,7 +3,7 @@
   <el-icon class="setting-icon" color="#ccc" @click="showInfo = true">
     <WarningFilled />
   </el-icon>
-  <el-drawer v-model="showInfo" title="search" :with-header="false" :size="400">
+  <el-drawer v-model="showInfo" resizable title="search" :with-header="false" :size="400">
     <div v-if="info" class="information">
       <el-image class="el-image" :src="coverUrls[info.id]" :alt="info.title" :preview-src-list="[coverUrls[info.id]]">
         <template #error>
@@ -11,8 +11,8 @@
             <el-icon>
               <Picture />
             </el-icon>
-          </div> </template
-      ></el-image>
+          </div>
+        </template></el-image>
       <p v-if="info.title">title:{{ info.title }}</p>
       <p v-if="info.author.name">author:{{ info.author.name }}</p>
       <p v-if="info.published">publisher:{{ format(info.published) }}</p>
@@ -33,7 +33,7 @@ const { coverUrls } = useStore()
 const showInfo = ref(false)
 const info = useInfo()
 const format = (time) => {
-  if(!time) return ''
+  if (!time) return ''
   dayjs(time).format('YYYY-MM-DD')
 }
 </script>

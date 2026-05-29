@@ -2,7 +2,7 @@
 	<el-icon class="bookmark-icon" @click="showBookmark = true" color="#ccc">
 		<CollectionTag />
 	</el-icon>
-	<el-drawer v-model="showBookmark" title="bookmark" :with-header="false" :size="400">
+	<el-drawer resizable v-model="showBookmark" title="bookmark" :with-header="false" :size="400">
 		<el-text size="large">
 			Bookmarks
 			<el-button size="small" :icon="Plus" circle @click="addBookmark" />
