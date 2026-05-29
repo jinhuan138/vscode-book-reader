@@ -3,16 +3,14 @@
     <book-view :url="url" :getRendition="(val) => (rendition = val)"
       :initOption="{ lastLocation: info!.lastLocation }" />
     <!-- menu tree -->
-    <el-popover ref="menuPopoverRef" placement="bottom" :popper-style="{ height: '80%' }" width="100%">
-      <template #reference>
-        <el-icon class="menu-icon" color="#ccc">
-          <Menu />
-        </el-icon>
-      </template>
+    <el-icon class="menu-icon" color="#ccc" @click="expand = true">
+      <Expand />
+    </el-icon>
+    <el-drawer v-model="expand" direction="ltr" title="TOC" resizable style="min-Width: 200px">
       <el-tree :data="toc" :props="{ children: 'subitems' }" @node-click="onNodeClick" class="tree" node-key="id"
         :current-node-key="currentToc" highlight-current>
       </el-tree>
-    </el-popover>
+    </el-drawer>
     <el-icon class="close-icon" color="#ccc" @click="close">
       <Close />
     </el-icon>
@@ -51,7 +49,7 @@
 <script setup lang="ts">
 import { BookView } from 'vue-book-reader'
 import { ref, computed } from 'vue'
-import { Back, Close, Menu } from '@element-plus/icons-vue'
+import { Back, Close, Expand } from '@element-plus/icons-vue'
 import { type UploadFile } from 'element-plus'
 import useStore from '@/hooks/useStore'
 import { rendition, onReady } from '@/hooks/useRendition'
@@ -66,6 +64,7 @@ import localforage from 'localforage'
 const { url, addBook, closeBook } = useStore()
 const info = useInfo()
 const toc = useToc()
+const expand = ref(false)
 const { progress, changeProgress, labelFromPercentage, goBack } = useProgress()
 const chapter = useChapter()
 const { theme } = useTheme()
@@ -184,12 +183,6 @@ onReady(() => {
 }
 
 .tree {
-  max-height: 100%;
-  max-width: 100%;
-  overflow-y: auto;
-  overflow-x: hidden;
-  word-wrap: wrap;
-
   :deep(.el-tree-node__content) {
     min-height: var(--el-tree-node-content-height);
     height: auto;
