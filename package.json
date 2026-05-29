@@ -101,6 +101,9 @@
           },
           {
             "filenamePattern": "*.pdf"
+          },
+          {
+            "filenamePattern": "*.txt"
           }
         ]
       }

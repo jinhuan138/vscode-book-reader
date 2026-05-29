@@ -3,25 +3,11 @@
   <el-icon class="setting-icon" @click="searching = true" color="#ccc">
     <Search />
   </el-icon>
-  <el-drawer v-model="searching" title="search" :with-header="false" :size="400">
-    <el-input
-      clearable
-      v-model="searchText"
-      size="small"
-      width="300"
-      placeholder="search"
-      :suffix-icon="searchText ? '' : Search"
-      @keyup.enter="search"
-      class="search"
-    />
-    <el-table
-      :key="searchResult.length"
-      :show-header="false"
-      :data="searchResult"
-      @cell-click="onNodeClick"
-      height="calc(100% - 26px)"
-      v-loading="searchingLoading"
-    >
+  <el-drawer v-model="searching" resizable title="search" :with-header="false" :size="400">
+    <el-input clearable v-model="searchText" size="small" width="300" placeholder="search"
+      :suffix-icon="searchText ? '' : Search" @keyup.enter="search" class="search" />
+    <el-table :key="searchResult.length" :show-header="false" :data="searchResult" @cell-click="onNodeClick"
+      height="calc(100% - 26px)" v-loading="searchingLoading">
       <el-table-column prop="label">
         <template #default="scope">
           <span v-html="scope.row.label" />

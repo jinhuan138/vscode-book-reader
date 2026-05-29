@@ -4,11 +4,12 @@ import { ref } from 'vue'
 import { type BookInfo } from './useInfo'
 import { rendition } from './useRendition'
 import useVscode from '@/hooks/useVscode'
+import { convertTxtToEpub } from '@/hooks/useTxt'
 //TODO https://vueuse.org/integrations/useIDBKeyval/#useidbkeyval
 
 const vscode = useVscode()
 const bookKey = ref<null | string>(null)
-const url = ref<null | UploadFile['raw'] | string>(null)
+const url = ref<null | UploadFile['raw'] | File | string>(null)
 const bookList = useLocalStorage<BookInfo[]>('bookListInfo', [])
 
 const removeBook = (id: string) => {
@@ -32,6 +33,11 @@ const closeBook = () => {
   rendition.value = null
   vscode?.postMessage({ type: 'title', content: '' })
 }
+
+const isTxt = (file: UploadFile | string) => {
+  const name = typeof file === 'string' ? file : file.name
+  return name.toLowerCase().endsWith('.txt')
+}
 const addBook = async (book: UploadFile | string) => {
   closeBook()
   let file: File
@@ -41,7 +47,11 @@ const addBook = async (book: UploadFile | string) => {
     file = book.raw!
   }
   const id = await getMd5(file)
-  url.value = typeof book === 'string' ? book : book.raw!
+  if (isTxt(book)) {
+    url.value = await convertTxtToEpub(book)
+  } else {
+    url.value = typeof book === 'string' ? book : book.raw!
+  }
   bookKey.value = id
   const existingBook = bookList.value.find((item: BookInfo) => item.id === id)
   if (!existingBook) {
@@ -53,6 +63,7 @@ const addBook = async (book: UploadFile | string) => {
     })
   }
 }
+// addBook('/files/啼笑因缘.txt')
 export default function useStore() {
   return { url, bookKey, bookList, addBook, removeBook, closeBook }
 }
