@@ -75,10 +75,9 @@ const close = () => {
   localforage.removeItem('lastBook')
 }
 
-const menuPopoverRef = ref()
 const onNodeClick = (item: TocItem) => {
   rendition.value?.goTo(item.href)
-  menuPopoverRef.value?.hide()
+  expand.value = false
 }
 const style = computed(() => {
   return {

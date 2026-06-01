@@ -36,6 +36,7 @@ onReady(async () => {
   }
   bookInfo.value = { ...bookInfo.value, ...book.metadata }
   book.getCover?.().then(async (blob: Blob) => {
+    if(!blob) return
     const cover = URL.createObjectURL(blob)
     bookInfo.value!.cover = cover
   })

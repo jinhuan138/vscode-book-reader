@@ -134,37 +134,50 @@ const formatText = (text: string): string => {
  * @param title   - 默认标题（无法分割时使用）
  */
 const getChapters = (content: string, title: string): Chapter[] => {
+  const normalize = (s: string) => s.replace(/\r\n/g, '\n')
+  let text = normalize(content)
+
+  // 去掉 Project Gutenberg 的头尾（若存在）
+  text = text.replace(/^[\s\S]*?\*\*\*\s*START OF( THE )?PROJECT GUTENBERG[\s\S]*?\*\*\*\s*/i, '')
+  text = text.replace(/\*\*\*\s*END OF( THE )?PROJECT GUTENBERG[\s\S]*$/i, '')
+
+  // 如有 "Contents" 或 "CONTENTS"，删除到第一个真实章节前（避免把目录当章节）
+  text = text.replace(
+    /^\s*contents[\s\S]{0,2000}?(?=^\s*(?:第[零一二三四五六七八九十百千万两0-9]+[回章卷节辑话篇]|(?:CHAPTER|Chapter|BOOK|Book)\b|\d+\b[ \t]*[\.:\)]))/im,
+    '',
+  )
+
+  // 更通用的章节行正则：支持中文“第...回/章”、阿拉伯数字“1. ”、以及多种英文章节格式
   const chapterRegex =
-    /^\s*([第卷][一二三四五六七八九十0-9]+[章卷节辑话篇]).*|^\s*(楔子|引言|序章|声明|后记|后序|前言)(?::[^\n]*)?$/gm
+    /^\s*(?:第[零一二三四五六七八九十百千万两0-9]+[回章卷节辑话篇]|(?:CHAPTER|Chapter|BOOK|Book)\s+(?:[IVXLCDM]+|\d+|[A-Za-z]+)|\d+[ \t]*[\.:\)])[^\n]*$/gim
+
   const chapters: Chapter[] = []
   let lastIndex = 0
   let match: RegExpExecArray | null
 
-  while ((match = chapterRegex.exec(content)) !== null) {
+  while ((match = chapterRegex.exec(text)) !== null) {
     if (chapters.length > 0) {
-      const prevChapterEnd = match.index
-      let chapterContent = content.slice(lastIndex, prevChapterEnd)
+      const prevEnd = match.index
+      let chapterContent = text.slice(lastIndex, prevEnd)
       chapterContent = formatText(chapterContent)
-      // 若 chapterContent 为空，则跳过本次循环
       if (chapterContent === '') {
         chapters.pop()
-        continue
+      } else {
+        chapters[chapters.length - 1].content += chapterContent
       }
-      chapters[chapters.length - 1].content += chapterContent
     }
 
-    const trimmedTitle = match[0].trim()
-    chapters.push({ title: trimmedTitle, content: '' })
+    const headingLine = match[0].trim()
+    chapters.push({ title: headingLine, content: '' })
     lastIndex = match.index + match[0].length
   }
 
   if (chapters.length > 0) {
-    let lastChapterContent = content.slice(lastIndex)
+    let lastChapterContent = text.slice(lastIndex)
     lastChapterContent = formatText(lastChapterContent)
     chapters[chapters.length - 1].content += lastChapterContent
   } else {
-    // 无法分割，就全部生成一个 html 文件
-    chapters.push({ title, content: formatText(content) })
+    chapters.push({ title, content: formatText(text) })
   }
 
   return chapters

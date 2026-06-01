@@ -5,7 +5,7 @@
   </el-icon>
   <el-drawer v-model="showInfo" resizable title="search" :with-header="false" :size="400">
     <div v-if="info" class="information">
-      <el-image class="el-image" :src="coverUrls[info.id]" :alt="info.title" :preview-src-list="[coverUrls[info.id]]">
+      <el-image class="el-image" :src="info.cover" :alt="info.title" :preview-src-list="[info.cover]">
         <template #error>
           <div class="image-slot">
             <el-icon>
@@ -27,14 +27,12 @@ import { ref } from 'vue'
 import { WarningFilled, Picture } from '@element-plus/icons-vue'
 import { dayjs } from 'element-plus'
 import useInfo from '@/hooks/useInfo'
-import useStore from '@/hooks/useStore'
 
-const { coverUrls } = useStore()
 const showInfo = ref(false)
 const info = useInfo()
 const format = (time) => {
   if (!time) return ''
-  dayjs(time).format('YYYY-MM-DD')
+  return dayjs(time).format('YYYY-MM-DD')
 }
 </script>
 <style scoped lang="scss">
