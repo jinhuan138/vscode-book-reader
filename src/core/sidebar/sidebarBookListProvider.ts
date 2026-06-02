@@ -59,7 +59,7 @@ export class SidebarBookListProvider implements vscode.TreeDataProvider<TreeItem
   private bookList: Book[] = []
 
   // 支持的电子书扩展名
-  private readonly supportedExtensions = ['.epub', '.mobi', '.azw3', '.pdf', '.fk8', '.fb2', '.cbz']
+  private readonly supportedExtensions = ['.epub', '.mobi', '.azw3', '.pdf', '.fk8', '.fb2', '.cbz','.txt']
 
   constructor() {
     const config = vscode.workspace.getConfiguration('book-reader')

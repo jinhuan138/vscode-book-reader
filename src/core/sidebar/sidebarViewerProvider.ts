@@ -90,6 +90,6 @@ export class SidebarViewerProvider implements vscode.WebviewViewProvider {
           break
       }
     })
-    webviewView.webview.html = readFileSync(this.extensionPath + '/resource/dist/index.html', 'utf8')
+    webviewView.webview.html = readFileSync(this.extensionPath + '/renderer/dist/index.html', 'utf8')
   }
 }
