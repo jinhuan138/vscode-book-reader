@@ -122,6 +122,6 @@ export class BookViewerProvider implements vscode.CustomReadonlyEditorProvider {
     webviewPanel.onDidDispose(() => {
       Store.webviewMap.delete(uri.toString())
     })
-    webview.html = readFileSync(this._context.extensionPath + '/resource/dist/index.html', 'utf8')
+    webview.html = readFileSync(this._context.extensionPath + '/renderer/dist/index.html', 'utf8')
   }
 }
