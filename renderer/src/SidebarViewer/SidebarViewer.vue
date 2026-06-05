@@ -6,7 +6,8 @@
     <el-icon class="menu-icon" color="#ccc" @click="expand = true">
       <Expand />
     </el-icon>
-    <el-drawer v-model="expand" direction="ltr" title="TOC" resizable style="min-Width: 200px">
+    <el-drawer v-model="expand" direction="ltr" title="TOC" resizable style="min-width: 200px"
+      header-class="toc-header">
       <el-tree :data="toc" :props="{ children: 'subitems' }" @node-click="onNodeClick" class="tree" node-key="id"
         :current-node-key="currentToc" highlight-current>
       </el-tree>
@@ -20,9 +21,7 @@
         <span class="chapter-text" :title="chapter">
           {{ chapter }}
         </span>
-        <span class="process">
-          {{ progress }}%
-        </span>
+        <span class="process"> {{ progress }}% </span>
       </div>
       <!-- process -->
       <el-row v-else class="footer-slider" justify="center" align="middle">
@@ -104,7 +103,6 @@ onReady(() => {
     }
   })
 })
-
 </script>
 
 <style scoped lang="scss">
@@ -181,10 +179,19 @@ onReady(() => {
   color: #409efc;
 }
 
+// toc
+:deep(.toc-header) {
+  margin-bottom: 0;
+}
+
 .tree {
   :deep(.el-tree-node__content) {
     min-height: var(--el-tree-node-content-height);
     height: auto;
+
+    .el-tree-node__expand-icon.is-leaf {
+      display: none;
+    }
 
     .el-tree-node__label {
       white-space: normal;
