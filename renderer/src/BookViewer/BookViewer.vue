@@ -29,7 +29,7 @@
   <!-- import -->
   <div v-else class="import-file" v-loading="vscode ? true : false">
     <el-upload v-if="!vscode" class="select-button" :on-change="onchange" :auto-upload="false"
-      accept=".epub,.mobi,.fk8,.azw3,.fb2,.cbz,.pdf" :show-file-list="false">
+      accept=".epub,.mobi,.fk8,.azw3,.fb2,.cbz,.pdf,.txt" :show-file-list="false">
       <el-button type="primary">select file</el-button>
     </el-upload>
   </div>
