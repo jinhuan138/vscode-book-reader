@@ -27,8 +27,8 @@
     <CodeInterface />
   </div>
   <!-- import -->
-  <div v-else class="import-file">
-    <el-upload class="select-button" :on-change="onchange" :auto-upload="false"
+  <div v-else class="import-file" v-loading="vscode ? true : false">
+    <el-upload v-if="!vscode" class="select-button" :on-change="onchange" :auto-upload="false"
       accept=".epub,.mobi,.fk8,.azw3,.fb2,.cbz,.pdf" :show-file-list="false">
       <el-button type="primary">select file</el-button>
     </el-upload>
@@ -52,6 +52,7 @@ import useDisguise from '@/hooks/useDisguise'
 import useProcessDisplay from '@/hooks/useProcessDisplay'
 import '@/hooks/useKeyboard'
 import useInfo from '@/hooks/useInfo'
+import useVscode from '@/hooks/useVscode'
 
 const { url, addBook } = useStore()
 const info = useInfo()
@@ -86,6 +87,7 @@ const chapter = useChapter()
 const location = useLocation()
 const { progress, changeProgress, labelFromPercentage, goBack } = useProgress()
 
+const vscode = useVscode()
 const onchange = (file: UploadFile) => {
   addBook(file)
 }
