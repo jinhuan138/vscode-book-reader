@@ -1,7 +1,7 @@
 import * as vscode from 'vscode'
 import { BookViewerProvider } from './core/bookViewerProvider'
 import { SidebarViewerProvider } from './core/sidebar/sidebarViewerProvider'
-import { SidebarBookListProvider, type Book, type TreeItem } from './core/sidebar/sidebarBookListProvider'
+import { SidebarBookListProvider } from './core/sidebar/sidebarBookListProvider'
 import { Store } from './core/store'
 
 //https://rackar.github.io/vscode-ext-doccn
@@ -20,40 +20,5 @@ export function activate(context: vscode.ExtensionContext) {
   // 注册侧边栏阅读
   vscode.window.registerWebviewViewProvider('bookReaderSidebar', new SidebarViewerProvider(context), option)
   // 侧边栏书籍列表
-  const sidebarBookListProvider = new SidebarBookListProvider()
-  vscode.window.createTreeView('bookReaderList', {
-    treeDataProvider: sidebarBookListProvider,
-    showCollapseAll: false,
-  })
-  const disposable = vscode.commands.registerCommand('book-reader.selectBookFolder', () =>
-    sidebarBookListProvider.selectBookFolder(),
-  )
-  context.subscriptions.push(disposable)
-  //book list打开书籍命令
-  const openBookCommand = vscode.commands.registerCommand('book-reader.openBook', (book: Book) => {
-    if (!book.uri) return
-    if (Store.webviewMap.has(book.uri.toString())) {
-      Store.webviewMap.get(book.uri.toString())?.reveal()
-    } else {
-      const panel = vscode.window.createWebviewPanel('bookReaderPanel', book.title, vscode.ViewColumn.Active)
-      new BookViewerProvider(context).createBookPanel(book.uri, panel)
-    }
-  })
-  context.subscriptions.push(openBookCommand)
-  //book list在侧边栏打开书籍命令
-  const openBookInSidebarCommand = vscode.commands.registerCommand(
-    'book-reader.openBookInSidebar',
-    (treeItem: TreeItem) => {
-      const book = treeItem.book
-      if (!book.uri) return
-      const sliderWebview = Store.sliderWebview
-      // 在侧边栏打开书籍
-      sliderWebview?.show(true)
-      sliderWebview?.webview.postMessage({
-        type: 'openBook',
-        content: sliderWebview?.webview.asWebviewUri(book.uri).toString(),
-      })
-    },
-  )
-  context.subscriptions.push(openBookInSidebarCommand)
+  SidebarBookListProvider.getInstance().initialize(context)
 }

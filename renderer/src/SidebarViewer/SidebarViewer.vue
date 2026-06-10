@@ -59,6 +59,8 @@ import useChapter from '@/hooks/useChapter'
 import useInfo from '@/hooks/useInfo'
 import '@/hooks/useKeyboard'
 import localforage from 'localforage'
+import useDisguise from '@/hooks/useDisguise'
+const { showBook } = useDisguise()
 
 const { url, addBook, closeBook } = useStore()
 const info = useInfo()
@@ -87,6 +89,7 @@ const style = computed(() => {
     width: '100%',
     height: '100vh',
     position: 'relative' as const,
+    display: showBook.value ? 'block' : 'none',
   }
 })
 const onchange = (file: UploadFile) => {

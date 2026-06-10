@@ -27,7 +27,11 @@ async function getMd5(file: Blob): Promise<string> {
 }
 
 const closeBook = () => {
-  rendition.value?.close()
+  try {
+    rendition.value?.close()
+  } catch (e) {
+    console.warn('rendition close failed', e)
+  }
   bookKey.value = null
   url.value = null
   rendition.value = null

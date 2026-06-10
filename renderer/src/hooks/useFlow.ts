@@ -1,4 +1,4 @@
-import { watch, onMounted, onUnmounted } from 'vue'
+import { watch, onMounted } from 'vue'
 import useVscode from './useVscode'
 import { rendition, onReady } from './useRendition'
 import { isSidebar } from './useSidebar'
@@ -17,9 +17,6 @@ export default function useFlow() {
 
   onMounted(() => {
     window.addEventListener('keydown', handleSetFlow)
-  })
-  onUnmounted(() => {
-    window.removeEventListener('keydown', handleSetFlow)
   })
   const setFlow = (flow: string) => {
     rendition.value?.renderer.setAttribute('flow', flow)

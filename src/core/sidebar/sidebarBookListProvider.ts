@@ -1,6 +1,92 @@
 import * as vscode from 'vscode'
 import * as path from 'path'
+import { BookViewerProvider } from '../bookViewerProvider'
+import { Store } from '../store'
 
+// ─── 假文件生成相关 ────────────────────────────────────────────
+const FILE_TYPES = [
+  { ext: '.ts', names: ['index', 'main', 'app', 'config', 'utils', 'helper', 'service', 'controller', 'model', 'router', 'types', 'store', 'hooks'] },
+  { ext: '.tsx', names: ['App', 'Layout', 'Header', 'Footer', 'Button', 'Input', 'Modal', 'Table', 'Form', 'Card', 'List', 'Sidebar'] },
+  { ext: '.js', names: ['index', 'main', 'app', 'config', 'utils', 'webpack.config', 'babel.config', 'jest.config', 'vite.config'] },
+  { ext: '.json', names: ['package', 'tsconfig', 'settings', 'data', 'schema', 'manifest'] },
+  { ext: '.md', names: ['README', 'CHANGELOG', 'CONTRIBUTING', 'TODO', 'NOTES', 'API'] },
+  { ext: '.scss', names: ['index', 'main', '_variables', '_mixins', '_layout', '_components', 'theme'] },
+  { ext: '.vue', names: ['App', 'Home', 'About', 'Login', 'Dashboard', 'Profile', 'Settings', 'Header', 'Footer', 'Sidebar'] },
+  { ext: '.go', names: ['main', 'server', 'handler', 'router', 'model', 'config', 'utils'] },
+  { ext: '.yml', names: ['docker-compose', 'workflow', 'config', 'build', 'deploy', 'ci'] },
+]
+const FOLDER_NAMES = [
+  'src', 'lib', 'test', 'tests', 'docs', 'public', 'assets',
+  'config', 'scripts', 'utils', 'helpers', 'components', 'pages',
+  'api', 'models', 'views', 'controllers', 'services', 'hooks',
+]
+
+function makeRand(seed: number) {
+  let s = seed
+  return () => {
+    s = (s * 1664525 + 1013904223) & 0x7fffffff
+    return s / 0x7fffffff
+  }
+}
+function pick<T>(arr: T[], rand: () => number): T {
+  return arr[Math.floor(rand() * arr.length)]
+}
+function shuffle<T>(arr: T[], rand: () => number): T[] {
+  const a = [...arr]
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]]
+  }
+  return a
+}
+
+class FakeFileItem extends vscode.TreeItem {
+  children?: FakeFileItem[]
+  constructor(name: string, isFolder: boolean, children?: FakeFileItem[]) {
+    super(name, isFolder ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None)
+    this.children = children
+    this.resourceUri = vscode.Uri.file(`/fake-project/${name}`)
+    if (!isFolder) {
+      this.command = {
+        command: 'book-reader.showBookList',
+        title: 'Show Books',
+        arguments: [],
+      }
+    }
+  }
+}
+
+function generateFakeTree(seed: number): FakeFileItem[] {
+  const rand = makeRand(seed)
+  const items: FakeFileItem[] = []
+  const folderCount = 2 + Math.floor(rand() * 3)
+  const folders = shuffle(FOLDER_NAMES, rand).slice(0, folderCount)
+  for (const folderName of folders) {
+    const fileCount = 2 + Math.floor(rand() * 5)
+    const files: FakeFileItem[] = []
+    const usedNames = new Set<string>()
+    for (let i = 0; i < fileCount; i++) {
+      const type = pick(FILE_TYPES, rand)
+      const baseName = pick(type.names, rand)
+      let fileName = `${baseName}${type.ext}`
+      if (usedNames.has(fileName)) fileName = `${baseName}2${type.ext}`
+      usedNames.add(fileName)
+      files.push(new FakeFileItem(fileName, false))
+    }
+    items.push(new FakeFileItem(folderName, true, files))
+  }
+  const rootFiles = shuffle(
+    [
+      { name: 'package.json' }, { name: 'tsconfig.json' }, { name: 'README.md' },
+      { name: '.gitignore' }, { name: 'vite.config.ts' }, { name: 'jest.config.js' },
+    ],
+    rand,
+  ).slice(0, 1 + Math.floor(rand() * 3))
+  for (const f of rootFiles) items.push(new FakeFileItem(f.name, false))
+  return items
+}
+
+// ─── 书籍相关类型 ──────────────────────────────────────────────
 export interface Book {
   /** 书籍ID */
   id: string
@@ -46,10 +132,22 @@ export class TreeItem extends vscode.TreeItem {
 /**
  * 侧边栏的书籍列表-树数据提供者
  */
-export class SidebarBookListProvider implements vscode.TreeDataProvider<TreeItem> {
-  private _onDidChangeTreeData: vscode.EventEmitter<TreeItem | undefined | null | void> = new vscode.EventEmitter<
-    TreeItem | undefined | null | void
-  >()
+export class SidebarBookListProvider implements vscode.TreeDataProvider<vscode.TreeItem> {
+  private static instance: SidebarBookListProvider
+
+  /** 是否处于伪装模式（运行时状态） */
+  private isDisguised = false
+  /** 当前伪装文件树 */
+  private fakeTree: FakeFileItem[] = []
+
+  public static getInstance(): SidebarBookListProvider {
+    if (!SidebarBookListProvider.instance) {
+      SidebarBookListProvider.instance = new SidebarBookListProvider()
+    }
+    return SidebarBookListProvider.instance
+  }
+
+  private _onDidChangeTreeData = new vscode.EventEmitter<vscode.TreeItem | undefined | null | void>()
 
   // 当数据改变时，树视图会监听此事件
   onDidChangeTreeData = this._onDidChangeTreeData.event
@@ -59,7 +157,7 @@ export class SidebarBookListProvider implements vscode.TreeDataProvider<TreeItem
   private bookList: Book[] = []
 
   // 支持的电子书扩展名
-  private readonly supportedExtensions = ['.epub', '.mobi', '.azw3', '.pdf', '.fk8', '.fb2', '.cbz','.txt']
+  private readonly supportedExtensions = ['.epub', '.mobi', '.azw3', '.pdf', '.fk8', '.fb2', '.cbz', '.txt']
 
   constructor() {
     const config = vscode.workspace.getConfiguration('book-reader')
@@ -76,7 +174,23 @@ export class SidebarBookListProvider implements vscode.TreeDataProvider<TreeItem
     }
   }
 
-  getChildren(element?: TreeItem): Promise<TreeItem[]> {
+  /**
+   * 切换伪装模式
+   * @param disguised true=显示假文件，false=显示真实书单
+   */
+  public setDisguised(disguised: boolean): void {
+    this.isDisguised = disguised
+    if (disguised) this.fakeTree = generateFakeTree(Date.now())
+    this._onDidChangeTreeData.fire()
+  }
+
+  getChildren(element?: vscode.TreeItem): Promise<vscode.TreeItem[]> {
+    // 伪装模式：返回假文件树
+    if (this.isDisguised) {
+      if (!element) return Promise.resolve(this.fakeTree)
+      return Promise.resolve((element as FakeFileItem).children ?? [])
+    }
+    // 正常模式：返回书单
     if (!element) {
       const folderItem = new TreeItem(
         {
@@ -93,7 +207,7 @@ export class SidebarBookListProvider implements vscode.TreeDataProvider<TreeItem
     return Promise.resolve([])
   }
 
-  getTreeItem(element: TreeItem): TreeItem {
+  getTreeItem(element: vscode.TreeItem): vscode.TreeItem {
     return element
   }
 
@@ -118,6 +232,7 @@ export class SidebarBookListProvider implements vscode.TreeDataProvider<TreeItem
         }
       })
   }
+
   /**
    * 获取文件夹下的书籍文件并更新列表
    */
@@ -129,7 +244,6 @@ export class SidebarBookListProvider implements vscode.TreeDataProvider<TreeItem
 
     try {
       // 读取目录下的所有文件和子目录
-      // readDirectory 返回 [string, FileType][] 数组
       const files = await vscode.workspace.fs.readDirectory(this.folder)
       const newBookList: Book[] = []
 
@@ -142,27 +256,72 @@ export class SidebarBookListProvider implements vscode.TreeDataProvider<TreeItem
         // 检查扩展名是否支持
         const ext = path.extname(name).toLowerCase()
         if (this.supportedExtensions.includes(ext)) {
-          const fileUri = vscode.Uri.joinPath(this.folder, name)
+          const fileUri = vscode.Uri.joinPath(this.folder!, name)
 
-          // 构造 Book 对象
           const book: Book = {
-            id: '', // 使用 URI 字符串作为唯一 ID
+            id: '',
             uri: fileUri,
             title: name,
-            excerpt: '', // 简单摘要
-            imgUrl: '', // 暂时为空，后续可提取封面
+            excerpt: '',
+            imgUrl: '',
           }
           newBookList.push(book)
         }
       }
 
-      // 更新列表
       this.bookList = newBookList
-      // 通知树视图数据已更改，触发重新渲染
       this._onDidChangeTreeData.fire()
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Failed to read book directory:', error)
       vscode.window.showErrorMessage(`读取书籍文件夹失败: ${error}`)
     }
+  }
+
+  public initialize(context: vscode.ExtensionContext): void {
+    const treeView = vscode.window.createTreeView('bookReaderList', {
+      treeDataProvider: this,
+      showCollapseAll: false,
+    })
+
+    const selectFolderCmd = vscode.commands.registerCommand('book-reader.selectBookFolder', () =>
+      this.selectBookFolder(),
+    )
+
+    const openBookCmd = vscode.commands.registerCommand('book-reader.openBook', (book: Book) => {
+      if (!book.uri) return
+      if (Store.webviewMap.has(book.uri.toString())) {
+        Store.webviewMap.get(book.uri.toString())?.reveal()
+      } else {
+        const panel = vscode.window.createWebviewPanel('bookReaderPanel', book.title, vscode.ViewColumn.Active)
+        new BookViewerProvider(context).createBookPanel(book.uri, panel)
+      }
+      // 开书后如果伪装开关已开，切换到假文件列表
+      const disguiseEnabled = vscode.workspace.getConfiguration('book-reader').get<boolean>('disguise', false)
+      if (disguiseEnabled) this.setDisguised(true)
+    })
+
+    const openBookInSidebarCmd = vscode.commands.registerCommand(
+      'book-reader.openBookInSidebar',
+      (treeItem: TreeItem) => {
+        const book = treeItem.book
+        if (!book.uri) return
+        const sliderWebview = Store.sliderWebview
+        sliderWebview?.show(true)
+        sliderWebview?.webview.postMessage({
+          type: 'openBook',
+          content: sliderWebview?.webview.asWebviewUri(book.uri).toString(),
+        })
+        // 开书后如果伪装开关已开，切换到假文件列表
+        const disguiseEnabled = vscode.workspace.getConfiguration('book-reader').get<boolean>('disguise', false)
+        if (disguiseEnabled) this.setDisguised(true)
+      },
+    )
+
+    // 点击假文件 → 恢复真实书单
+    const showBookListCmd = vscode.commands.registerCommand('book-reader.showBookList', () => {
+      this.setDisguised(false)
+    })
+
+    context.subscriptions.push(treeView, selectFolderCmd, openBookCmd, openBookInSidebarCmd, showBookListCmd)
   }
 }

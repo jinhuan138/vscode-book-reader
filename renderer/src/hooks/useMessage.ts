@@ -1,14 +1,15 @@
-import { onUnmounted } from 'vue'
 import useStore from '@/hooks/useStore'
 import useFlow from '@/hooks/useFlow'
 import { isSidebar } from '@/hooks/useSidebar'
 import useAnimation from '@/hooks/useAnimation'
 import useTheme from '@/hooks/useTheme'
+import useDisguise from '@/hooks/useDisguise'
 
 const { addBook } = useStore()
 const flow = useFlow()
 const { theme } = useTheme()
 const animation = useAnimation()
+const { disguise, active } = useDisguise()
 
 const handleMessage = ({ data }) => {
   if (data) {
@@ -31,13 +32,27 @@ const handleMessage = ({ data }) => {
         flow.value = data.content
         break
       case 'animation':
-        animation.value = JSON.parse(data.content)
+        animation.value = Boolean(data.content)
+        break
+      case 'disguise':
+        disguise.value = Boolean(data.content)
+        break
+      case 'active':
+        active.value = Boolean(data.content)
         break
     }
   }
 }
-
 window.addEventListener('message', handleMessage)
-onUnmounted(() => {
-  window.removeEventListener('message', handleMessage)
+window.focus()
+window.addEventListener('blur', () => {
+  if (disguise.value && isSidebar.value) {
+    active.value = false
+  }
+})
+
+window.addEventListener('focus', () => {
+  if (disguise.value && isSidebar.value) {
+    active.value = true
+  }
 })
