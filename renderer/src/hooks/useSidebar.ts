@@ -6,18 +6,23 @@ import localforage from 'localforage'
 const { addBook, url } = useStore()
 const firstLoad = ref(true)
 
-export const isSidebar = ref(false)
+export const isSidebar = ref<boolean>(false)
 //store last book
-watch([isSidebar, url], async ([is, u]) => {
-  if (is) {
-    if (!u && firstLoad.value) {
-      firstLoad.value = false
-      const lastBook = await localforage.getItem('lastBook')
-      if (lastBook) {
-        addBook(lastBook as string | UploadFile)
+watch(
+  [isSidebar, url],
+  async ([is, currentBook]) => {
+    if (is) {
+      if (!currentBook && firstLoad.value) {
+        firstLoad.value = false
+        const lastBook = await localforage.getItem('lastBook')
+        console.log('lastBook:', lastBook)
+        if (lastBook) {
+          addBook(lastBook as string | UploadFile)
+        }
+      } else {
+        localforage.setItem('lastBook', currentBook)
       }
-    } else {
-      localforage.setItem('lastBook', u)
     }
-  }
-})
+  },
+  { immediate: true },
+)

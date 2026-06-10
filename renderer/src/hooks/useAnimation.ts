@@ -6,7 +6,7 @@ import { isSidebar } from './useSidebar'
 
 const vscode = useVscode()
 export default function useAnimation() {
-  const animation = useLocalStorage('animation', false)
+  const animation = useLocalStorage<boolean>('animation', false)
   const setAnimation = (animated: boolean) => {
     if (animated) {
       rendition.value.renderer.setAttribute('animated', '')

@@ -12,17 +12,13 @@ const disguise = useLocalStorage<boolean>('disguise', false)
 const active = ref<boolean>(true)
 const showBook = ref(true)
 const title = computed(() => {
-  return active.value ? info.value!.title : fileName
+  if (active.value) {
+    return info.value?.title
+  } else {
+    return isSidebar.value ? '' : fileName
+  }
 })
 
-window.addEventListener('message', ({ data }) => {
-  if (!disguise.value) {
-    return
-  }
-  if (data && data.type === 'active') {
-    active.value = data.content
-  }
-})
 document.body.onkeydown = function (event: KeyboardEvent) {
   // 禁用空格键的默认滚动行为
   if (event.key === ' ' || event.code === 'Space') {
@@ -31,7 +27,7 @@ document.body.onkeydown = function (event: KeyboardEvent) {
   }
 }
 export default function useDisguise() {
-  watch(disguise, (enabled) => {
+  watch(disguise, (enabled: boolean) => {
     if (!enabled) {
       showBook.value = true
     }
@@ -54,11 +50,11 @@ export default function useDisguise() {
     }
     return lines
   })
-  watch(active, (val) => {
+  watch(active, (isActive: boolean) => {
     if (!disguise.value) {
       return
     }
-    if (val) {
+    if (isActive) {
       setTimeout(() => {
         showBook.value = true
       }, 300)

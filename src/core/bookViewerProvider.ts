@@ -1,5 +1,6 @@
 import * as vscode from 'vscode'
 import { readFileSync } from 'fs'
+import { SidebarBookListProvider } from './sidebar/sidebarBookListProvider'
 import { dirname } from 'path'
 import { translate } from 'bing-translate-api'
 import { Store } from '../core/store'
@@ -12,7 +13,7 @@ export class BookViewerProvider implements vscode.CustomReadonlyEditorProvider {
   }
 
   public openCustomDocument(uri: vscode.Uri): vscode.CustomDocument | Thenable<vscode.CustomDocument> {
-    return { uri, dispose: (): void => {} }
+    return { uri, dispose: (): void => { } }
   }
 
   public updateSliderWebview(type: string, content: any) {
@@ -37,7 +38,7 @@ export class BookViewerProvider implements vscode.CustomReadonlyEditorProvider {
     }
     webview.options = {
       enableScripts: true,
-      localResourceRoots: [vscode.Uri.file(this._context.extensionPath),vscode.Uri.file(dirname(uri.fsPath))],
+      localResourceRoots: [vscode.Uri.file(this._context.extensionPath), vscode.Uri.file(dirname(uri.fsPath))],
     }
     webview.onDidReceiveMessage(async (message) => {
       switch (message.type) {
@@ -108,6 +109,15 @@ export class BookViewerProvider implements vscode.CustomReadonlyEditorProvider {
                 content: 'translate error',
               })
             })
+          break
+        case 'disguise':
+          this._context.globalState.update('disguise', message.content)
+          this.updateSliderWebview(message.type, message.content)
+          vscode.workspace.getConfiguration('book-reader')
+            .update('disguise', message.content, vscode.ConfigurationTarget.Global)
+          if (!message.content) {
+            SidebarBookListProvider.getInstance().setDisguised(false)
+          }
           break
       }
     })

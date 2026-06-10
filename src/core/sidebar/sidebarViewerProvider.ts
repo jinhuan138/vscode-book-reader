@@ -51,7 +51,12 @@ export class SidebarViewerProvider implements vscode.WebviewViewProvider {
         case 'init':
           webview.postMessage({
             type: 'isSidebar',
-            content: 'true',
+            content: true,
+          })
+          const disguiseEnabled = vscode.workspace.getConfiguration('book-reader').get<boolean>('disguise', false)
+          webview.postMessage({
+            type: 'disguise',
+            content: disguiseEnabled,
           })
           break
         case 'title':
