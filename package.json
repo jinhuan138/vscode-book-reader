@@ -51,6 +51,16 @@
         "command": "book-reader.openBookInSidebar",
         "title": "Open in Sidebar",
         "icon": "$(open-preview)"
+      },
+      {
+        "command": "book-reader.toggleSidebarDisguise",
+        "title": "Toggle Sidebar Disguise Mode",
+        "icon": "$(eye)"
+      },
+      {
+        "command": "book-reader.refreshBookList",
+        "title": "Refresh Book List",
+        "icon": "$(refresh)"
       }
     ],
     "viewsContainers": {
@@ -112,9 +122,19 @@
     "menus": {
       "view/title": [
         {
-          "command": "book-reader.selectBookFolder",
+          "command": "book-reader.refreshBookList",
           "when": "view == bookReaderList",
           "group": "navigation@1"
+        },
+        {
+          "command": "book-reader.toggleSidebarDisguise",
+          "when": "view == bookReaderList",
+          "group": "navigation@2"
+        },
+        {
+          "command": "book-reader.selectBookFolder",
+          "when": "view == bookReaderList",
+          "group": "navigation@3"
         }
       ],
       "view/item/context": [
@@ -133,10 +153,10 @@
           "default": "",
           "description": "Path to the folder containing books"
         },
-        "book-reader.disguise": {
+        "book-reader.sidebarDisguise": {
           "type": "boolean",
           "default": false,
-          "description": "Enable disguise mode to hide book content when not focused"
+          "description": "Show fake file list in sidebar and hide reader content on blur"
         }
       }
     }
