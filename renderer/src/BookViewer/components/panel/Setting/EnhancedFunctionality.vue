@@ -3,10 +3,13 @@
     <el-form-item label="Grayscale Mode">
       <el-switch v-model="theme.grayscale" />
     </el-form-item>
-    <el-form-item label="Disguise">
+    <el-form-item label="Code Disguise">
       <el-tooltip content="Space → Toggle Disguise" placement="top">
-        <el-switch v-model="disguise" />
+        <el-switch v-model="codeDisguise" />
       </el-tooltip>
+    </el-form-item>
+    <el-form-item label="Sidebar Disguise">
+      <el-switch v-model="sidebarDisguise" />
     </el-form-item>
     <el-form-item label="Text To Speech">
       <el-switch v-model="isReading" />
@@ -30,5 +33,5 @@ import useTheme from '@/hooks/useTheme'
 
 const { isReading, voiceIndex, voices, speed, speedList } = useTTS()
 const { theme } = useTheme()
-const { disguise } = useDisguise()
+const { codeDisguise, sidebarDisguise } = useDisguise()
 </script>

@@ -8,7 +8,8 @@ const lineCount = ref(100)
 const fileType = ref('')
 const vscode = useVscode()
 const info = useInfo()
-const disguise = useLocalStorage<boolean>('disguise', false)
+const codeDisguise = useLocalStorage<boolean>('codeDisguise', false)
+const sidebarDisguise = useLocalStorage<boolean>('sidebarDisguise', false)
 const active = ref<boolean>(true)
 const showBook = ref(true)
 const title = computed(() => {
@@ -27,7 +28,7 @@ document.body.onkeydown = function (event: KeyboardEvent) {
   }
 }
 export default function useDisguise() {
-  watch(disguise, (enabled: boolean) => {
+  watch(codeDisguise, (enabled: boolean) => {
     if (!enabled) {
       showBook.value = true
     }
@@ -51,7 +52,7 @@ export default function useDisguise() {
     return lines
   })
   watch(active, (isActive: boolean) => {
-    if (!disguise.value) {
+    if (!codeDisguise.value) {
       return
     }
     if (isActive) {
@@ -69,7 +70,7 @@ export default function useDisguise() {
     }
   })
 
-  return { disguise, active, showBook, codeLines }
+  return { codeDisguise, sidebarDisguise, active, showBook, codeLines }
 }
 /** 文件类型映射表 */
 

@@ -110,14 +110,16 @@ export class BookViewerProvider implements vscode.CustomReadonlyEditorProvider {
               })
             })
           break
-        case 'disguise':
-          this._context.globalState.update('disguise', message.content)
+        case 'codeDisguise':
+          this._context.globalState.update('codeDisguise', message.content)
           this.updateSliderWebview(message.type, message.content)
           vscode.workspace.getConfiguration('book-reader')
-            .update('disguise', message.content, vscode.ConfigurationTarget.Global)
-          if (!message.content) {
-            SidebarBookListProvider.getInstance().setDisguised(false)
-          }
+            .update('codeDisguise', message.content, vscode.ConfigurationTarget.Global)
+          break
+        case 'sidebarDisguise':
+          vscode.workspace.getConfiguration('book-reader')
+            .update('sidebarDisguise', message.content, vscode.ConfigurationTarget.Global)
+          SidebarBookListProvider.getInstance().setDisguised(message.content)
           break
       }
     })

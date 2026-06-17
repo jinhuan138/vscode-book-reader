@@ -9,7 +9,7 @@ const { addBook } = useStore()
 const flow = useFlow()
 const { theme } = useTheme()
 const animation = useAnimation()
-const { disguise, active } = useDisguise()
+const { codeDisguise, sidebarDisguise, active } = useDisguise()
 
 const handleMessage = ({ data }) => {
   if (data) {
@@ -34,8 +34,11 @@ const handleMessage = ({ data }) => {
       case 'animation':
         animation.value = Boolean(data.content)
         break
-      case 'disguise':
-        disguise.value = Boolean(data.content)
+      case 'codeDisguise':
+        codeDisguise.value = Boolean(data.content)
+        break
+      case 'sidebarDisguise':
+        sidebarDisguise.value = Boolean(data.content)
         break
       case 'active':
         active.value = Boolean(data.content)
@@ -46,13 +49,13 @@ const handleMessage = ({ data }) => {
 window.addEventListener('message', handleMessage)
 window.focus()
 window.addEventListener('blur', () => {
-  if (disguise.value && isSidebar.value) {
+  if (!document.hasFocus() && codeDisguise.value && isSidebar.value) {
     active.value = false
   }
 })
 
 window.addEventListener('focus', () => {
-  if (disguise.value && isSidebar.value) {
+  if (codeDisguise.value && isSidebar.value) {
     active.value = true
   }
 })

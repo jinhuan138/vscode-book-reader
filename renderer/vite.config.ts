@@ -12,9 +12,9 @@ export default defineConfig({
   plugins: [
     vue(),
     viteSingleFile(),
-    visualizer({
-      filename: `stats${version}.html`,
-    }) as PluginOption,
+    // visualizer({
+    //   filename: `stats${version}.html`,
+    // }) as PluginOption,
     AutoImport({
       resolvers: [ElementPlusResolver()],
     }),

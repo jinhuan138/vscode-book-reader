@@ -1,6 +1,6 @@
 <template>
   <Transition>
-    <div id="disguise-code-interface" class="disguise-code-interface" v-show="disguise && !active">
+    <div id="disguise-code-interface" class="disguise-code-interface" v-show="codeDisguise && !active">
       <!-- Main content area -->
       <div class="disguise-main-content">
         <!-- Line numbers area -->
@@ -21,10 +21,7 @@
 </template>
 <script setup>
 import useDisguise from '@/hooks/useDisguise'
-const { active, disguise, codeLines } = useDisguise()
-// setInterval(() => {
-//   active.value = !active.value
-// }, 1000)
+const { active, codeDisguise, codeLines } = useDisguise()
 </script>
 <style scoped>
 .v-enter-active,
