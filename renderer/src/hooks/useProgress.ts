@@ -1,5 +1,5 @@
 import { ref } from 'vue'
-import { rendition, onReady } from './useRendition'
+import { rendition, onReady, onClose } from './useRendition'
 export default function useProgress() {
   const progress = ref<number>(0)
   const changeProgress = (val: number) => {
@@ -22,6 +22,10 @@ export default function useProgress() {
 
   onReady(() => {
     rendition.value.addEventListener('relocate', onRelocate)
+  })
+
+  onClose(() => {
+    progress.value = 0
   })
 
   return { progress, changeProgress, labelFromPercentage, goBack }

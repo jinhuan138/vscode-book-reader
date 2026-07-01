@@ -1,5 +1,5 @@
 import { ref } from 'vue'
-import { rendition, onReady } from './useRendition'
+import { rendition, onReady, onClose } from './useRendition'
 
 export type TocItem = {
   id: number
@@ -12,6 +12,10 @@ export default function useToc() {
 
   onReady(() => {
     toc.value = rendition.value.book.toc
+  })
+
+  onClose(() => {
+    toc.value = []
   })
 
   return toc

@@ -1,5 +1,5 @@
 import { ref } from 'vue'
-import { rendition, onReady } from './useRendition'
+import { rendition, onReady, onClose } from './useRendition'
 
 const getLabel = (toc, href) => {
   let label = 'n/a'
@@ -27,5 +27,10 @@ export default function useChapter() {
   onReady(() => {
     rendition.value.addEventListener('relocate', onRelocate)
   })
+
+  onClose(() => {
+    page.value = ''
+  })
+
   return page
 }

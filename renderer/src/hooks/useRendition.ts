@@ -1,12 +1,21 @@
 import { ref, watch } from 'vue'
 export const rendition = ref<any>(null)
 
-const listeners = new Set<() => void>()
+const readyListeners = new Set<() => void>()
+const closeListeners = new Set<() => void>()
+
 export function onReady(callback: () => void) {
-  listeners.add(callback)
+  readyListeners.add(callback)
 }
+
+export function onClose(callback: () => void) {
+  closeListeners.add(callback)
+}
+
 watch(rendition, (r) => {
   if (r) {
-    listeners.forEach((cb) => cb())
+    readyListeners.forEach((cb) => cb())
+  } else {
+    closeListeners.forEach((cb) => cb())
   }
 })
