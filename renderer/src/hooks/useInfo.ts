@@ -19,7 +19,7 @@ export interface Highlight {
 }
 export interface BookInfo {
   id: string
-  lastLocation: string | number
+  lastLocation: string | number | undefined
   bookmarks: Bookmark[]
   highlights: Highlight[]
   title?: string

@@ -61,7 +61,7 @@ const addBook = async (book: UploadFile | string) => {
   if (!existingBook) {
     bookList.value.push({
       id,
-      lastLocation: 0,
+      lastLocation: undefined,
       bookmarks: [],
       highlights: [],
     })
