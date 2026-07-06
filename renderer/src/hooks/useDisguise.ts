@@ -34,7 +34,7 @@ export default function useDisguise() {
     }
     if (!isSidebar.value && vscode) {
       vscode.postMessage({
-        type: 'disguise',
+        type: 'codeDisguise',
         content: enabled,
       })
     }

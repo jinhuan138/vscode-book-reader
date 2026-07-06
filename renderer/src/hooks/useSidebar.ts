@@ -7,10 +7,11 @@ const { addBook, url } = useStore()
 const firstLoad = ref(true)
 
 export const isSidebar = ref<boolean>(false)
-//store last book
+
+// store last book
 watch(
   [isSidebar, url],
-  async ([is, currentBook]) => {
+  async ([is, currentBook]: [boolean, null | UploadFile['raw'] | File | string]) => {
     if (is) {
       if (!currentBook && firstLoad.value) {
         firstLoad.value = false
@@ -19,7 +20,7 @@ watch(
         if (lastBook) {
           addBook(lastBook as string | UploadFile)
         }
-      } else {
+      } else if (currentBook) {
         localforage.setItem('lastBook', currentBook)
       }
     }

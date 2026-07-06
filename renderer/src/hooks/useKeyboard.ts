@@ -1,18 +1,16 @@
 import useDisguise from '@/hooks/useDisguise'
-import { rendition, onReady } from './useRendition'
+import { rendition } from './useRendition'
+import { watch } from 'vue'
 const { active } = useDisguise()
 type Direction = 'next' | 'prev'
 function keyListener(el: HTMLElement, fn: (dire: Direction) => void) {
   el.addEventListener(
     'keyup',
     (e: KeyboardEvent) => {
-      // Right or up arrow key indicates next
       if (e.key === 's' || e.key === 'd') {
-        fn('next')
-      }
-      // left or down arrow key indicates next
-      else if (e.key === 'a' || e.key === 'w') {
-        fn('prev')
+        active.value && fn('next')
+      } else if (e.key === 'a' || e.key === 'w') {
+        active.value && fn('prev')
       }
       if (e.key === ' ' || e.code === 'Space') {
         active.value = !active.value
@@ -29,12 +27,30 @@ const flipPage = (direction: string) => {
     rendition.value.prev()
   }
 }
+
+const focusRenderer = () => {
+  rendition.value?.renderer.focus()
+}
+
 ;(function useKeyboard() {
-  onReady(() => {
-    rendition.value.addEventListener('load', (event: any) => {
-      const doc = event.detail.doc
-      rendition.value.renderer.focus()
-      keyListener(doc, flipPage)
-    })
+  watch(
+    rendition,
+    (newRendition: any) => {
+      if (!newRendition) return
+      newRendition.addEventListener('load', (event: any) => {
+        const doc = event.detail.doc
+        newRendition.renderer.focus()
+        keyListener(doc, flipPage)
+      })
+    },
+    { flush: 'sync' },
+  )
+
+  window.addEventListener('focus', focusRenderer)
+
+  watch(active, (isActive: boolean) => {
+    if (isActive) {
+      focusRenderer()
+    }
   })
 })()
