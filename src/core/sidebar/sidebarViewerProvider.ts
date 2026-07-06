@@ -46,6 +46,12 @@ export class SidebarViewerProvider implements vscode.WebviewViewProvider {
         this.updateLocalResourceRoots(webview)
       }
     })
+    let hasFocused = false
+    vscode.window.onDidChangeActiveTextEditor(() => {
+      if (hasFocused) {
+        webview.postMessage({ type: 'active', content: false })
+      }
+    })
     webview.onDidReceiveMessage(async (message) => {
       switch (message.type) {
         case 'init':
@@ -92,6 +98,9 @@ export class SidebarViewerProvider implements vscode.WebviewViewProvider {
               forceNewWindow: true,
             })
           }
+          break
+        case 'focused':
+          hasFocused = true
           break
       }
     })

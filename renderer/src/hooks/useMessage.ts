@@ -4,7 +4,9 @@ import { isSidebar } from '@/hooks/useSidebar'
 import useAnimation from '@/hooks/useAnimation'
 import useTheme from '@/hooks/useTheme'
 import useDisguise from '@/hooks/useDisguise'
+import useVscode from '@/hooks/useVscode'
 
+const vscode = useVscode()
 const { addBook } = useStore()
 const flow = useFlow()
 const { theme } = useTheme()
@@ -22,11 +24,7 @@ const handleMessage = ({ data }) => {
         break
       case 'style':
         const newTheme = JSON.parse(data.content)
-        Object.keys(newTheme).forEach((key) => {
-          if (key in theme.value) {
-            theme.value[key] = newTheme[key]
-          }
-        })
+        theme.value = { ...theme.value, ...newTheme }
         break
       case 'flow':
         flow.value = data.content
@@ -58,4 +56,5 @@ window.addEventListener('focus', () => {
   if (codeDisguise.value && isSidebar.value) {
     active.value = true
   }
+  vscode?.postMessage({ type: 'focused' })
 })
