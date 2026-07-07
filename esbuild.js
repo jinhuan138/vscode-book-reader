@@ -11,4 +11,12 @@ esbuild
         minify: true,
         sourcemap: false,
     })
-    .catch(() => process.exit(1))
+    .then(() => {
+        console.log('esbuild: build succeeded ✅');
+        process.exit(0);
+    })
+    .catch((err) => {
+        console.error('esbuild: build failed ❌');
+        console.error(err);
+        process.exit(1);
+    });
