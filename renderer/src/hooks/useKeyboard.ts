@@ -20,7 +20,7 @@ function keyListener(el: HTMLElement, fn: (dire: Direction) => void) {
   )
 }
 
-const flipPage = (direction: string) => {
+const flipPage = (direction: Direction) => {
   if (direction === 'next') {
     rendition.value.next()
   } else if (direction === 'prev') {

@@ -39,6 +39,14 @@ export default function useDisguise() {
       })
     }
   })
+  watch(sidebarDisguise, (enabled: boolean) => {
+    if (!isSidebar.value && vscode) {
+      vscode.postMessage({
+        type: 'sidebarDisguise',
+        content: enabled,
+      })
+    }
+  })
   const codeLines = computed(() => {
     const generator = getCodeGenerator(fileType.value)
     const lines = []

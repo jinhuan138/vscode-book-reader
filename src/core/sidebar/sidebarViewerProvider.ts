@@ -59,15 +59,16 @@ export class SidebarViewerProvider implements vscode.WebviewViewProvider {
             type: 'isSidebar',
             content: true,
           })
-          const sidebarDisguiseEnabled = vscode.workspace.getConfiguration('book-reader').get<boolean>('sidebarDisguise', false)
           webview.postMessage({
             type: 'sidebarDisguise',
-            content: sidebarDisguiseEnabled,
+            content: vscode.workspace.getConfiguration('book-reader').get<boolean>('sidebarDisguise', false),
           })
           break
         case 'title':
           webviewView.title = message.content
-          this.title = message.content
+          if (message.content) {
+            webview.postMessage({ type: 'active', content: true })
+          }
           break
         case 'download':
           const imgName = `${this.title}${Date.now()}.jpg`
@@ -101,6 +102,11 @@ export class SidebarViewerProvider implements vscode.WebviewViewProvider {
           break
         case 'focused':
           hasFocused = true
+          break
+        case 'sidebarDisguise':
+          vscode.workspace
+            .getConfiguration('book-reader')
+            .update('sidebarDisguise', message.content, vscode.ConfigurationTarget.Global)
           break
       }
     })
