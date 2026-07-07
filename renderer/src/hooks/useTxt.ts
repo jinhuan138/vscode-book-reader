@@ -11,6 +11,33 @@ interface Chapter {
 interface EpubMetadata {
   author: string
   title: string
+  language: string
+}
+
+/**
+ * XML/HTML 转义，防止特殊字符破坏 EPUB 结构
+ */
+const escapeXml = (text: string): string => {
+  return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;')
+}
+
+/**
+ * 检测文本语言：中文为主返回 'zh'，否则 'en'
+ */
+const detectLanguage = (text: string): string => {
+  // 取前 10000 个字符做样本
+  const sample = text.slice(0, 10000)
+  let cjkCount = 0
+  let latinCount = 0
+  for (const ch of sample) {
+    const code = ch.charCodeAt(0)
+    if ((code >= 0x4e00 && code <= 0x9fff) || (code >= 0x3400 && code <= 0x4dbf) || (code >= 0xf900 && code <= 0xfaff)) {
+      cjkCount++
+    } else if ((code >= 0x41 && code <= 0x5a) || (code >= 0x61 && code <= 0x7a)) {
+      latinCount++
+    }
+  }
+  return cjkCount > latinCount ? 'zh' : 'en'
 }
 
 /**
@@ -93,22 +120,46 @@ const fileNameFromUrl = (url: string): string => {
 
 /**
  * 从文件名中提取作者和标题
- * 支持格式：「作者 书名」「作者-书名」「书名」
+ * 支持格式：「作者 书名」「作者-书名」「《书名》」「书名-作者」
+ * 同时尝试解析「作者 著」等常见模式
  * @param fileName - 文件名（含或不含 .txt 后缀）
  */
 const parseEpubInfo = (fileName: string): EpubMetadata => {
   // 去掉 .txt 后缀
-  const baseName = fileName.replace(/\.txt$/i, '')
-  // 按第一个空格或者 - 分割文件名
-  const splitRegex = /[ \-]/
-  const parts = baseName.split(splitRegex, 2)
+  const baseName = fileName.replace(/\.txt$/i, '').trim()
   let author = 'Unknown'
   let title = baseName
-  if (parts.length === 2) {
-    author = parts[0]
-    title = parts[1]
+
+  // 1. 尝试解析「作者 - 书名」或「书名 - 作者」
+  const dashParts = baseName.split(/\s*[-–—]\s*/)
+  if (dashParts.length === 2) {
+    // 如果第一部分以「著」「作」结尾，则第一部分是作者
+    if (/[著作]$/.test(dashParts[0])) {
+      author = dashParts[0].replace(/[著作]$/, '').trim()
+      title = dashParts[1].trim()
+    } else if (/[著作]$/.test(dashParts[1])) {
+      title = dashParts[0].trim()
+      author = dashParts[1].replace(/[著作]$/, '').trim()
+    } else {
+      // 默认：第一部分是作者，第二部分是书名
+      author = dashParts[0].trim()
+      title = dashParts[1].trim()
+    }
+    return { author, title, language: 'zh' }
   }
-  return { author, title }
+
+  // 2. 尝试解析「作者 书名」
+  const spaceIdx = baseName.indexOf(' ')
+  if (spaceIdx > 0) {
+    author = baseName.slice(0, spaceIdx).trim()
+    title = baseName.slice(spaceIdx + 1).trim()
+    // 如果作者部分以「著」结尾，去掉
+    author = author.replace(/[著作]$/, '').trim()
+    return { author, title, language: 'zh' }
+  }
+
+  // 3. 单段：取书名
+  return { author, title, language: 'zh' }
 }
 
 /**
@@ -121,7 +172,7 @@ const formatText = (text: string): string => {
   for (const line of lines) {
     const trimmed = line.trim()
     if (trimmed !== '') {
-      paragraphs.push(`<p>${trimmed}</p>`)
+      paragraphs.push(`<p>${escapeXml(trimmed)}</p>`)
     }
   }
 
@@ -143,41 +194,57 @@ const getChapters = (content: string, title: string): Chapter[] => {
 
   // 如有 "Contents" 或 "CONTENTS"，删除到第一个真实章节前（避免把目录当章节）
   text = text.replace(
-    /^\s*contents[\s\S]{0,2000}?(?=^\s*(?:第[零一二三四五六七八九十百千万两0-9]+[回章卷节辑话篇]|(?:CHAPTER|Chapter|BOOK|Book)\b|\d+\b[ \t]*[\.:\)]))/im,
+    /^\s*contents[\s\S]{0,2000}?(?=^\s*(?:第[零一二三四五六七八九十百千万两0-9]+[回章卷节辑话篇部册]|楔子|前言|序[章言]|后记|尾声|(?:CHAPTER|Chapter|BOOK|Book|Part|Volume)\b|\d+\b[ \t]*[\.:\)]))/im,
     '',
   )
 
-  // 更通用的章节行正则：支持中文“第...回/章”、阿拉伯数字“1. ”、以及多种英文章节格式
+  // 章节行正则：支持中文、英文、数字等多种章节格式
   const chapterRegex =
-    /^\s*(?:第[零一二三四五六七八九十百千万两0-9]+[回章卷节辑话篇]|(?:CHAPTER|Chapter|BOOK|Book)\s+(?:[IVXLCDM]+|\d+|[A-Za-z]+)|\d+[ \t]*[\.:\)])[^\n]*$/gim
+    /^\s*(?:第[零一二三四五六七八九十百千万两0-9]+[回章卷节辑话篇部册]|楔子|前言|序[章言]|后记|尾声|引子|(?:CHAPTER|Chapter|BOOK|Book|Part|Volume)\s+(?:[IVXLCDM]+|\d+|[A-Za-z]+)|\d+\s*[\.:\)、．][ \t]*\S)[^\n]*$/gim
 
   const chapters: Chapter[] = []
   let lastIndex = 0
   let match: RegExpExecArray | null
 
   while ((match = chapterRegex.exec(text)) !== null) {
+    const headingLine = match[0].trim()
+
+    // 处理上一个章节的内容
     if (chapters.length > 0) {
       const prevEnd = match.index
-      let chapterContent = text.slice(lastIndex, prevEnd)
-      chapterContent = formatText(chapterContent)
-      if (chapterContent === '') {
-        chapters.pop()
-      } else {
-        chapters[chapters.length - 1].content += chapterContent
+      const chapterContent = text.slice(lastIndex, prevEnd).trim()
+      if (chapterContent !== '') {
+        // 有内容：追加到上一章
+        chapters[chapters.length - 1].content += formatText(chapterContent)
       }
+      // 无内容（连续标题）：不 pop 上一章，仅丢弃空段，保留上一章标题
     }
 
-    const headingLine = match[0].trim()
     chapters.push({ title: headingLine, content: '' })
     lastIndex = match.index + match[0].length
   }
 
+  // 处理最后一章的内容
   if (chapters.length > 0) {
-    let lastChapterContent = text.slice(lastIndex)
-    lastChapterContent = formatText(lastChapterContent)
-    chapters[chapters.length - 1].content += lastChapterContent
+    const lastChapterContent = text.slice(lastIndex).trim()
+    if (lastChapterContent !== '') {
+      chapters[chapters.length - 1].content += formatText(lastChapterContent)
+    }
   } else {
-    chapters.push({ title, content: formatText(text) })
+    // 无章节标题：按约 80 段切分为多章
+    const lines = text.split('\n').filter((l) => l.trim() !== '')
+    if (lines.length === 0) {
+      chapters.push({ title, content: '' })
+    } else if (lines.length <= 80) {
+      chapters.push({ title, content: formatText(lines.join('\n')) })
+    } else {
+      const chunkSize = Math.ceil(lines.length / Math.ceil(lines.length / 80))
+      for (let i = 0; i < lines.length; i += chunkSize) {
+        const chunk = lines.slice(i, i + chunkSize).join('\n')
+        const chunkTitle = `${title} (${Math.floor(i / chunkSize) + 1}/${Math.ceil(lines.length / chunkSize)})`
+        chapters.push({ title: chunkTitle, content: formatText(chunk) })
+      }
+    }
   }
 
   return chapters
@@ -189,7 +256,7 @@ const getChapters = (content: string, title: string): Chapter[] => {
  * @param metadata - 元信息
  */
 const buildEpub = async (chapters: Chapter[], metadata: EpubMetadata): Promise<ArrayBuffer> => {
-  const { author, title } = metadata
+  const { author, title, language } = metadata
 
   const zip = new JSZip()
 
@@ -211,10 +278,10 @@ const buildEpub = async (chapters: Chapter[], metadata: EpubMetadata): Promise<A
   const navPoints = chapters
     .map((chapter, index) => {
       const id = `chapter${index + 1}`
-      const playOrder = index + 2 // 封页的 playOrder 为 1
+      const playOrder = index + 1
       return `<navPoint id="navPoint-${id}" playOrder="${playOrder}">
   <navLabel>
-    <text>${chapter.title}</text>
+    <text>${escapeXml(chapter.title)}</text>
   </navLabel>
   <content src="./OEBPS/${id}.xhtml" />
 </navPoint>`
@@ -232,10 +299,10 @@ const buildEpub = async (chapters: Chapter[], metadata: EpubMetadata): Promise<A
     <meta name="dtb:maxPageNumber" content="0" />
   </head>
   <docTitle>
-    <text>${title}</text>
+    <text>${escapeXml(title)}</text>
   </docTitle>
   <docAuthor>
-    <text>${author}</text>
+    <text>${escapeXml(author)}</text>
   </docAuthor>
   <navMap>
 ${navPoints}
@@ -244,26 +311,31 @@ ${navPoints}
   )
 
   // content.opf
-  const manifest = chapters
-    .map(
-      (_, index) =>
-        `<item id="chap${index + 1}" href="OEBPS/chapter${index + 1}.xhtml" media-type="application/xhtml+xml"/>`,
+  const manifestItems: string[] = []
+  manifestItems.push(`<item id="style" href="OEBPS/style.css" media-type="text/css"/>`)
+
+  chapters.forEach((_, index) => {
+    manifestItems.push(
+      `<item id="chap${index + 1}" href="OEBPS/chapter${index + 1}.xhtml" media-type="application/xhtml+xml"/>`,
     )
-    .join('\n')
+  })
+  const manifest = manifestItems.join('\n')
 
   const spine = chapters.map((_, index) => `<itemref idref="chap${index + 1}"/>`).join('\n')
 
   const tocManifest = `<item id="ncx" href="toc.ncx" media-type="application/x-dtbncx+xml"/>`
+
+  const bookId = `urn:uuid:${crypto.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`}`
 
   zip.file(
     'content.opf',
     `<?xml version="1.0" encoding="UTF-8"?>
 <package xmlns="http://www.idpf.org/2007/opf" unique-identifier="book-id" version="2.0">
   <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
-    <dc:title>${title}</dc:title>
-    <dc:language>zh</dc:language>
-    <dc:creator>${author}</dc:creator>
-    <dc:identifier id="book-id">${Date.now()}</dc:identifier>
+    <dc:title>${escapeXml(title)}</dc:title>
+    <dc:language>${language}</dc:language>
+    <dc:creator>${escapeXml(author)}</dc:creator>
+    <dc:identifier id="book-id">${bookId}</dc:identifier>
   </metadata>
   <manifest>
 ${manifest}
@@ -275,6 +347,15 @@ ${spine}
 </package>`,
   )
 
+  // style.css
+  zip.folder('OEBPS')!.file(
+    'style.css',
+    `body { margin: 0; padding: 0; }
+h1 { text-align: left; font-size: 1.5em; margin: 1em 0; }
+h2 { text-align: left; font-size: 1.3em; margin: 0.8em 0; }
+p { text-indent: 2em; margin: 0.5em 0; line-height: 1.6; }`,
+  )
+
   // 章节内容 xhtml 文件
   const oebps = zip.folder('OEBPS')!
   chapters.forEach((chapter, index) => {
@@ -282,13 +363,13 @@ ${spine}
       `chapter${index + 1}.xhtml`,
       `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" lang="zh">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="${language}">
   <head>
-    <title>${chapter.title}</title>
+    <title>${escapeXml(chapter.title)}</title>
     <link rel="stylesheet" type="text/css" href="../style.css"/>
   </head>
   <body>
-    <h1>${chapter.title}</h1>
+    <h1>${escapeXml(chapter.title)}</h1>
 ${chapter.content}
   </body>
 </html>`,
@@ -328,12 +409,16 @@ export async function convertTxtToEpub(input: string | UploadFile, fileName?: st
     resolvedFileName = fileName ?? file.name
   }
 
-  const { author, title } = parseEpubInfo(resolvedFileName)
+  const metadata = parseEpubInfo(resolvedFileName)
   const txtContent = decodeBuffer(txtBuffer)
-  const chapters = getChapters(txtContent, title)
+
+  // 根据文本内容检测语言，覆盖文件名解析的默认值
+  metadata.language = detectLanguage(txtContent)
+
+  const chapters = getChapters(txtContent, metadata.title)
 
   // 构建 EPUB 并直接包装成 File 对象
-  const epubData = await buildEpub(chapters, { author, title })
+  const epubData = await buildEpub(chapters, metadata)
   const epubFile = new File([epubData], resolvedFileName.replace(/\.[^/.]+$/, '.epub'), {
     type: 'application/epub+zip',
   })
