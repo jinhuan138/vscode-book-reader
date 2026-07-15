@@ -1,16 +1,21 @@
 import * as vscode from 'vscode'
 import { readFileSync } from 'fs'
 import { Store } from '../store'
+import { generateEdgeTTS, clearTTSCache } from '../ttsPlayer'
+import { join } from 'path'
 
 export class SidebarViewerProvider implements vscode.WebviewViewProvider {
   private extensionPath: string
   private title: string = ''
+  private context: vscode.ExtensionContext
+
   constructor(context: vscode.ExtensionContext) {
     this.extensionPath = context.extensionPath
+    this.context = context
   }
 
   private buildLocalResourceRoots(): vscode.Uri[] {
-    const roots = [vscode.Uri.file(this.extensionPath)]
+    const roots = [vscode.Uri.file(this.extensionPath), vscode.Uri.file(join(this.context.globalStorageUri.fsPath, 'tts-cache'))]
     const config = vscode.workspace.getConfiguration('book-reader')
     const bookFolderPath = config.get<string>('bookFolderPath')
     if (bookFolderPath) {
@@ -107,6 +112,26 @@ export class SidebarViewerProvider implements vscode.WebviewViewProvider {
           vscode.workspace
             .getConfiguration('book-reader')
             .update('sidebarDisguise', message.content, vscode.ConfigurationTarget.Global)
+          break
+        case 'ttsSpeak': {
+          const { id, text, voice, speed } = message.content
+          generateEdgeTTS(
+            id,
+            text,
+            voice,
+            speed || 1,
+          ).then(filePath => {
+            if (filePath) {
+              const url = webview.asWebviewUri(vscode.Uri.file(filePath)).toString()
+              webview.postMessage({ type: 'ttsAudio', id, content: url })
+            } else {
+              webview.postMessage({ type: 'ttsEnd', id })
+            }
+          })
+          break
+        }
+        case 'ttsStop':
+          clearTTSCache()
           break
       }
     })

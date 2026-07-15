@@ -12,9 +12,14 @@
         :current-node-key="currentToc" highlight-current>
       </el-tree>
     </el-drawer>
-    <el-icon class="close-icon" color="#ccc" @click="close">
-      <Close />
-    </el-icon>
+    <div class="operation-group">
+      <el-icon class="voice" :color="isReading ? '#409efc' : '#ccc'" @click="isReading = !isReading">
+        <Headset />
+      </el-icon>
+      <el-icon class="close" color="#ccc" @click="close">
+        <Close />
+      </el-icon>
+    </div>
     <!-- footer -->
     <div class="footer" @mouseenter="showSlider = true" @mouseleave="showSlider = false">
       <div v-if="!showSlider" class="chapter">
@@ -48,7 +53,7 @@
 <script setup lang="ts">
 import { BookView } from 'vue-book-reader'
 import { ref, computed } from 'vue'
-import { Back, Close, Expand } from '@element-plus/icons-vue'
+import { Headset, Close, Back, Expand, } from '@element-plus/icons-vue'
 import { type UploadFile } from 'element-plus'
 import useStore from '@/hooks/useStore'
 import { rendition, onReady } from '@/hooks/useRendition'
@@ -60,6 +65,7 @@ import useInfo from '@/hooks/useInfo'
 import '@/hooks/useKeyboard'
 import localforage from 'localforage'
 import useDisguise from '@/hooks/useDisguise'
+import useTTS from '@/hooks/useTTS'
 const { showBook } = useDisguise()
 
 const { url, addBook, closeBook } = useStore()
@@ -70,6 +76,7 @@ const { progress, changeProgress, labelFromPercentage, goBack } = useProgress()
 const chapter = useChapter()
 const { theme } = useTheme()
 const showSlider = ref(false)
+const { isReading } = useTTS()
 
 const close = () => {
   closeBook()
@@ -162,20 +169,24 @@ onReady(() => {
 }
 
 .menu-icon,
-.close-icon {
+.operation-group {
   position: absolute;
-  cursor: pointer;
   z-index: 5;
   top: 5px;
+  right: 5px;
+  display: flex;
+  gap: 5px;
+
+  .close,
+  .voice {
+    cursor: pointer;
+  }
 }
 
 .menu-icon {
   left: 5px;
 }
 
-.close-icon {
-  right: 5px;
-}
 
 .menu-icon:hover,
 .close-icon:hover {

@@ -45,7 +45,7 @@ const onNodeClick = (item: Bookmark) => {
 }
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .bookmark-icon {
 	cursor: pointer;
 	z-index: 5;

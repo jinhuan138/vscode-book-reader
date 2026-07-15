@@ -1,9 +1,10 @@
 import * as vscode from 'vscode'
 import { readFileSync } from 'fs'
 import { SidebarBookListProvider } from './sidebar/sidebarBookListProvider'
-import { dirname } from 'path'
+import { dirname, join } from 'path'
 import { translate } from 'bing-translate-api'
 import { Store } from '../core/store'
+import { generateEdgeTTS, clearTTSCache } from './ttsPlayer'
 
 export class BookViewerProvider implements vscode.CustomReadonlyEditorProvider {
   private _context: vscode.ExtensionContext
@@ -13,7 +14,7 @@ export class BookViewerProvider implements vscode.CustomReadonlyEditorProvider {
   }
 
   public openCustomDocument(uri: vscode.Uri): vscode.CustomDocument | Thenable<vscode.CustomDocument> {
-    return { uri, dispose: (): void => { } }
+    return { uri, dispose: (): void => {} }
   }
 
   public updateSliderWebview(type: string, content: any) {
@@ -38,7 +39,11 @@ export class BookViewerProvider implements vscode.CustomReadonlyEditorProvider {
     }
     webview.options = {
       enableScripts: true,
-      localResourceRoots: [vscode.Uri.file(this._context.extensionPath), vscode.Uri.file(dirname(uri.fsPath))],
+      localResourceRoots: [
+        vscode.Uri.file(this._context.extensionPath),
+        vscode.Uri.file(dirname(uri.fsPath)),
+        vscode.Uri.file(join(this._context.globalStorageUri.fsPath, 'tts-cache')),
+      ],
     }
     webview.onDidReceiveMessage(async (message) => {
       switch (message.type) {
@@ -113,13 +118,36 @@ export class BookViewerProvider implements vscode.CustomReadonlyEditorProvider {
         case 'codeDisguise':
           this._context.globalState.update('codeDisguise', message.content)
           this.updateSliderWebview(message.type, message.content)
-          vscode.workspace.getConfiguration('book-reader')
+          vscode.workspace
+            .getConfiguration('book-reader')
             .update('codeDisguise', message.content, vscode.ConfigurationTarget.Global)
           break
         case 'sidebarDisguise':
-          vscode.workspace.getConfiguration('book-reader')
+          vscode.workspace
+            .getConfiguration('book-reader')
             .update('sidebarDisguise', message.content, vscode.ConfigurationTarget.Global)
-          SidebarBookListProvider.getInstance().setDisguised(message.content)
+          if (!message.content) {
+            SidebarBookListProvider.getInstance().setDisguised(false)
+          }
+          break
+        case 'ttsConfig':
+          this._context.globalState.update('ttsConfig', message.content)
+          this.updateSliderWebview(message.type, message.content)
+          break
+        case 'ttsSpeak': {
+          const { id, text, voice, speed } = message.content
+          generateEdgeTTS(id, text, voice, speed || 1).then((filePath) => {
+            if (filePath) {
+              const url = webview.asWebviewUri(vscode.Uri.file(filePath)).toString()
+              webview.postMessage({ type: 'ttsAudio', id, content: url })
+            } else {
+              webview.postMessage({ type: 'ttsEnd', id })
+            }
+          })
+          break
+        }
+        case 'ttsStop':
+          clearTTSCache()
           break
       }
     })

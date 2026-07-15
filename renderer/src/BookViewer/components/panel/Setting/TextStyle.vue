@@ -8,33 +8,17 @@
     </el-form-item>
     <el-form-item label="Text Color">
       <el-color-picker v-model="theme.textColor" show-alpha color-format="rgb" />
-      <li
-        class="color-circle"
-        v-for="color in textList"
-        :key="color"
-        :style="{ backgroundColor: color }"
-        @click="theme.textColor = color"
-      ></li>
+      <li class="color-circle" v-for="color in textList" :key="color" :style="{ backgroundColor: color }"
+        @click="theme.textColor = color"></li>
     </el-form-item>
     <el-form-item label="Background Color">
-      <el-color-picker v-model="theme.backgroundColor" show-alpha color-format="rgb" @change="e=>console.log(e)"/>
-      <li
-        class="color-circle"
-        v-for="color in backgroundList"
-        :key="color"
-        :style="{ backgroundColor: color }"
-        @click="theme.backgroundColor = color"
-      ></li>
+      <el-color-picker v-model="theme.backgroundColor" show-alpha color-format="rgb" />
+      <li class="color-circle" v-for="color in backgroundList" :key="color" :style="{ backgroundColor: color }"
+        @click="theme.backgroundColor = color"></li>
     </el-form-item>
     <el-form-item label="Line Height">
-      <el-input-number
-        v-model="theme.lineHeight"
-        :precision="2"
-        :step="0.1"
-        :min="1"
-        :max="2.5"
-        size="small"
-      ></el-input-number>
+      <el-input-number v-model="theme.lineHeight" :precision="2" :step="0.1" :min="1" :max="2.5"
+        size="small"></el-input-number>
     </el-form-item>
     <el-form-item label="Opacity">
       <el-slider v-model="theme.opacity" :format-tooltip="formatOpacity" :min="0" :max="100" :step="1" />
@@ -73,9 +57,11 @@ const formatOpacity = (val: number): string => {
   cursor: pointer;
   z-index: 5;
 }
+
 .setting-icon:hover {
   color: #409efc;
 }
+
 .color-circle {
   display: inline-block;
   width: 35px;

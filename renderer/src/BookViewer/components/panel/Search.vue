@@ -29,7 +29,7 @@ const onNodeClick = (item) => {
 }
 </script>
 
-<style>
+<style scoped lang="scss">
 .setting-icon {
   cursor: pointer;
   z-index: 5;
