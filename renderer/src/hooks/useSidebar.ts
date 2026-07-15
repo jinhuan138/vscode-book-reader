@@ -16,7 +16,6 @@ watch(
       if (!currentBook && firstLoad.value) {
         firstLoad.value = false
         const lastBook = await localforage.getItem('lastBook')
-        console.log('lastBook:', lastBook)
         if (lastBook) {
           addBook(lastBook as string | UploadFile)
         }

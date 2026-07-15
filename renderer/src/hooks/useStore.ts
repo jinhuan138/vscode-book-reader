@@ -67,7 +67,7 @@ const addBook = async (book: UploadFile | string) => {
     })
   }
 }
-// addBook('/files/啼笑因缘.txt')
+// addBook('/files/alice.epub')
 export default function useStore() {
   return { url, bookKey, bookList, addBook, removeBook, closeBook }
 }

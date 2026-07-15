@@ -70,12 +70,10 @@ export default function useDisguise() {
     } else {
       showBook.value = false
     }
-    if (vscode) {
-      vscode.postMessage({
-        type: 'title',
-        content: title.value,
-      })
-    }
+    vscode?.postMessage({
+      type: 'title',
+      content: title.value,
+    })
   })
 
   return { codeDisguise, sidebarDisguise, active, showBook, codeLines }

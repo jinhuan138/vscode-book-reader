@@ -4,6 +4,7 @@ import { isSidebar } from '@/hooks/useSidebar'
 import useAnimation from '@/hooks/useAnimation'
 import useTheme from '@/hooks/useTheme'
 import useDisguise from '@/hooks/useDisguise'
+import useTTS from '@/hooks/useTTS'
 import useVscode from '@/hooks/useVscode'
 
 const vscode = useVscode()
@@ -12,6 +13,7 @@ const flow = useFlow()
 const { theme } = useTheme()
 const animation = useAnimation()
 const { codeDisguise, sidebarDisguise, active } = useDisguise()
+const { ttsConfig } = useTTS()
 
 const handleMessage = ({ data }) => {
   if (data) {
@@ -38,8 +40,8 @@ const handleMessage = ({ data }) => {
       case 'sidebarDisguise':
         sidebarDisguise.value = Boolean(data.content)
         break
-      case 'active':
-        active.value = Boolean(data.content)
+      case 'ttsConfig':
+        ttsConfig.value = JSON.parse(data.content)
         break
     }
   }
