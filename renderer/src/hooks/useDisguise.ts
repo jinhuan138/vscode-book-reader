@@ -22,7 +22,7 @@ const title = computed(() => {
 
 document.body.onkeydown = function (event: KeyboardEvent) {
   // 禁用空格键的默认滚动行为
-  if (event.key === ' ' || event.code === 'Space') {
+  if ((event.key === ' ' || event.code === 'Space') && codeDisguise.value) {
     active.value = !active.value
     event.preventDefault()
   }
@@ -30,6 +30,7 @@ document.body.onkeydown = function (event: KeyboardEvent) {
 export default function useDisguise() {
   watch(codeDisguise, (enabled: boolean) => {
     if (!enabled) {
+      active.value = true
       showBook.value = true
     }
     if (!isSidebar.value && vscode) {
