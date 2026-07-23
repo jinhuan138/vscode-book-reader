@@ -27,7 +27,7 @@ Support reading epub、mobi、azw3、pdf、fk8、fb2、cbz、txt files in vscode
 | **⌨️Page Navigation**        | Navigate pages using arrow keys (⬆️⬇️⬅️➡️) or WASD                        |
 | **🔁Scroll/Page View Modes** | Switch between scrolling or paginated reading modes,shortcut key:s        |
 | **👀view the image**         | View images and Download in the book                                      |
-| **🎧Listen to book**         | Listen to book                                                            |
+| **🎧Listen to book**         | Listen to books using System voices or Edge TTS.                           |
 | **🔖Bookmark**               | Add and manage bookmarks for the current reading position.                |
 | **🖍️Highlight & Annotation** | Select text to highlight or underline, choose color and save annotations. |
 | **🌐Translate Selection**    | Translate selected text instantly with target language selection.         |
