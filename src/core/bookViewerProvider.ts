@@ -136,12 +136,12 @@ export class BookViewerProvider implements vscode.CustomReadonlyEditorProvider {
           break
         case 'ttsSpeak': {
           const { id, text, voice, speed } = message.content
-          generateEdgeTTS(id, text, voice, speed || 1).then((filePath) => {
+          generateEdgeTTS(id, text, voice, speed || 1).then(({ filePath, error }) => {
             if (filePath) {
               const url = webview.asWebviewUri(vscode.Uri.file(filePath)).toString()
               webview.postMessage({ type: 'ttsAudio', id, content: url })
             } else {
-              webview.postMessage({ type: 'ttsEnd', id })
+              webview.postMessage({ type: 'ttsEnd', id, error })
             }
           })
           break

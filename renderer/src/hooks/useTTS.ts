@@ -1,6 +1,8 @@
 import { ref, computed, watch, onUnmounted } from 'vue'
 import { AudioContext } from 'standardized-audio-context'
 import { useSpeechSynthesis, useLocalStorage } from '@vueuse/core'
+import { ElMessage } from 'element-plus'
+import 'element-plus/es/components/message/style/css'
 import { rendition } from './useRendition'
 import { isSidebar } from './useSidebar'
 import useVscode from './useVscode'
@@ -227,6 +229,21 @@ export default function useTTS() {
   let preIds: string[] = [] // 预取队列，最多 BUFFER_SIZE-1 个
   const urlCache = new Map<string, string>()
   const urlWait = new Map<string, (u: string) => void>()
+  const TTS_ERROR_NOTICE_INTERVAL = 60 * 1000
+  let lastTTSErrorNoticeAt = 0
+
+  const showTTSError = (error?: string) => {
+    const now = Date.now()
+    if (now - lastTTSErrorNoticeAt < TTS_ERROR_NOTICE_INTERVAL) return
+    lastTTSErrorNoticeAt = now
+
+    const isProxyError = /proxy|proxies|pacproxy|127\.0\.0\.1:7897|socket connection/i.test(error ?? '')
+    ElMessage.warning(
+      isProxyError
+        ? '\u8bed\u97f3\u751f\u6210\u5931\u8d25\uff1a\u65e0\u6cd5\u8fde\u63a5\u4ee3\u7406 127.0.0.1:7897\uff0c\u8bf7\u5f00\u542f VPN/\u4ee3\u7406\u6216\u5173\u95ed VS Code \u4ee3\u7406\u8bbe\u7f6e\u540e\u91cd\u8bd5\u3002'
+        : '\u8bed\u97f3\u751f\u6210\u5931\u8d25\uff0c\u8bf7\u68c0\u67e5\u7f51\u7edc\u6216\u7a0d\u540e\u91cd\u8bd5\u3002',
+    )
+  }
 
   // AudioContext 创建一次，整个生命周期复用
   const ctx = new AudioContext()
@@ -494,3 +511,4 @@ export default function useTTS() {
     systemVoiceList,
   }
 }
+
