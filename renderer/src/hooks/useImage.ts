@@ -4,6 +4,34 @@ import { rendition, onReady } from './useRendition'
 import { useLocalStorage } from '@vueuse/core'
 
 const vscode = useVscode()
+
+const addAnnotationTitles = (doc: Document) => {
+  const anchors = Array.from(doc.querySelectorAll<HTMLAnchorElement>('a[href*="#"]'))
+
+  anchors.forEach((anchor) => {
+    const href = anchor.getAttribute('href')
+    const hashIndex = href?.lastIndexOf('#') ?? -1
+    if (!href || hashIndex < 0 || hashIndex === href.length - 1) return
+
+    let targetId = href.slice(hashIndex + 1)
+    try {
+      targetId = decodeURIComponent(targetId)
+    } catch {
+      // Keep the original fragment when it is not valid URI-encoded text.
+    }
+
+    const target = doc.getElementById(targetId) ?? Array.from(doc.getElementsByName(targetId))[0]
+    if (!target || target === anchor) return
+
+    const annotation =
+      target.closest('[epub\\:type~="footnote"], [role="doc-footnote"], aside, li') ??
+      target.parentElement ??
+      target
+    const title = annotation.textContent?.replace(/\s+/g, ' ').trim()
+    if (title) anchor.title = title
+  })
+}
+
 const imageUrlToUint8Array = async (url: string) => {
   try {
     const response = await fetch(url)
@@ -85,20 +113,8 @@ export default function useImage() {
         const imgs = [...doc.querySelectorAll('img'), ...doc.querySelectorAll('image')] as HTMLImageElement[]
         imageList.value = imgs
         initImage()
-        // 添加注释
-        const annotation = Array.from(doc.querySelectorAll('a')) as HTMLAnchorElement[]
-        if (annotation.length) {
-          const halfLength = Math.floor(annotation.length / 2)
-          annotation.slice(0, halfLength).forEach((el) => {
-            if (el.href) {
-              const id = el.href.split('#')[1]
-              const target = annotation.slice(halfLength).find((a: HTMLAnchorElement) => a.id === id)
-              if (target && target.parentNode) {
-                el.title = target.parentNode.textContent as string
-              }
-            }
-          })
-        }
+        // 添加脚注提示
+        addAnnotationTitles(doc)
       })
     })
   })

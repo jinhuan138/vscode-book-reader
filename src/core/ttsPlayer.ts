@@ -9,6 +9,17 @@ let tts: InstanceType<typeof EdgeTTS> | null = null
 let curVoice = ''
 let curRate = ''
 
+export type EdgeTTSResult = {
+    filePath: string | null
+    error?: string
+}
+
+function getErrorMessage(error: unknown): string {
+    if (error instanceof Error) return error.message
+    if (typeof error === 'string') return error
+    return 'Unknown Edge TTS error'
+}
+
 function speedToRate(speed: number): string {
     const n = Math.round((speed - 1) * 100)
     return n >= 0 ? `+${n}%` : `${n}%`
@@ -41,15 +52,15 @@ export async function generateEdgeTTS(
     text: string,
     voice: string,
     speed: number,
-): Promise<string | null> {
+): Promise<EdgeTTSResult> {
     ensureTTS(voice, speed)
     const filePath = join(getCacheDir(), `tts-${id}.mp3`)
     try {
         await tts!.ttsPromise(text, filePath)
-        return filePath
+        return { filePath }
     } catch (e) {
         console.error('[Edge TTS] 生成失败:', e)
-        return null
+        return { filePath: null, error: getErrorMessage(e) }
     }
 }
 

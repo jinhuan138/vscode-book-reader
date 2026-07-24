@@ -4,7 +4,7 @@ export interface VoiceNode {
   children?: VoiceNode[]
 }
 
-// Azure TTS 语音列表，已通过免费端点逐个实测（单句合成，8s 超时判定），仅保留可用语音，中文置顶
+// Edge ReadAloud TTS 语音列表，已通过免费端点逐个实测（单句合成，15s 超时判定），仅保留可用语音，中文置顶
 // 数据来源: https://learn.microsoft.com/en-us/azure/ai-services/speech-service/language-support?tabs=tts
 // 测试时间: 2026-07
 export const edgeVoiceOptions: VoiceNode[] = [
@@ -14,10 +14,24 @@ export const edgeVoiceOptions: VoiceNode[] = [
     children: [
       { value: 'zh-CN-XiaoxiaoNeural', label: '晓晓 (女声)' },
       { value: 'zh-CN-XiaoyiNeural', label: '小艺 (女声)' },
+      { value: 'zh-CN-YunxiaNeural', label: '云霞 (男声)' },
       { value: 'zh-CN-YunxiNeural', label: '云希 (男声)' },
       { value: 'zh-CN-YunjianNeural', label: '云健 (男声)' },
       { value: 'zh-CN-YunyangNeural', label: '云扬 (男声)' },
-      { value: 'zh-CN-YunxiaNeural', label: '云霞 (男声)' },
+    ],
+  },
+  {
+    value: 'zh-CN-liaoning',
+    label: '中文（东北官话）',
+    children: [
+      { value: 'zh-CN-liaoning-XiaobeiNeural', label: '小北 (女声)' },
+    ],
+  },
+  {
+    value: 'zh-CN-shaanxi',
+    label: '中文（中原官话，陕西）',
+    children: [
+      { value: 'zh-CN-shaanxi-XiaoniNeural', label: '小妮 (女声)' },
     ],
   },
   {
@@ -43,9 +57,13 @@ export const edgeVoiceOptions: VoiceNode[] = [
     label: 'English (United States)',
     children: [
       { value: 'en-US-AvaNeural', label: 'Ava (Female)' },
+      { value: 'en-US-AvaMultilingualNeural', label: 'Ava Multilingual (Female)' },
       { value: 'en-US-AndrewNeural', label: 'Andrew (Male)' },
+      { value: 'en-US-AndrewMultilingualNeural', label: 'Andrew Multilingual (Male)' },
       { value: 'en-US-EmmaNeural', label: 'Emma (Female)' },
+      { value: 'en-US-EmmaMultilingualNeural', label: 'Emma Multilingual (Female)' },
       { value: 'en-US-BrianNeural', label: 'Brian (Male)' },
+      { value: 'en-US-BrianMultilingualNeural', label: 'Brian Multilingual (Male)' },
       { value: 'en-US-JennyNeural', label: 'Jenny (Female)' },
       { value: 'en-US-GuyNeural', label: 'Guy (Male)' },
       { value: 'en-US-AriaNeural', label: 'Aria (Female)' },
@@ -74,6 +92,7 @@ export const edgeVoiceOptions: VoiceNode[] = [
     children: [
       { value: 'en-AU-NatashaNeural', label: 'Natasha (Female)' },
       { value: 'en-AU-WilliamNeural', label: 'William (Male)' },
+      { value: 'en-AU-WilliamMultilingualNeural', label: 'William Multilingual (Male)' },
     ],
   },
   {
@@ -96,6 +115,7 @@ export const edgeVoiceOptions: VoiceNode[] = [
     value: 'en-IN',
     label: 'English (India)',
     children: [
+      { value: 'en-IN-NeerjaExpressiveNeural', label: 'Neerja Expressive (Female)' },
       { value: 'en-IN-NeerjaNeural', label: 'Neerja (Female)' },
       { value: 'en-IN-PrabhatNeural', label: 'Prabhat (Male)' },
     ],

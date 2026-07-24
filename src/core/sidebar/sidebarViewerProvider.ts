@@ -120,12 +120,12 @@ export class SidebarViewerProvider implements vscode.WebviewViewProvider {
             text,
             voice,
             speed || 1,
-          ).then(filePath => {
+          ).then(({ filePath, error }) => {
             if (filePath) {
               const url = webview.asWebviewUri(vscode.Uri.file(filePath)).toString()
               webview.postMessage({ type: 'ttsAudio', id, content: url })
             } else {
-              webview.postMessage({ type: 'ttsEnd', id })
+              webview.postMessage({ type: 'ttsEnd', id, error })
             }
           })
           break
