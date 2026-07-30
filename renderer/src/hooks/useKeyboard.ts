@@ -55,6 +55,11 @@ const focusRenderer = () => {
 }
 
 ;(function useKeyboard() {
+  // Fixed-layout pages (such as CBZ) replace their iframe documents while
+  // navigating. Also listen on the stable outer document so keyboard
+  // navigation continues after the focused iframe has been removed.
+  keyListener(document, flipPage)
+
   watch(
     rendition,
     (newRendition: any) => {
