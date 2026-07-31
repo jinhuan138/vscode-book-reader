@@ -2,6 +2,7 @@ import { ref, computed, watch } from 'vue'
 import useVscode from './useVscode'
 import { rendition, onReady } from './useRendition'
 import { useLocalStorage } from '@vueuse/core'
+import { useI18n } from 'vue-i18n'
 
 const vscode = useVscode()
 
@@ -56,6 +57,7 @@ const imageUrlToUint8Array = async (url: string) => {
 }
 
 export default function useImage() {
+  const { t, locale } = useI18n()
   const srcList = computed(() => imageList.value.map((img) => img.src || (img.getAttribute('xlink:href') as string)))
   const imageList = ref<HTMLImageElement[]>([])
   const indexRef = ref<number>(0)
@@ -63,6 +65,11 @@ export default function useImage() {
   const imageDisplayModeOptions = ['Normal', 'Mini', 'Hide']
   const imageDisplayMode = useLocalStorage<'Normal' | 'Mini' | 'Hide'>('imageDisplayMode', 'Normal')
   const miniMediaScale = useLocalStorage<number>('miniMediaScale', 100)
+  const updateImageTitles = () => {
+    imageList.value.forEach((img) => {
+      img.title = t('settings.viewImage')
+    })
+  }
   const downloadImage = (index: number) => {
     if (vscode) {
       imageUrlToUint8Array(srcList.value[index]).then((data) => {
@@ -84,7 +91,7 @@ export default function useImage() {
 
   const initImage = () => {
     imageList.value.forEach((img, index) => {
-      img.title = '点击查看图片'
+      img.title = t('settings.viewImage')
       img.addEventListener('click', () => {
         indexRef.value = index
         showPreview.value = true
@@ -105,6 +112,7 @@ export default function useImage() {
     })
   }
   watch([imageDisplayMode, miniMediaScale], handleImage)
+  watch(locale, updateImageTitles)
 
   onReady(() => {
     rendition.value.addEventListener('load', () => {

@@ -5,6 +5,7 @@
     <Info />
     <Search />
     <Bookmark />
+    <Note />
     <Setting />
   </div>
 </template>
@@ -14,6 +15,7 @@ import Search from './Search.vue'
 import Info from './Info.vue'
 import Setting from './Setting/Setting.vue'
 import Bookmark from './Bookmark.vue'
+import Note from './Note.vue'
 import Voice from './Voice.vue'
 </script>
 <style scoped>

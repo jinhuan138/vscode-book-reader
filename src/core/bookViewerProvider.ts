@@ -2,9 +2,61 @@ import * as vscode from 'vscode'
 import { readFileSync } from 'fs'
 import { SidebarBookListProvider } from './sidebar/sidebarBookListProvider'
 import { dirname, join } from 'path'
-import { translate } from 'bing-translate-api'
+import { translate as bingTranslate } from 'bing-translate-api'
 import { Store } from '../core/store'
 import { generateEdgeTTS, clearTTSCache } from './ttsPlayer'
+
+const MAX_TRANSLATION_TEXT_LENGTH = 10000
+const TRANSLATION_CHUNK_LENGTH = 900
+
+const splitTranslationText = (text: string) => {
+  const chunks: string[] = []
+  let remaining = text.trim()
+
+  while (remaining.length > TRANSLATION_CHUNK_LENGTH) {
+    const candidate = remaining.slice(0, TRANSLATION_CHUNK_LENGTH)
+    const boundaries = [
+      candidate.lastIndexOf('\n') + 1,
+      candidate.lastIndexOf('。') + 1,
+      candidate.lastIndexOf('！') + 1,
+      candidate.lastIndexOf('？') + 1,
+      candidate.lastIndexOf('. ') + 1,
+      candidate.lastIndexOf('! ') + 1,
+      candidate.lastIndexOf('? ') + 1,
+      candidate.lastIndexOf('; ') + 1,
+      candidate.lastIndexOf(' '),
+    ]
+    const preferredBoundary = Math.max(...boundaries)
+    const splitAt = preferredBoundary >= TRANSLATION_CHUNK_LENGTH / 2
+      ? preferredBoundary
+      : TRANSLATION_CHUNK_LENGTH
+    const chunk = remaining.slice(0, splitAt).trim()
+    if (chunk) chunks.push(chunk)
+    remaining = remaining.slice(splitAt).trimStart()
+  }
+
+  if (remaining) chunks.push(remaining)
+  return chunks
+}
+
+const translateText = async (text: string, to: string) => {
+  const translations: string[] = []
+  let detectedSource = ''
+
+  for (const chunk of splitTranslationText(text)) {
+    const result = await bingTranslate(chunk, null, to)
+    if (!result?.translation) {
+      throw new Error('Translation service returned an empty result')
+    }
+    translations.push(result.translation)
+    detectedSource ||= result.language?.from || ''
+  }
+
+  return {
+    content: translations.join('\n'),
+    from: detectedSource,
+  }
+}
 
 export class BookViewerProvider implements vscode.CustomReadonlyEditorProvider {
   private _context: vscode.ExtensionContext
@@ -99,22 +151,38 @@ export class BookViewerProvider implements vscode.CustomReadonlyEditorProvider {
             })
           }
           break
-        case 'translate':
-          translate(message.content, null, message.to)
-            .then((res) => {
-              webview.postMessage({
-                type: 'translate',
-                content: res!.translation,
-              })
+        case 'translate': {
+          const requestId = message.requestId
+          const content = typeof message.content === 'string' ? message.content.trim() : ''
+          const to = typeof message.to === 'string' ? message.to : ''
+          const respondWithError = (error: string) => webview.postMessage({
+            type: 'translate',
+            requestId,
+            error,
+          })
+
+          if (!content || !to || !/^[A-Za-z-]{2,20}$/.test(to)) {
+            await respondWithError('INVALID_INPUT')
+            break
+          }
+          if (content.length > MAX_TRANSLATION_TEXT_LENGTH) {
+            await respondWithError('TEXT_TOO_LONG')
+            break
+          }
+
+          try {
+            const result = await translateText(content, to)
+            await webview.postMessage({
+              type: 'translate',
+              requestId,
+              ...result,
             })
-            .catch((err) => {
-              console.error(err)
-              webview.postMessage({
-                type: 'translate',
-                content: 'translate error',
-              })
-            })
+          } catch (err) {
+            console.error('Translation failed', err)
+            await respondWithError('TRANSLATE_FAILED')
+          }
           break
+        }
         case 'codeDisguise':
           this._context.globalState.update('codeDisguise', message.content)
           this.updateSliderWebview(message.type, message.content)

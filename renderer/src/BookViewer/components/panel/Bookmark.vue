@@ -1,11 +1,11 @@
 <template>
-	<el-icon class="bookmark-icon" @click="showBookmark = true" color="#ccc">
+	<el-icon class="bookmark-icon" :title="t('bookmark.title')" @click="showBookmark = true" color="#ccc">
 		<CollectionTag />
 	</el-icon>
-	<el-drawer resizable v-model="showBookmark" title="bookmark" :with-header="false" :size="400">
+	<el-drawer resizable v-model="showBookmark" :title="t('bookmark.title')" :with-header="false" :size="400">
 		<el-text size="large">
-			Bookmarks
-			<el-button size="small" :icon="Plus" circle @click="addBookmark" />
+			{{ t('bookmark.title') }}
+			<el-button size="small" :icon="Plus" :title="t('bookmark.add')" circle @click="addBookmark" />
 		</el-text>
 		<el-tree :data="bookInfo!.bookmarks" node-key="id" @node-click="onNodeClick">
 			<template #default="{ node }">
@@ -23,13 +23,15 @@ import { ref } from 'vue'
 import { Plus, Close, CollectionTag } from '@element-plus/icons-vue'
 import { rendition } from '@/hooks/useRendition'
 import useInfo, { type Bookmark } from '@/hooks/useInfo'
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 const showBookmark = ref(false)
 const bookInfo = useInfo()
 
 const addBookmark = () => {
 	const { lastLocation } = rendition.value
 	const { cfi, fraction, tocItem } = lastLocation;
-	const label = `${tocItem?.label || ''} : At ${(fraction * 100).toFixed(2)}%`;
+	const label = `${tocItem?.label || ''} : ${t('bookmark.location', { percentage: (fraction * 100).toFixed(2) })}`;
 	bookInfo.value!.bookmarks.push({
 		label,
 		cfi,

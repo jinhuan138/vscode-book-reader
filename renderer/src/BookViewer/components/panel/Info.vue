@@ -1,9 +1,9 @@
 <template>
   <!-- info -->
-  <el-icon class="setting-icon" color="#ccc" @click="showInfo = true">
+  <el-icon class="setting-icon" color="#ccc" :title="t('info.title')" @click="showInfo = true">
     <WarningFilled />
   </el-icon>
-  <el-drawer v-model="showInfo" resizable title="search" :with-header="false" :size="400">
+  <el-drawer v-model="showInfo" resizable :title="t('info.title')" :with-header="false" :size="400">
     <div v-if="info" class="information">
       <el-image class="el-image" :src="info.cover" :alt="info.title" :preview-src-list="[info.cover]">
         <template #error>
@@ -13,12 +13,12 @@
             </el-icon>
           </div>
         </template></el-image>
-      <p v-if="info.title">title:{{ info.title }}</p>
-      <p v-if="info.author.name">author:{{ info.author.name }}</p>
-      <p v-if="info.published">publisher:{{ format(info.published) }}</p>
-      <p v-if="info.language">language:{{ info.language }}</p>
-      <p v-if="info.modified">modified:{{ info.modified }}</p>
-      <p v-if="info.description">description:{{ info.description }}</p>
+      <p v-if="info.title">{{ t('info.bookTitle') }}: {{ info.title }}</p>
+      <p v-if="info.author?.name">{{ t('info.author') }}: {{ info.author.name }}</p>
+      <p v-if="info.published">{{ t('info.publisher') }}: {{ format(info.published) }}</p>
+      <p v-if="info.language">{{ t('info.language') }}: {{ info.language }}</p>
+      <p v-if="info.modified">{{ t('info.modified') }}: {{ info.modified }}</p>
+      <p v-if="info.description">{{ t('info.description') }}: {{ info.description }}</p>
     </div>
   </el-drawer>
 </template>
@@ -27,7 +27,9 @@ import { ref } from 'vue'
 import { WarningFilled, Picture } from '@element-plus/icons-vue'
 import { dayjs } from 'element-plus'
 import useInfo from '@/hooks/useInfo'
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
 const showInfo = ref(false)
 const info = useInfo()
 const format = (time) => {

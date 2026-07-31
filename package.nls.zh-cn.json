@@ -1,0 +1,17 @@
+{
+  "extension.displayName": "电子书阅读器",
+  "extension.description": "在 VS Code 中阅读 EPUB、MOBI、AZW3、PDF、FK8、FB2、CBZ 和 TXT 电子书。",
+  "command.openFile": "电子书阅读器",
+  "command.openBook": "打开书籍",
+  "command.selectBookFolder": "选择书籍文件夹",
+  "command.openBookInSidebar": "在侧栏中打开",
+  "command.toggleSidebarDisguise": "切换侧栏伪装",
+  "command.refreshBookList": "刷新书籍列表",
+  "view.container": "电子书阅读器",
+  "view.bookList": "书籍列表",
+  "view.readerSidebar": "阅读侧栏",
+  "editor.displayName": "电子书阅读器",
+  "configuration.title": "电子书阅读器",
+  "configuration.bookFolderPath": "包含电子书的文件夹路径",
+  "configuration.sidebarDisguise": "在侧栏显示伪装文件列表，并在失去焦点时隐藏阅读内容"
+}

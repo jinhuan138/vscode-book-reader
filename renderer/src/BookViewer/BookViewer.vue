@@ -13,7 +13,7 @@
         </div>
         <!-- slider -->
         <div v-else-if="progressDisplay === 'bar'" class="footer-slider">
-          <el-icon title="back" class="back-icon" @click="goBack">
+          <el-icon :title="t('common.back')" class="back-icon" @click="goBack">
             <Back />
           </el-icon>
           <el-slider class="slider" v-model="progress" @change="changeProgress"
@@ -30,7 +30,7 @@
   <div v-else class="import-file" v-loading="vscode ? true : false">
     <el-upload v-if="!vscode" class="select-button" :on-change="onchange" :auto-upload="false"
       accept=".epub,.mobi,.fk8,.azw3,.fb2,.cbz,.pdf,.txt" :show-file-list="false">
-      <el-button type="primary">select file</el-button>
+      <el-button type="primary">{{ t('common.selectFile') }}</el-button>
     </el-upload>
   </div>
 </template>
@@ -53,7 +53,9 @@ import useProcessDisplay from '@/hooks/useProcessDisplay'
 import '@/hooks/useKeyboard'
 import useInfo from '@/hooks/useInfo'
 import useVscode from '@/hooks/useVscode'
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
 const { url, addBook } = useStore()
 const info = useInfo()
 const { showBook } = useDisguise()

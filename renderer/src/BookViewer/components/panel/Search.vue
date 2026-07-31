@@ -1,10 +1,10 @@
 <template>
   <!-- search -->
-  <el-icon class="setting-icon" @click="searching = true" color="#ccc">
+  <el-icon class="setting-icon" :title="t('search.title')" @click="searching = true" color="#ccc">
     <Search />
   </el-icon>
-  <el-drawer v-model="searching" resizable title="search" :with-header="false" :size="400">
-    <el-input clearable v-model="searchText" size="small" width="300" placeholder="search"
+  <el-drawer v-model="searching" resizable :title="t('search.title')" :with-header="false" :size="400">
+    <el-input clearable v-model="searchText" size="small" width="300" :placeholder="t('search.placeholder')"
       :suffix-icon="searchText ? '' : Search" @keyup.enter="search" class="search" />
     <el-table :key="searchResult.length" :show-header="false" :data="searchResult" @cell-click="onNodeClick"
       height="calc(100% - 26px)" v-loading="searchingLoading">
@@ -21,7 +21,9 @@
 import { Search } from '@element-plus/icons-vue'
 import useSearch from '@/hooks/useSearch'
 import { rendition } from '@/hooks/useRendition'
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
 const { searching, searchText, searchingLoading, searchResult, search } = useSearch()
 
 const onNodeClick = (item) => {

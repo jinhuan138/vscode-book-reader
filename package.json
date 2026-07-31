@@ -1,9 +1,9 @@
 {
   "name": "vscode-book-reader",
-  "displayName": "book reader",
-  "description": "Support reading epub、mobi、azw3、pdf、fk8、fb2、cbz 、txt files.支持在vscode中阅读epub、mobi、azw3、pdf、fk8、fb2、cbz、txt电子书。",
+  "displayName": "%extension.displayName%",
+  "description": "%extension.description%",
   "publisher": "lindacong",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "icon": "renderer/public/logo.png",
   "license": "MIT",
   "repository": {
@@ -36,30 +36,30 @@
     "commands": [
       {
         "command": "book-reader.openFile",
-        "title": "book reader"
+        "title": "%command.openFile%"
       },
       {
         "command": "book-reader.openBook",
-        "title": "book reader"
+        "title": "%command.openBook%"
       },
       {
         "command": "book-reader.selectBookFolder",
-        "title": "select book folder",
+        "title": "%command.selectBookFolder%",
         "icon": "$(folder-opened)"
       },
       {
         "command": "book-reader.openBookInSidebar",
-        "title": "Open in Sidebar",
+        "title": "%command.openBookInSidebar%",
         "icon": "$(open-preview)"
       },
       {
         "command": "book-reader.toggleSidebarDisguise",
-        "title": "Toggle Sidebar Disguise Mode",
+        "title": "%command.toggleSidebarDisguise%",
         "icon": "$(eye)"
       },
       {
         "command": "book-reader.refreshBookList",
-        "title": "Refresh Book List",
+        "title": "%command.refreshBookList%",
         "icon": "$(refresh)"
       }
     ],
@@ -67,7 +67,7 @@
       "activitybar": [
         {
           "id": "bookReader",
-          "title": "book reader",
+          "title": "%view.container%",
           "icon": "renderer/public/icon.svg"
         }
       ]
@@ -76,12 +76,12 @@
       "bookReader": [
         {
           "id": "bookReaderList",
-          "name": "book list",
+          "name": "%view.bookList%",
           "icon": "$(home)"
         },
         {
           "id": "bookReaderSidebar",
-          "name": "reader sidebar",
+          "name": "%view.readerSidebar%",
           "icon": "$(book)",
           "type": "webview"
         }
@@ -90,7 +90,7 @@
     "customEditors": [
       {
         "viewType": "book-reader.openFile",
-        "displayName": "book reader",
+        "displayName": "%editor.displayName%",
         "selector": [
           {
             "filenamePattern": "*.epub"
@@ -146,17 +146,17 @@
       ]
     },
     "configuration": {
-      "title": "Book Reader",
+      "title": "%configuration.title%",
       "properties": {
         "book-reader.bookFolderPath": {
           "type": "string",
           "default": "",
-          "description": "Path to the folder containing books"
+          "description": "%configuration.bookFolderPath%"
         },
         "book-reader.sidebarDisguise": {
           "type": "boolean",
           "default": false,
-          "description": "Show fake file list in sidebar and hide reader content on blur"
+          "description": "%configuration.sidebarDisguise%"
         }
       }
     }

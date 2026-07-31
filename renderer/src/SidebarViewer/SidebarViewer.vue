@@ -6,7 +6,7 @@
     <el-icon class="menu-icon" color="#ccc" @click="expand = true">
       <Expand />
     </el-icon>
-    <el-drawer v-model="expand" direction="ltr" title="TOC" resizable style="min-width: 200px"
+    <el-drawer v-model="expand" direction="ltr" :title="t('reader.toc')" resizable style="min-width: 200px"
       header-class="toc-header">
       <el-tree :data="toc" :props="{ children: 'subitems' }" @node-click="onNodeClick" class="tree" node-key="id"
         :current-node-key="currentToc" highlight-current>
@@ -31,7 +31,7 @@
       <!-- process -->
       <el-row v-else class="footer-slider" justify="center" align="middle">
         <el-col :span="4">
-          <el-icon title="back" class="back-icon" @click="goBack">
+          <el-icon :title="t('common.back')" class="back-icon" @click="goBack">
             <Back />
           </el-icon>
         </el-col>
@@ -46,7 +46,7 @@
   <div v-else class="import-file">
     <el-upload class="select-button" :on-change="onchange" :auto-upload="false"
       accept=".epub,.mobi,.fk8,.azw3,.fb2,.cbz,.pdf,.txt" :show-file-list="false">
-      <el-button type="primary">select file</el-button>
+      <el-button type="primary">{{ t('common.selectFile') }}</el-button>
     </el-upload>
   </div>
 </template>
@@ -66,6 +66,8 @@ import '@/hooks/useKeyboard'
 import localforage from 'localforage'
 import useDisguise from '@/hooks/useDisguise'
 import useTTS from '@/hooks/useTTS'
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 const { showBook } = useDisguise()
 
 const { url, addBook, closeBook } = useStore()

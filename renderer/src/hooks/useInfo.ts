@@ -15,7 +15,12 @@ export interface Highlight {
   value: string
   type?: string
   color?: string
+  /** Selected text. */
+  quote: string
+  /** User-authored note. */
   note: string
+  createdAt?: number
+  updatedAt?: number
 }
 export interface BookInfo {
   id: string

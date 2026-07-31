@@ -1,26 +1,64 @@
 <template>
-  <el-popover :visible="isVisible" popper-class="bubble" :width="170">
+  <el-popover :visible="isVisible" popper-class="bubble" placement="top"
+    :fallback-placements="['bottom', 'right', 'left']"
+    :width="noteEditorVisible ? 'min(360px, calc(100vw - 24px))' : 'min(240px, calc(100vw - 24px))'">
     <template #reference>
       <span ref="popRef" style="position: absolute; visibility: hidden">{{ text }}</span>
     </template>
     <el-button-group>
-      <el-button :icon="Brush" @click="onHLBtn" v-if="!editAnnotation"></el-button>
+      <el-button :icon="Brush" :title="t('note.highlight')" @click="createAnnotation(false)"
+        v-if="!editAnnotation"></el-button>
+      <el-button :icon="ChatLineRound" :title="t('note.highlightAndAdd')" @click="createAnnotation(true)"
+        v-if="!editAnnotation"></el-button>
       <el-button :icon="Delete" @click="removeAnnotation" v-else></el-button>
+      <el-button :icon="ChatLineRound" :title="t('note.edit')" @click="openNoteEditor" v-if="editAnnotation"></el-button>
       <el-button :icon="CopyDocument" @click="copyText"></el-button>
-      <el-popover width="200" trigger="hover">
+      <el-popover :width="'min(360px, calc(100vw - 24px))'" trigger="click" @show="translateText">
         <template #reference>
-          <el-button :icon="Collection">
+          <el-button :icon="Collection" :title="t('translation.title')">
           </el-button>
         </template>
-        <div class="el-popover__title">
-          <el-select v-model="translateTo" placeholder="translateTo" style="width: 100%" size="small"
-            @change="translateText" :teleported="false">
-            <el-option v-for="(label, code) in lang" :key="code" :label="label" :value="code" />
+        <div class="translation-header">
+          <el-select v-model="translateTo" :placeholder="t('translation.target')" filterable
+            style="width: 100%" size="small" @change="translateText" :teleported="false">
+            <el-option v-for="option in languageOptions" :key="option.value"
+              :label="option.label" :value="option.value" />
           </el-select>
         </div>
-        {{ translatedText }}
+        <div class="translation-result">
+          <div v-if="translationLoading" class="translation-status">
+            {{ t('translation.loading') }}
+          </div>
+          <div v-else-if="translationError" class="translation-error">
+            <span>{{ translationError }}</span>
+            <el-button link type="primary" size="small" @click.stop="translateText">
+              {{ t('translation.retry') }}
+            </el-button>
+          </div>
+          <template v-else-if="translatedText">
+            <div v-if="detectedSourceLabel" class="translation-source">
+              {{ t('translation.detectedSource', { language: detectedSourceLabel }) }}
+            </div>
+            <div class="translation-text">{{ translatedText }}</div>
+            <div class="translation-actions">
+              <el-button link type="primary" size="small" :icon="CopyDocument" @click.stop="copyTranslation">
+                {{ t('translation.copy') }}
+              </el-button>
+            </div>
+          </template>
+          <div v-else class="translation-status">{{ t('translation.empty') }}</div>
+        </div>
       </el-popover>
     </el-button-group>
+    <div v-if="noteEditorVisible" class="note-editor">
+      <div class="note-quote" :title="text">{{ text }}</div>
+      <el-input v-model="draftNote" type="textarea" :rows="4" resize="vertical"
+        :placeholder="t('note.add')" @keydown.stop />
+      <div class="note-actions">
+        <el-button size="small" @click="closeNoteEditor">{{ t('common.cancel') }}</el-button>
+        <el-button size="small" type="primary" @click="saveNote">{{ t('common.save') }}</el-button>
+      </div>
+    </div>
     <div class="color-option-container" v-if="isVisible && !editAnnotation">
       <div v-if="!isLine" class="color-option" v-for="color in colorOption"
         :style="{ backgroundColor: color, border: color === highlightColor ? '' : '0px' }"
@@ -38,17 +76,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useLocalStorage } from '@vueuse/core'
 import { ElMessage } from 'element-plus'
 import 'element-plus/es/components/message/style/css'
-import { Brush, Delete, CopyDocument, Collection, DCaret } from '@element-plus/icons-vue'
+import { Brush, Delete, CopyDocument, Collection, DCaret, ChatLineRound } from '@element-plus/icons-vue'
 import { Overlayer } from 'vue-book-reader/dist/overlayer.js'
 import { useClipboard, useTextSelection } from '@vueuse/core'
 import { rendition, onReady } from '@/hooks/useRendition'
 import useInfo, { type Highlight } from '@/hooks/useInfo'
 import useVscode from '@/hooks/useVscode'
+import { useI18n } from 'vue-i18n'
 
+const { t, locale } = useI18n()
 const bookInfo = useInfo()
 const vscode = useVscode()
 const text = ref('')
@@ -59,7 +99,10 @@ const highlightColor = useLocalStorage('highlightColor', '#FBF1D1')
 
 const isVisible = ref(false)
 const cfiRange = ref<Range[] | null>(null)
+const noteEditorVisible = ref(false)
+const draftNote = ref('')
 let currentIndex = 0
+let currentRect: DOMRect | null = null
 const popRef = ref<null | HTMLElement>(null)
 const { copy } = useClipboard({ source: text })
 
@@ -69,7 +112,7 @@ const changeOption = () => {
 }
 
 onReady(() => {
-  rendition.value.addEventListener("create-overlay", (e) => {
+  rendition.value.addEventListener("create-overlay", () => {
     bookInfo.value!.highlights?.forEach((annotation) => {
       addAnnotation(annotation)
     })
@@ -84,7 +127,7 @@ onReady(() => {
       if (t.value === '') return
       text.value = t.value
       cfiRange.value = ranges.value
-      setProps(cfiRange.value[0].getBoundingClientRect())
+      setProps(getViewportRect(cfiRange.value[0]))
     })
     win.addEventListener('mousedown', hide)
     win.addEventListener('scroll', hide)
@@ -97,50 +140,84 @@ onReady(() => {
     else if (type === 'squiggly') draw(Overlayer.squiggly, { color })
   })
   rendition.value.addEventListener("show-annotation", (e) => {
-    const annotation = bookInfo.value!.highlights.find((h) => h.value === e.detail.value)!
-    highlightClick(annotation, e.detail.range.getBoundingClientRect())
+    const annotation = bookInfo.value!.highlights.find((h) => h.value === e.detail.value)
+    if (annotation) {
+      highlightClick(annotation, getViewportRect(e.detail.range))
+    }
   });
 })
 
 const copyText = () => {
   copy(text.value).then(() => {
     ElMessage({
-      message: 'copy success',
+      message: t('message.copySuccess'),
       type: 'success',
       plain: true,
     })
   })
 }
+
+const getViewportRect = (range: Range) => {
+  const clientRects = Array.from(range.getClientRects()).filter((rect) => rect.width || rect.height)
+  const rect = clientRects[clientRects.length - 1] || range.getBoundingClientRect()
+  const frame = range.startContainer.ownerDocument.defaultView?.frameElement as HTMLElement | null
+
+  if (!frame) return rect
+
+  const frameRect = frame.getBoundingClientRect()
+  const scaleX = frame.clientWidth ? frameRect.width / frame.clientWidth : 1
+  const scaleY = frame.clientHeight ? frameRect.height / frame.clientHeight : 1
+
+  return new DOMRect(
+    frameRect.left + rect.left * scaleX,
+    frameRect.top + rect.top * scaleY,
+    rect.width * scaleX,
+    rect.height * scaleY,
+  )
+}
+
 const setProps = (react: DOMRect) => {
-  const viewRect = rendition.value.renderer.getBoundingClientRect()
+  currentRect = react
   const reference = popRef.value
-  let left = react.left + viewRect.left
-  if (left + 170 > window.innerWidth) {
-    left = window.innerWidth - 170
-  }
-  if (left < 0) left = 0
-  reference!.style.left = `${left}px`
-  reference!.style.top = `${react.y + viewRect.top}px`
+  reference!.style.left = `${react.left}px`
+  reference!.style.top = `${react.top}px`
   reference!.style.width = react.width + 'px'
   reference!.style.height = react.height + 'px'
   isVisible.value = true
-  translateText()
 }
 
 const hide = () => {
   isVisible.value = false
   text.value = ''
-  translatedText.value = 'No Data'
   cfiRange.value = null
   editAnnotation.value = null
+  noteEditorVisible.value = false
+  draftNote.value = ''
+  currentRect = null
+  resetTranslation()
 }
 
 const editAnnotation = ref<Highlight | null>(null)
+
 const highlightClick = (annotation: Highlight, react: DOMRect) => {
   editAnnotation.value = annotation
-  const { note } = annotation
-  text.value = note
+  text.value = annotation.quote
+  draftNote.value = annotation.note
+  noteEditorVisible.value = false
   setProps(react)
+}
+
+const openNoteEditor = () => {
+  if (!editAnnotation.value) return
+  draftNote.value = editAnnotation.value.note
+  noteEditorVisible.value = true
+  if (currentRect) setProps(currentRect)
+}
+
+const closeNoteEditor = () => {
+  noteEditorVisible.value = false
+  draftNote.value = editAnnotation.value?.note || ''
+  if (currentRect) setProps(currentRect)
 }
 function addAnnotation(annotation: Highlight) {
   rendition.value.addAnnotation(annotation)
@@ -152,25 +229,71 @@ function removeAnnotation() {
   hide()
   bookInfo.value!.highlights = bookInfo.value!.highlights.filter(h => h.value !== value)
 }
-const onHLBtn = () => {
+
+const createAnnotation = (withNote: boolean) => {
   if (!bookInfo.value!.highlights) {
     bookInfo.value!.highlights = []
   }
-  const cfi = rendition.value.getCFI(currentIndex, cfiRange.value![0])
-  const annotation = {
+  if (!cfiRange.value?.[0]) return
+
+  const cfi = rendition.value.getCFI(currentIndex, cfiRange.value[0])
+  const now = Date.now()
+  const annotation: Highlight = {
     value: cfi,
     type: isLine.value ? 'underline' : 'highlight',
-    note: text.value,
+    quote: text.value,
+    note: '',
     color: highlightColor.value,
+    createdAt: now,
+    updatedAt: now,
   }
   addAnnotation(annotation)
   bookInfo.value!.highlights.push(annotation)
+
+  if (withNote) {
+    editAnnotation.value = annotation
+    draftNote.value = ''
+    cfiRange.value = null
+    noteEditorVisible.value = true
+    if (currentRect) setProps(currentRect)
+  } else {
+    hide()
+  }
+}
+
+const saveNote = () => {
+  if (!editAnnotation.value || !bookInfo.value) return
+
+  const updated: Highlight = {
+    ...editAnnotation.value,
+    note: draftNote.value.trim(),
+    createdAt: editAnnotation.value.createdAt || Date.now(),
+    updatedAt: Date.now(),
+  }
+
+  bookInfo.value.highlights = bookInfo.value.highlights.map((highlight) =>
+    highlight.value === updated.value ? updated : highlight
+  )
+  editAnnotation.value = updated
+  ElMessage({
+    message: t('note.saved'),
+    type: 'success',
+    plain: true,
+  })
   hide()
 }
 
-const translateTo = useLocalStorage('translateTo', 'en')
+const translateTo = useLocalStorage('translateTo', locale.value.startsWith('zh') ? 'zh-Hans' : 'en')
 const translatedText = ref('')
-const lang = {
+const translationLoading = ref(false)
+const translationError = ref('')
+const detectedSource = ref('')
+const translationCache = new Map<string, { text: string, source: string }>()
+let translationRequestSequence = 0
+let activeTranslationRequestId = 0
+let activeTranslationCacheKey = ''
+
+const lang: Record<string, string> = {
   af: 'Afrikaans',
   am: 'Amharic',
   ar: 'Arabic',
@@ -309,18 +432,137 @@ const lang = {
   'zh-Hant': 'Chinese Traditional',
   zu: 'Zulu',
 }
-const translateText = () => {
-  if (vscode && text.value) {
-    vscode.postMessage({ type: 'translate', content: text.value, to: translateTo.value })
+
+const languageOptions = computed(() => {
+  let displayNames: Intl.DisplayNames | null = null
+  try {
+    displayNames = new Intl.DisplayNames([locale.value], { type: 'language' })
+  } catch {
+    // Fall back to the bundled English labels if the runtime lacks DisplayNames.
   }
+
+  const preferred = locale.value.startsWith('zh')
+    ? ['zh-Hans', 'zh-Hant', 'en', 'ja', 'ko']
+    : ['en', 'zh-Hans', 'zh-Hant', 'es', 'fr']
+  const preferredOrder = new Map(preferred.map((code, index) => [code, index]))
+
+  return Object.entries(lang)
+    .map(([value, fallbackLabel]) => {
+      let label = fallbackLabel
+      try {
+        label = displayNames?.of(value) || fallbackLabel
+      } catch {
+        // Some service-specific language codes are not valid BCP 47 tags.
+      }
+      return { value, label }
+    })
+    .sort((a, b) => {
+      const aIndex = preferredOrder.get(a.value) ?? Number.MAX_SAFE_INTEGER
+      const bIndex = preferredOrder.get(b.value) ?? Number.MAX_SAFE_INTEGER
+      return aIndex - bIndex
+    })
+})
+
+const detectedSourceLabel = computed(() =>
+  languageOptions.value.find((option) => option.value === detectedSource.value)?.label || detectedSource.value
+)
+
+const getTranslationError = (code: string) => {
+  const keyByCode: Record<string, string> = {
+    INVALID_INPUT: 'translation.errors.invalidInput',
+    TEXT_TOO_LONG: 'translation.errors.textTooLong',
+    UNSUPPORTED_LANGUAGE: 'translation.errors.unsupportedLanguage',
+    UNAVAILABLE: 'translation.errors.unavailable',
+  }
+  return t(keyByCode[code] || 'translation.errors.failed')
 }
+
+const setTranslationCache = (key: string, value: { text: string, source: string }) => {
+  if (translationCache.size >= 50) {
+    const oldestKey = translationCache.keys().next().value
+    if (oldestKey) translationCache.delete(oldestKey)
+  }
+  translationCache.set(key, value)
+}
+
+const resetTranslation = () => {
+  activeTranslationRequestId = ++translationRequestSequence
+  activeTranslationCacheKey = ''
+  translatedText.value = ''
+  detectedSource.value = ''
+  translationLoading.value = false
+  translationError.value = ''
+}
+
+const translateText = () => {
+  const sourceText = text.value.trim()
+  if (!sourceText) {
+    resetTranslation()
+    return
+  }
+  if (!vscode) {
+    resetTranslation()
+    translationError.value = getTranslationError('UNAVAILABLE')
+    return
+  }
+
+  const cacheKey = JSON.stringify([sourceText, translateTo.value])
+  const cached = translationCache.get(cacheKey)
+  if (cached) {
+    activeTranslationRequestId = ++translationRequestSequence
+    activeTranslationCacheKey = cacheKey
+    translatedText.value = cached.text
+    detectedSource.value = cached.source
+    translationLoading.value = false
+    translationError.value = ''
+    return
+  }
+
+  const requestId = ++translationRequestSequence
+  activeTranslationRequestId = requestId
+  activeTranslationCacheKey = cacheKey
+  translatedText.value = ''
+  detectedSource.value = ''
+  translationLoading.value = true
+  translationError.value = ''
+  vscode.postMessage({
+    type: 'translate',
+    requestId,
+    content: sourceText,
+    to: translateTo.value,
+  })
+}
+
+const copyTranslation = () => {
+  if (!translatedText.value) return
+  copy(translatedText.value).then(() => {
+    ElMessage({
+      message: t('translation.copySuccess'),
+      type: 'success',
+      plain: true,
+    })
+  })
+}
+
 window.addEventListener('message', ({ data }) => {
-  if (data) {
-    switch (data.type) {
-      case 'translate':
-        translatedText.value = data.content
-        break
-    }
+  if (!data || data.type !== 'translate' || data.requestId !== activeTranslationRequestId) return
+
+  translationLoading.value = false
+  if (data.error) {
+    translatedText.value = ''
+    detectedSource.value = ''
+    translationError.value = getTranslationError(data.error)
+    return
+  }
+
+  translatedText.value = data.content || ''
+  detectedSource.value = data.from || ''
+  translationError.value = translatedText.value ? '' : getTranslationError('TRANSLATE_FAILED')
+  if (translatedText.value && activeTranslationCacheKey) {
+    setTranslationCache(activeTranslationCacheKey, {
+      text: translatedText.value,
+      source: detectedSource.value,
+    })
   }
 })
 </script>
@@ -406,6 +648,74 @@ window.addEventListener('message', ({ data }) => {
         height: 0px;
       }
     }
+  }
+}
+
+.translation-header {
+  margin-bottom: 10px;
+}
+
+.translation-result {
+  min-height: 54px;
+  max-height: min(320px, calc(100vh - 160px));
+  overflow-y: auto;
+}
+
+.translation-status {
+  padding: 14px 4px;
+  color: var(--el-text-color-secondary);
+  text-align: center;
+}
+
+.translation-error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px;
+  color: var(--el-color-danger);
+  background: var(--el-color-danger-light-9);
+  border-radius: 4px;
+}
+
+.translation-source {
+  margin-bottom: 6px;
+  color: var(--el-text-color-secondary);
+  font-size: 12px;
+}
+
+.translation-text {
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.translation-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.note-editor {
+  margin-top: 10px;
+
+  .note-quote {
+    margin-bottom: 8px;
+    padding: 6px 8px;
+    max-height: 54px;
+    overflow: hidden;
+    color: var(--el-text-color-secondary);
+    background: var(--el-fill-color-light);
+    border-radius: 4px;
+    font-size: 12px;
+    line-height: 18px;
+  }
+
+  .note-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 8px;
   }
 }
 </style>

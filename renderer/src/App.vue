@@ -1,7 +1,9 @@
 <template>
-  <BookViewer v-if="!isSidebar" />
-  <SidebarViewer v-else />
-  <ImageViewer />
+  <el-config-provider :locale="elementPlusLocale">
+    <BookViewer v-if="!isSidebar" />
+    <SidebarViewer v-else />
+    <ImageViewer />
+  </el-config-provider>
 </template>
 <script setup lang="ts">
 //http://element-plus.org/zh-CN/component/overview.html
@@ -14,6 +16,7 @@ import * as pdfjsLib from 'pdfjs-dist'
 import useVscode from '@/hooks/useVscode'
 import pkg from '../../package.json'
 import '@/hooks/useMessage'
+import { elementPlusLocale } from '@/locales'
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
   'pdfjs-dist/legacy/build/pdf.worker.min.mjs',

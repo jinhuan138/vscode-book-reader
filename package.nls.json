@@ -1,0 +1,17 @@
+{
+  "extension.displayName": "Book Reader",
+  "extension.description": "Read EPUB, MOBI, AZW3, PDF, FK8, FB2, CBZ and TXT books in VS Code.",
+  "command.openFile": "Book Reader",
+  "command.openBook": "Open Book",
+  "command.selectBookFolder": "Select Book Folder",
+  "command.openBookInSidebar": "Open in Sidebar",
+  "command.toggleSidebarDisguise": "Toggle Sidebar Disguise",
+  "command.refreshBookList": "Refresh Book List",
+  "view.container": "Book Reader",
+  "view.bookList": "Book List",
+  "view.readerSidebar": "Reader Sidebar",
+  "editor.displayName": "Book Reader",
+  "configuration.title": "Book Reader",
+  "configuration.bookFolderPath": "Path to the folder containing books",
+  "configuration.sidebarDisguise": "Show a fake file list in the sidebar and hide reader content when focus is lost"
+}
