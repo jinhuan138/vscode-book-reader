@@ -409,6 +409,14 @@ export async function convertTxtToEpub(input: string | UploadFile, fileName?: st
     resolvedFileName = fileName ?? file.name
   }
 
+  return convertTxtBufferToEpub(txtBuffer, resolvedFileName)
+}
+
+/** Convert an already-read TXT buffer to EPUB without reading the source again. */
+export async function convertTxtBufferToEpub(
+  txtBuffer: ArrayBuffer,
+  resolvedFileName: string,
+): Promise<File> {
   const metadata = parseEpubInfo(resolvedFileName)
   const txtContent = decodeBuffer(txtBuffer)
 

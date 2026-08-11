@@ -3,7 +3,7 @@
   "displayName": "%extension.displayName%",
   "description": "%extension.description%",
   "publisher": "lindacong",
-  "version": "1.4.2",
+  "version": "1.4.3",
   "icon": "renderer/public/logo.png",
   "license": "MIT",
   "repository": {

@@ -17,7 +17,7 @@ watch(
         firstLoad.value = false
         const lastBook = await localforage.getItem('lastBook')
         if (lastBook) {
-          addBook(lastBook as string | UploadFile)
+          addBook(lastBook as string | UploadFile | File)
         }
       } else if (currentBook) {
         localforage.setItem('lastBook', currentBook)
