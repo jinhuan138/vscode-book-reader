@@ -1,5 +1,4 @@
 import { ref, computed, watch, onUnmounted } from 'vue'
-import { AudioContext } from 'standardized-audio-context'
 import { useSpeechSynthesis, useLocalStorage } from '@vueuse/core'
 import { ElMessage } from 'element-plus'
 import 'element-plus/es/components/message/style/css'
@@ -246,7 +245,7 @@ export default function useTTS() {
   }
 
   // AudioContext 创建一次，整个生命周期复用
-  const ctx = new AudioContext()
+  const ctx = new window.AudioContext()
   let schedEnd = 0
   console.log('[TTS] AudioContext创建 state=', (ctx as any).state)
 

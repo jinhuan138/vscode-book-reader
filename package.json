@@ -3,7 +3,7 @@
   "displayName": "%extension.displayName%",
   "description": "%extension.description%",
   "publisher": "lindacong",
-  "version": "1.4.3",
+  "version": "1.4.4",
   "icon": "renderer/public/logo.png",
   "license": "MIT",
   "repository": {
@@ -11,7 +11,7 @@
     "type": "git"
   },
   "engines": {
-    "vscode": "^1.109.0"
+    "vscode": "^1.88.0"
   },
   "keywords": [
     "reader",
@@ -167,7 +167,7 @@
     "preview": "pnpm -F ./renderer preview",
     "vscode:prepublish": "pnpm compile",
     "package": "pnpm vsce package",
-    "compile": "node esbuild.js",
+    "compile": "pnpm -F ./renderer exec vite build --config vite.extension.config.ts",
     "watch": "tsc -watch -p ./",
     "pretest": "pnpm compile && pnpm lint",
     "lint": "eslint src --ext ts",
@@ -176,12 +176,11 @@
   "devDependencies": {
     "@types/mocha": "^10.0.10",
     "@types/node": "~18.19.130",
-    "@types/vscode": "^1.109.0",
+    "@types/vscode": "^1.88.0",
     "@typescript-eslint/eslint-plugin": "^7.18.0",
     "@typescript-eslint/parser": "^7.18.0",
     "@vscode/test-cli": "^0.0.8",
     "@vscode/test-electron": "^2.5.2",
-    "esbuild": "^0.28.0",
     "eslint": "^8.57.1",
     "typescript": "^6.0.3"
   },

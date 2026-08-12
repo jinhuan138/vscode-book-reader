@@ -1,22 +1,18 @@
 .vscode/**
 src/**
+renderer/**
+.github/**
 .gitignore
+
 **/tsconfig.json
 **/.eslintrc.json
 **/*.map
 **/*.ts
-.github
 pnpm-workspace.yaml
 pnpm-lock.yaml
-# 忽略整个 renderer 目录及其子内容
-renderer/**
-# 但保留 renderer/dist
+.prettierignore
+
+# Keep the built webview and extension icons.
 !renderer/dist/**
-# 保留 renderer/public 下的图片目录（renderer/public/image）
-!renderer/public/image/**
 !renderer/public/logo.png
 !renderer/public/icon.svg
-# 明确排除 renderer/public/files 下的所有文件
-renderer/public/files/**
-esbuild.js
-.prettierignore
