@@ -3,7 +3,7 @@
   "displayName": "%extension.displayName%",
   "description": "%extension.description%",
   "publisher": "lindacong",
-  "version": "1.4.4",
+  "version": "1.4.5",
   "icon": "renderer/public/logo.png",
   "license": "MIT",
   "repository": {
@@ -25,7 +25,7 @@
     "cbz",
     "fb2"
   ],
-  "homepage": "https://jinhuan138.github.io/vscode-book-reader/",
+  "homepage": "https://jinhuan138.github.io/vscode-book-reader",
   "bugs": "https://github.com/jinhuan138/vscode-book-reader/issues",
   "categories": [
     "Other"

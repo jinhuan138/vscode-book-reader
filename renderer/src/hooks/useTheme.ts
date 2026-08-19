@@ -120,7 +120,7 @@ const getCSS = ({
   svg,img,image {
     background-color: transparent !important;
     mix-blend-mode: multiply;
-    cursor: pointer;
+    cursor: zoom-in;
   }
   /* prevent the above from overriding the align attribute */
   [align="left"] { text-align: left; }

@@ -23,8 +23,19 @@
 </template>
 
 <script setup>
+import { watch } from 'vue'
 import { Download, RefreshLeft, RefreshRight, ZoomIn, ZoomOut } from '@element-plus/icons-vue'
 import useImage from '@/hooks/useImage'
+import { isSidebar } from '@/hooks/useSidebar'
 
 const { srcList, showPreview, indexRef, downloadImage } = useImage()
+
+watch(isSidebar, (val) => {
+    document.body.classList.toggle('is-sidebar', val)
+}, { immediate: true })
 </script>
+<style>
+body.is-sidebar .el-image-viewer__btn {
+    display: none;
+}
+</style>
