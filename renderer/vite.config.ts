@@ -5,13 +5,13 @@ import { visualizer } from 'rollup-plugin-visualizer'
 import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
-import { version } from '../package.json'
+import pkg from '../package.json' with { type: 'json' }
 // https://cn.vitejs.dev/
 export default defineConfig({
   plugins: [
     vue(),
     // visualizer({
-    //   filename: `stats${version}.html`,
+    //   filename: `stats${pkg.version}.html`,
     // }) as PluginOption,
     AutoImport({
       resolvers: [ElementPlusResolver()],
@@ -26,7 +26,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, 'src'),
+      '@': path.resolve(import.meta.dirname, 'src'),
     },
   },
   build: {

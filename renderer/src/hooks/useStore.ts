@@ -5,6 +5,7 @@ import { type BookInfo } from './useInfo'
 import { rendition } from './useRendition'
 import useVscode from '@/hooks/useVscode'
 import { convertTxtBufferToEpub } from '@/hooks/useTxt'
+import { preparePdfWorker } from '@/hooks/usePdfWorker'
 //TODO https://vueuse.org/integrations/useIDBKeyval/#useidbkeyval
 
 const vscode = useVscode()
@@ -52,6 +53,11 @@ const isTxt = (file: BookSource) => {
   return name.toLowerCase().endsWith('.txt')
 }
 
+const isPdf = (file: BookSource) => {
+  const name = typeof file === 'string' ? file.split(/[?#]/)[0] : file.name
+  return name.toLowerCase().endsWith('.pdf')
+}
+
 const getFileName = (source: string, responseUrl: string): string => {
   try {
     const pathname = new URL(responseUrl || source, window.location.href).pathname
@@ -68,6 +74,11 @@ const addBook = async (book: BookSource) => {
 
   const controller = new AbortController()
   fetchController = controller
+
+  // worker 与书籍内容并行加载，别串在整本书读完之后；失败只降级不阻断开书
+  const pdfWorkerPromise = isPdf(book)
+    ? preparePdfWorker().catch((e) => console.warn('pdf worker prepare failed', e))
+    : Promise.resolve()
 
   try {
     let file: File
@@ -94,7 +105,7 @@ const addBook = async (book: BookSource) => {
     const preparedBookPromise = isTxt(file.name)
       ? convertTxtBufferToEpub(sourceBuffer, file.name)
       : Promise.resolve(file)
-    const [id, preparedBook] = await Promise.all([hashPromise, preparedBookPromise])
+    const [id, preparedBook] = await Promise.all([hashPromise, preparedBookPromise, pdfWorkerPromise])
 
     // A newer open/close action owns the state; discard this stale result.
     if (requestId !== openRequestId) return
