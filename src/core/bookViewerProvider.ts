@@ -1,10 +1,10 @@
 import * as vscode from 'vscode'
-import { readFileSync } from 'fs'
 import { SidebarBookListProvider } from './sidebar/sidebarBookListProvider'
 import { dirname, join } from 'path'
 import { translate as bingTranslate } from 'bing-translate-api'
 import { Store } from '../core/store'
 import { generateEdgeTTS, clearTTSCache } from './ttsPlayer'
+import { getWebviewHtml } from './webviewHtml'
 
 const MAX_TRANSLATION_TEXT_LENGTH = 10000
 const TRANSLATION_CHUNK_LENGTH = 900
@@ -230,6 +230,6 @@ export class BookViewerProvider implements vscode.CustomReadonlyEditorProvider {
     webviewPanel.onDidDispose(() => {
       Store.webviewMap.delete(uri.toString())
     })
-    webview.html = readFileSync(this._context.extensionPath + '/renderer/dist/index.html', 'utf8')
+    webview.html = getWebviewHtml(webview, this._context.extensionPath)
   }
 }

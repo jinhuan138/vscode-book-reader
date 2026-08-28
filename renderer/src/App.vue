@@ -19,7 +19,7 @@ import '@/hooks/useMessage'
 import { elementPlusLocale } from '@/locales'
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-  'pdfjs-dist/legacy/build/pdf.worker.min.mjs',
+  'pdfjs-dist/build/pdf.worker.min.mjs',
   import.meta.url,
 ).toString()
 console.log(

@@ -1,7 +1,7 @@
 import * as vscode from 'vscode'
-import { readFileSync } from 'fs'
 import { Store } from '../store'
 import { generateEdgeTTS, clearTTSCache } from '../ttsPlayer'
+import { getWebviewHtml } from '../webviewHtml'
 import { join } from 'path'
 
 export class SidebarViewerProvider implements vscode.WebviewViewProvider {
@@ -135,6 +135,6 @@ export class SidebarViewerProvider implements vscode.WebviewViewProvider {
           break
       }
     })
-    webviewView.webview.html = readFileSync(this.extensionPath + '/renderer/dist/index.html', 'utf8')
+    webviewView.webview.html = getWebviewHtml(webview, this.extensionPath)
   }
 }

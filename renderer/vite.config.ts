@@ -1,6 +1,5 @@
 import { defineConfig, PluginOption } from 'vite'
 import vue from '@vitejs/plugin-vue'
-import { viteSingleFile } from 'vite-plugin-singlefile'
 import path from 'path'
 import { visualizer } from 'rollup-plugin-visualizer'
 import AutoImport from 'unplugin-auto-import/vite'
@@ -11,7 +10,6 @@ import { version } from '../package.json'
 export default defineConfig({
   plugins: [
     vue(),
-    viteSingleFile(),
     // visualizer({
     //   filename: `stats${version}.html`,
     // }) as PluginOption,
@@ -22,6 +20,7 @@ export default defineConfig({
       resolvers: [ElementPlusResolver()],
     }),
   ],
+  base: './',
   server: {
     port: 8025,
   },
@@ -32,8 +31,5 @@ export default defineConfig({
   },
   build: {
     copyPublicDir: false,
-    output: {
-      codeSplitting: false,
-    },
   },
 })
