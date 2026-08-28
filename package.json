@@ -175,17 +175,17 @@
   },
   "devDependencies": {
     "@types/mocha": "^10.0.10",
-    "@types/node": "~18.19.130",
+    "@types/node": "~20.19.43",
     "@types/vscode": "^1.88.0",
     "@typescript-eslint/eslint-plugin": "^7.18.0",
     "@typescript-eslint/parser": "^7.18.0",
-    "@vscode/test-cli": "^0.0.8",
-    "@vscode/test-electron": "^2.5.2",
+    "@vscode/test-cli": "^0.0.15",
+    "@vscode/test-electron": "^3.1.0",
     "eslint": "^8.57.1",
     "typescript": "^6.0.3"
   },
   "dependencies": {
-    "bing-translate-api": "^4.2.0",
+    "bing-translate-api": "^4.2.1",
     "node-edge-tts": "1.2.10"
   },
   "vsce": {
