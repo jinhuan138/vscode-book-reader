@@ -93,7 +93,6 @@ export default {
     grayscale: 'Grayscale mode',
     codeDisguise: 'Code disguise',
     codeDisguiseTip: 'Press Space to toggle disguise',
-    sidebarDisguise: 'Sidebar disguise',
   },
   reader: {
     toc: 'Table of contents',

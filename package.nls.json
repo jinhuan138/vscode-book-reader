@@ -5,7 +5,6 @@
   "command.openBook": "Open Book",
   "command.selectBookFolder": "Select Book Folder",
   "command.openBookInSidebar": "Open in Sidebar",
-  "command.toggleSidebarDisguise": "Toggle Sidebar Disguise",
   "command.refreshBookList": "Refresh Book List",
   "view.container": "Book Reader",
   "view.bookList": "Book List",
@@ -13,5 +12,4 @@
   "editor.displayName": "Book Reader",
   "configuration.title": "Book Reader",
   "configuration.bookFolderPath": "Path to the folder containing books",
-  "configuration.sidebarDisguise": "Show a fake file list in the sidebar and hide reader content when focus is lost"
 }

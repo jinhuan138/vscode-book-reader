@@ -9,7 +9,6 @@ const fileType = ref('')
 const vscode = useVscode()
 const info = useInfo()
 const codeDisguise = useLocalStorage<boolean>('codeDisguise', false)
-const sidebarDisguise = useLocalStorage<boolean>('sidebarDisguise', false)
 const active = ref<boolean>(true)
 const showBook = ref(true)
 const title = computed(() => {
@@ -33,17 +32,9 @@ export default function useDisguise() {
       active.value = true
       showBook.value = true
     }
-    if (!isSidebar.value && vscode) {
+    if (vscode) {
       vscode.postMessage({
         type: 'codeDisguise',
-        content: enabled,
-      })
-    }
-  })
-  watch(sidebarDisguise, (enabled: boolean) => {
-    if (!isSidebar.value && vscode) {
-      vscode.postMessage({
-        type: 'sidebarDisguise',
         content: enabled,
       })
     }
@@ -77,7 +68,7 @@ export default function useDisguise() {
     })
   })
 
-  return { codeDisguise, sidebarDisguise, active, showBook, codeLines }
+  return { codeDisguise, active, showBook, codeLines }
 }
 /** 文件类型映射表 */
 

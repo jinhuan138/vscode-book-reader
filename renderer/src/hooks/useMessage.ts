@@ -12,7 +12,7 @@ const { addBook } = useStore()
 const flow = useFlow()
 const { theme } = useTheme()
 const animation = useAnimation()
-const { codeDisguise, sidebarDisguise, active } = useDisguise()
+const { codeDisguise, active } = useDisguise()
 const { ttsConfig } = useTTS()
 
 const handleMessage = ({ data }) => {
@@ -36,9 +36,6 @@ const handleMessage = ({ data }) => {
         break
       case 'codeDisguise':
         codeDisguise.value = Boolean(data.content)
-        break
-      case 'sidebarDisguise':
-        sidebarDisguise.value = Boolean(data.content)
         break
       case 'ttsConfig':
         ttsConfig.value = JSON.parse(data.content)

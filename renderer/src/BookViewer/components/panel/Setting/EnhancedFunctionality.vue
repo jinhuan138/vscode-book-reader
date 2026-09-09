@@ -14,9 +14,6 @@
         <el-switch v-model="codeDisguise" />
       </el-tooltip>
     </el-form-item>
-    <el-form-item :label="t('settings.sidebarDisguise')">
-      <el-switch v-model="sidebarDisguise" />
-    </el-form-item>
   </el-form>
 </template>
 <script setup>
@@ -27,6 +24,6 @@ import { useI18n } from 'vue-i18n'
 
 
 const { theme } = useTheme()
-const { codeDisguise, sidebarDisguise } = useDisguise()
+const { codeDisguise } = useDisguise()
 const { t } = useI18n()
 </script>

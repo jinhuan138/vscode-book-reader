@@ -1,5 +1,4 @@
 import * as vscode from 'vscode'
-import { SidebarBookListProvider } from './sidebar/sidebarBookListProvider'
 import { dirname, join } from 'path'
 import { translate as bingTranslate } from 'bing-translate-api'
 import { Store } from '../core/store'
@@ -191,14 +190,6 @@ export class BookViewerProvider implements vscode.CustomReadonlyEditorProvider {
           vscode.workspace
             .getConfiguration('book-reader')
             .update('codeDisguise', message.content, vscode.ConfigurationTarget.Global)
-          break
-        case 'sidebarDisguise':
-          vscode.workspace
-            .getConfiguration('book-reader')
-            .update('sidebarDisguise', message.content, vscode.ConfigurationTarget.Global)
-          if (!message.content) {
-            SidebarBookListProvider.getInstance().setDisguised(false)
-          }
           break
         case 'ttsConfig':
           this._context.globalState.update('ttsConfig', message.content)

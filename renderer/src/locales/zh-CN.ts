@@ -93,7 +93,6 @@ export default {
     grayscale: '灰度模式',
     codeDisguise: '代码伪装',
     codeDisguiseTip: '按空格键切换伪装状态',
-    sidebarDisguise: '侧栏伪装',
   },
   reader: {
     toc: '目录',

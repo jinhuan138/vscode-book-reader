@@ -53,11 +53,6 @@
         "icon": "$(open-preview)"
       },
       {
-        "command": "book-reader.toggleSidebarDisguise",
-        "title": "%command.toggleSidebarDisguise%",
-        "icon": "$(eye)"
-      },
-      {
         "command": "book-reader.refreshBookList",
         "title": "%command.refreshBookList%",
         "icon": "$(refresh)"
@@ -127,11 +122,6 @@
           "group": "navigation@1"
         },
         {
-          "command": "book-reader.toggleSidebarDisguise",
-          "when": "view == bookReaderList",
-          "group": "navigation@2"
-        },
-        {
           "command": "book-reader.selectBookFolder",
           "when": "view == bookReaderList",
           "group": "navigation@3"
@@ -152,11 +142,6 @@
           "type": "string",
           "default": "",
           "description": "%configuration.bookFolderPath%"
-        },
-        "book-reader.sidebarDisguise": {
-          "type": "boolean",
-          "default": false,
-          "description": "%configuration.sidebarDisguise%"
         }
       }
     }

@@ -66,8 +66,8 @@ export class SidebarViewerProvider implements vscode.WebviewViewProvider {
             content: true,
           })
           webview.postMessage({
-            type: 'sidebarDisguise',
-            content: vscode.workspace.getConfiguration('book-reader').get<boolean>('sidebarDisguise', false),
+            type: 'codeDisguise',
+            content: vscode.workspace.getConfiguration('book-reader').get<boolean>('codeDisguise', false),
           })
           break
         case 'title':
@@ -109,10 +109,10 @@ export class SidebarViewerProvider implements vscode.WebviewViewProvider {
         case 'focused':
           hasFocused = true
           break
-        case 'sidebarDisguise':
+        case 'codeDisguise':
           vscode.workspace
             .getConfiguration('book-reader')
-            .update('sidebarDisguise', message.content, vscode.ConfigurationTarget.Global)
+            .update('codeDisguise', message.content, vscode.ConfigurationTarget.Global)
           break
         case 'ttsSpeak': {
           const { id, text, voice, speed } = message.content
