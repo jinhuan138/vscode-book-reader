@@ -45,6 +45,7 @@ export class SidebarViewerProvider implements vscode.WebviewViewProvider {
   resolveWebviewView(webviewView: vscode.WebviewView) {
     Store.sliderWebview = webviewView
     const webview = webviewView.webview
+    const ttsSessionId = 'sidebar'
     this.updateLocalResourceRoots(webview)
     vscode.workspace.onDidChangeConfiguration((e) => {
       if (e.affectsConfiguration('book-reader.bookFolderPath')) {
@@ -116,7 +117,7 @@ export class SidebarViewerProvider implements vscode.WebviewViewProvider {
         case 'ttsSpeak': {
           const { id, text, voice, speed } = message.content
           generateEdgeTTS(
-            id,
+            ttsSessionId,
             text,
             voice,
             speed || 1,
@@ -131,10 +132,11 @@ export class SidebarViewerProvider implements vscode.WebviewViewProvider {
           break
         }
         case 'ttsStop':
-          clearTTSCache()
+          clearTTSCache(ttsSessionId)
           break
       }
     })
+    webviewView.onDidDispose(() => clearTTSCache(ttsSessionId))
     webviewView.webview.html = getWebviewHtml(webview, this.extensionPath)
   }
 }

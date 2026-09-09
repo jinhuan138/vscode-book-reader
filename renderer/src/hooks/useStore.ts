@@ -5,7 +5,6 @@ import { type BookInfo } from './useInfo'
 import { rendition } from './useRendition'
 import useVscode from '@/hooks/useVscode'
 import { convertTxtBufferToEpub } from '@/hooks/useTxt'
-import { preparePdfWorker } from '@/hooks/usePdfWorker'
 //TODO https://vueuse.org/integrations/useIDBKeyval/#useidbkeyval
 
 const vscode = useVscode()
@@ -77,7 +76,9 @@ const addBook = async (book: BookSource) => {
 
   // worker 与书籍内容并行加载，别串在整本书读完之后；失败只降级不阻断开书
   const pdfWorkerPromise = isPdf(book)
-    ? preparePdfWorker().catch((e) => console.warn('pdf worker prepare failed', e))
+    ? import('./usePdfWorker')
+      .then(({ preparePdfWorker }) => preparePdfWorker())
+      .catch((e) => console.warn('pdf worker prepare failed', e))
     : Promise.resolve()
 
   try {

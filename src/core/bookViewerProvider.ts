@@ -4,6 +4,7 @@ import { dirname, join } from 'path'
 import { translate as bingTranslate } from 'bing-translate-api'
 import { Store } from '../core/store'
 import { generateEdgeTTS, clearTTSCache } from './ttsPlayer'
+import { createHash } from 'crypto'
 import { getWebviewHtml } from './webviewHtml'
 
 const MAX_TRANSLATION_TEXT_LENGTH = 10000
@@ -86,6 +87,7 @@ export class BookViewerProvider implements vscode.CustomReadonlyEditorProvider {
 
   public createBookPanel(uri: vscode.Uri, webviewPanel: vscode.WebviewPanel) {
     const webview = webviewPanel.webview
+    const ttsSessionId = createHash('md5').update(uri.toString()).digest('hex')
     if (!Store.webviewMap.has(uri.toString())) {
       Store.webviewMap.set(uri.toString(), webviewPanel)
     }
@@ -204,7 +206,7 @@ export class BookViewerProvider implements vscode.CustomReadonlyEditorProvider {
           break
         case 'ttsSpeak': {
           const { id, text, voice, speed } = message.content
-          generateEdgeTTS(id, text, voice, speed || 1).then(({ filePath, error }) => {
+          generateEdgeTTS(ttsSessionId, text, voice, speed || 1).then(({ filePath, error }) => {
             if (filePath) {
               const url = webview.asWebviewUri(vscode.Uri.file(filePath)).toString()
               webview.postMessage({ type: 'ttsAudio', id, content: url })
@@ -215,7 +217,7 @@ export class BookViewerProvider implements vscode.CustomReadonlyEditorProvider {
           break
         }
         case 'ttsStop':
-          clearTTSCache()
+          clearTTSCache(ttsSessionId)
           break
       }
     })
@@ -228,6 +230,7 @@ export class BookViewerProvider implements vscode.CustomReadonlyEditorProvider {
     })
     // 当面板关闭/销毁，从列表中移除
     webviewPanel.onDidDispose(() => {
+      clearTTSCache(ttsSessionId)
       Store.webviewMap.delete(uri.toString())
     })
     webview.html = getWebviewHtml(webview, this._context.extensionPath)

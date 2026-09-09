@@ -3,6 +3,7 @@ import { BookViewerProvider } from './core/bookViewerProvider'
 import { SidebarViewerProvider } from './core/sidebar/sidebarViewerProvider'
 import { SidebarBookListProvider } from './core/sidebar/sidebarBookListProvider'
 import { Store } from './core/store'
+import { clearAllTTSCache } from './core/ttsPlayer'
 
 //https://rackar.github.io/vscode-ext-doccn
 //https://code.visualstudio.com/api
@@ -12,6 +13,7 @@ import { Store } from './core/store'
 export function activate(context: vscode.ExtensionContext) {
   console.log('🐟book reader🐟 已激活！')
   Store.context = context // 保存上下文到全局 Store
+  clearAllTTSCache()
   const option = {
     webviewOptions: { retainContextWhenHidden: true, enableFindWidget: true },
   }
