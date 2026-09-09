@@ -27,15 +27,25 @@ import { watch } from 'vue'
 import { Download, RefreshLeft, RefreshRight, ZoomIn, ZoomOut } from '@element-plus/icons-vue'
 import useImage from '@/hooks/useImage'
 import { isSidebar } from '@/hooks/useSidebar'
+import useTheme from '@/hooks/useTheme'
 
 const { srcList, showPreview, indexRef, downloadImage } = useImage()
+const { theme } = useTheme()
 
 watch(isSidebar, (val) => {
     document.body.classList.toggle('is-sidebar', val)
+}, { immediate: true })
+
+// 图片预览跟随全局灰度模式
+watch(() => theme.value.grayscale, (val) => {
+    document.body.classList.toggle('is-image-grayscale', val)
 }, { immediate: true })
 </script>
 <style>
 body.is-sidebar .el-image-viewer__btn {
     display: none;
+}
+body.is-image-grayscale .el-image-viewer__img {
+    filter: grayscale(100%);
 }
 </style>

@@ -6,47 +6,56 @@ type Direction = 'next' | 'prev'
 
 const boundDocuments = new WeakSet<Document>()
 
-function isEditableTarget(target: EventTarget | null): boolean {
-  const element = target as HTMLElement | null
-  const tagName = element?.tagName?.toLowerCase()
-  return Boolean(
-    element?.isContentEditable ||
-      tagName === 'input' ||
-      tagName === 'textarea' ||
-      tagName === 'select' ||
-      element?.closest?.('[contenteditable=true]'),
-  )
-}
-
 function keyListener(doc: Document, fn: (dire: Direction) => void) {
   if (boundDocuments.has(doc)) return
   boundDocuments.add(doc)
 
   doc.addEventListener(
-    'keyup',
+    'keydown',
     (e: KeyboardEvent) => {
-      if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey || isEditableTarget(e.target)) return
+      if (e.defaultPrevented || e.repeat || e.ctrlKey || e.metaKey || e.altKey) return
 
       const canFlip = !codeDisguise.value || active.value
       if (e.code === 'KeyS' || e.code === 'KeyD') {
-        if (canFlip) fn('next')
+        if (canFlip) {
+          e.preventDefault()
+          fn('next')
+        }
       } else if (e.code === 'KeyA' || e.code === 'KeyW') {
-        if (canFlip) fn('prev')
-      }
-
-      if (e.code === 'Space' && codeDisguise.value) {
-        active.value = !active.value
+        if (canFlip) {
+          e.preventDefault()
+          fn('prev')
+        }
       }
     },
     false,
   )
 }
 
-const flipPage = (direction: Direction) => {
-  if (direction === 'next') {
-    rendition.value.next()
-  } else if (direction === 'prev') {
-    rendition.value.prev()
+let isNavigating = false
+let pendingDirection: Direction | null = null
+
+const flipPage = async (direction: Direction) => {
+  pendingDirection = direction
+  if (isNavigating) return
+
+  const currentRendition = rendition.value
+  if (!currentRendition) return
+
+  isNavigating = true
+  try {
+    // Navigation rebuilds iframe documents. Coalesce rapid key presses rather
+    // than running next()/prev() concurrently.
+    while (pendingDirection && rendition.value === currentRendition) {
+      const nextDirection = pendingDirection
+      pendingDirection = null
+      await currentRendition[nextDirection]()
+    }
+  } catch (error) {
+    console.warn('Page navigation failed', error)
+  } finally {
+    isNavigating = false
+    pendingDirection = null
   }
 }
 
