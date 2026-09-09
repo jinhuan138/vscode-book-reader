@@ -1,10 +1,17 @@
 import { ref } from 'vue'
 import { rendition } from './useRendition'
 
+type SearchResult = {
+  pre: string
+  match: string
+  post: string
+  cfi: string
+}
+
 export default function useSearch() {
   const searching = ref(false)
   const searchText = ref('')
-  const searchResult = ref<any[]>([])
+  const searchResult = ref<SearchResult[]>([])
   const searchingLoading = ref(false)
   const search = async () => {
     const text = searchText.value
@@ -29,13 +36,14 @@ export default function useSearch() {
         }
       }
     }
-    const tableResults: any[] = []
+    const tableResults: SearchResult[] = []
     results.forEach(({ subitems }) => {
       subitems.forEach((item) => {
         const { pre, post } = item.excerpt
-        const label = `${pre}<span style='color: orange;'>${text}</span>${post}`
         tableResults.push({
-          label,
+          pre: String(pre ?? ''),
+          match: text,
+          post: String(post ?? ''),
           cfi: item.cfi,
         })
       })

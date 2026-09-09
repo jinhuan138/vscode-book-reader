@@ -8,9 +8,9 @@
       :suffix-icon="searchText ? '' : Search" @keyup.enter="search" class="search" />
     <el-table :key="searchResult.length" :show-header="false" :data="searchResult" @cell-click="onNodeClick"
       height="calc(100% - 26px)" v-loading="searchingLoading">
-      <el-table-column prop="label">
+      <el-table-column>
         <template #default="scope">
-          <span v-html="scope.row.label" />
+          <span>{{ scope.row.pre }}<mark class="search-match">{{ scope.row.match }}</mark>{{ scope.row.post }}</span>
         </template>
       </el-table-column>
     </el-table>
@@ -39,5 +39,10 @@ const onNodeClick = (item) => {
 
 .setting-icon:hover {
   color: #409efc;
+}
+
+.search-match {
+  color: orange;
+  background: transparent;
 }
 </style>
