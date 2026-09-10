@@ -67,7 +67,10 @@ export class SidebarViewerProvider implements vscode.WebviewViewProvider {
           })
           webview.postMessage({
             type: 'codeDisguise',
-            content: vscode.workspace.getConfiguration('book-reader').get<boolean>('codeDisguise', false),
+            content: this.context.globalState.get<boolean>(
+              'codeDisguise',
+              vscode.workspace.getConfiguration('book-reader').get<boolean>('codeDisguise', false),
+            ),
           })
           break
         case 'title':

@@ -24,6 +24,9 @@ const handleMessage = ({ data }) => {
       case 'isSidebar':
         isSidebar.value = true
         break
+      case 'active':
+        active.value = Boolean(data.content)
+        break
       case 'style':
         const newTheme = JSON.parse(data.content)
         theme.value = { ...theme.value, ...newTheme }
@@ -46,13 +49,13 @@ const handleMessage = ({ data }) => {
 window.addEventListener('message', handleMessage)
 window.focus()
 window.addEventListener('blur', () => {
-  if (!document.hasFocus() && codeDisguise.value && isSidebar.value) {
+  if (!document.hasFocus() && codeDisguise.value) {
     active.value = false
   }
 })
 
 window.addEventListener('focus', () => {
-  if (codeDisguise.value && isSidebar.value) {
+  if (codeDisguise.value) {
     active.value = true
   }
   vscode?.postMessage({ type: 'focused' })

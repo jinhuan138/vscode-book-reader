@@ -107,6 +107,11 @@ const onchange = (file: UploadFile) => {
 
 const currentToc = ref<number | null>(null)
 onReady(() => {
+  rendition.value.addEventListener('load', ({ detail }) => {
+    if (detail.doc?.body) {
+      detail.doc.body.onkeydown = document.body.onkeydown
+    }
+  })
   rendition.value.addEventListener('relocate', ({ detail }) => {
     if (detail.tocItem) {
       currentToc.value = detail.tocItem.id

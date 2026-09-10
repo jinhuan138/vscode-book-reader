@@ -20,7 +20,6 @@ const title = computed(() => {
 })
 
 document.body.onkeydown = function (event: KeyboardEvent) {
-  // 禁用空格键的默认滚动行为
   if ((event.key === ' ' || event.code === 'Space') && codeDisguise.value) {
     active.value = !active.value
     event.preventDefault()
@@ -57,7 +56,7 @@ export default function useDisguise() {
     }
     if (isActive) {
       setTimeout(() => {
-        showBook.value = true
+        if (active.value) showBook.value = true
       }, 300)
     } else {
       showBook.value = false
