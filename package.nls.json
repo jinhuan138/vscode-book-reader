@@ -11,5 +11,5 @@
   "view.readerSidebar": "Reader Sidebar",
   "editor.displayName": "Book Reader",
   "configuration.title": "Book Reader",
-  "configuration.bookFolderPath": "Path to the folder containing books",
+  "configuration.bookFolderPath": "Path to the folder containing books"
 }
