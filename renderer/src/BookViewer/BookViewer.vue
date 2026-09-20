@@ -53,6 +53,7 @@ import useProcessDisplay from '@/hooks/useProcessDisplay'
 import '@/hooks/useKeyboard'
 import useInfo from '@/hooks/useInfo'
 import useVscode from '@/hooks/useVscode'
+import useFootnote from '@/hooks/useFootnote'
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
@@ -60,6 +61,7 @@ const { url, addBook } = useStore()
 const info = useInfo()
 const { showBook } = useDisguise()
 const { theme, defaultBackgroundColor, defaultTextColor } = useTheme()
+useFootnote()
 
 const bookStyle = computed(() => {
   const style: CSSProperties = {
