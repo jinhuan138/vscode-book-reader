@@ -1,5 +1,5 @@
 <template>
-    <el-icon class="voice-icon" :title="t('voice.title')" @click="showVoice = true" color="#ccc">
+    <el-icon v-if="showTrigger" class="voice-icon" :title="t('voice.title')" @click="showVoice = true" color="#ccc">
         <Headset />
     </el-icon>
     <el-drawer resizable v-model="showVoice" :title="t('voice.title')" :with-header="false" :size="400">
@@ -38,6 +38,8 @@ import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 const { isReading, ttsConfig, engineList, edgeVoiceOptions, systemVoiceList } = useTTS()
 const showVoice = ref<boolean>(false)
+defineProps({ showTrigger: { type: Boolean, default: true } })
+defineExpose({ open: () => (showVoice.value = true) })
 </script>
 <style scoped lang="scss">
 .voice-icon {

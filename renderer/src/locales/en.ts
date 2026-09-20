@@ -4,6 +4,7 @@ export default {
     cancel: 'Cancel',
     delete: 'Delete',
     back: 'Back',
+    more: 'More actions',
     selectFile: 'Select file',
   },
   search: {
@@ -65,6 +66,9 @@ export default {
     image: 'Image',
     layout: 'Layout',
     enhanced: 'More',
+    reading: 'Reading',
+    preferences: 'Preferences & tools',
+    illustration: 'Illustrations',
     language: 'Language',
     english: 'English',
     chinese: '简体中文',

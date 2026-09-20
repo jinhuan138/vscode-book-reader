@@ -4,6 +4,7 @@ export default {
     cancel: '取消',
     delete: '删除',
     back: '返回',
+    more: '更多功能',
     selectFile: '选择文件',
   },
   search: {
@@ -65,6 +66,9 @@ export default {
     image: '图片',
     layout: '布局',
     enhanced: '更多',
+    reading: '阅读设置',
+    preferences: '偏好与工具',
+    illustration: '插图',
     language: '界面语言',
     english: 'English',
     chinese: '简体中文',
