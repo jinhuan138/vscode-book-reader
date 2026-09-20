@@ -1,24 +1,100 @@
 import { type UploadFile } from 'element-plus'
-import { useLocalStorage } from '@vueuse/core'
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
+import localforage from 'localforage'
 import { type BookInfo } from './useInfo'
 import { rendition } from './useRendition'
 import useVscode from '@/hooks/useVscode'
 import { convertTxtBufferToEpub } from '@/hooks/useTxt'
-//TODO https://vueuse.org/integrations/useIDBKeyval/#useidbkeyval
-
 const vscode = useVscode()
 const bookKey = ref<null | string>(null)
 const url = ref<null | UploadFile['raw'] | File | string>(null)
-const bookList = useLocalStorage<BookInfo[]>('bookListInfo', [])
+const bookInfo = ref<BookInfo | null>(null)
+const readingData = localforage.createInstance({ name: 'book-reader', storeName: 'reading_data' })
+const BOOK_INFO_KEY_PREFIX = 'book:'
+const LEGACY_BOOK_LIST_KEY = 'bookListInfo'
 let openRequestId = 0
 let fetchController: AbortController | null = null
+let migrationPromise: Promise<void> | null = null
+let persistTimer: ReturnType<typeof setTimeout> | undefined
+let persistQueue = Promise.resolve()
 type BookSource = UploadFile | File | string
 
-const removeBook = (id: string) => {
-  const index = bookList.value.findIndex((item: BookInfo) => item.id === id)
-  if (index > -1) {
-    bookList.value.splice(index, 1)
+const getBookInfoKey = (id: string) => `${BOOK_INFO_KEY_PREFIX}${id}`
+
+const createBookInfo = (id: string): BookInfo => ({
+  id,
+  lastLocation: undefined,
+  bookmarks: [],
+  highlights: [],
+})
+
+const normalizeBookInfo = (value: Partial<BookInfo> | null, id: string): BookInfo => ({
+  ...createBookInfo(id),
+  ...value,
+  id,
+  bookmarks: Array.isArray(value?.bookmarks) ? value.bookmarks : [],
+  highlights: Array.isArray(value?.highlights) ? value.highlights : [],
+})
+
+const migrateLegacyBookInfos = () => {
+  if (migrationPromise) return migrationPromise
+
+  migrationPromise = (async () => {
+    const raw = localStorage.getItem(LEGACY_BOOK_LIST_KEY)
+    if (!raw) return
+
+    const legacyBookInfos = JSON.parse(raw) as Partial<BookInfo>[]
+    if (!Array.isArray(legacyBookInfos)) return
+
+    for (const legacyBookInfo of legacyBookInfos) {
+      if (!legacyBookInfo?.id) continue
+      const key = getBookInfoKey(legacyBookInfo.id)
+      const existing = await readingData.getItem<BookInfo>(key)
+      if (!existing) await readingData.setItem(key, normalizeBookInfo(legacyBookInfo, legacyBookInfo.id))
+    }
+
+    localStorage.removeItem(LEGACY_BOOK_LIST_KEY)
+  })().catch((error) => {
+    console.warn('Failed to migrate legacy reading data:', error)
+  })
+
+  return migrationPromise
+}
+
+const loadBookInfo = async (id: string) => {
+  await migrateLegacyBookInfos()
+  const stored = await readingData.getItem<BookInfo>(getBookInfoKey(id))
+  if (stored) return normalizeBookInfo(stored, id)
+
+  const info = createBookInfo(id)
+  await readingData.setItem(getBookInfoKey(id), info)
+  return info
+}
+
+const persistBookInfo = (info: BookInfo) => {
+  const snapshot = JSON.parse(JSON.stringify(info)) as BookInfo
+  persistQueue = persistQueue
+    .then(async () => {
+      await readingData.setItem(getBookInfoKey(snapshot.id), snapshot)
+    })
+    .catch((error) => console.warn('Failed to save reading data:', error))
+}
+
+watch(
+  bookInfo,
+  (info) => {
+    if (!info) return
+    const snapshot = JSON.parse(JSON.stringify(info)) as BookInfo
+    if (persistTimer) clearTimeout(persistTimer)
+    persistTimer = setTimeout(() => persistBookInfo(snapshot), 300)
+  },
+  { deep: true },
+)
+
+const removeBook = async (id: string) => {
+  await readingData.removeItem(getBookInfoKey(id))
+  if (bookKey.value === id) {
+    bookInfo.value = null
   }
 }
 
@@ -35,6 +111,7 @@ const resetBook = () => {
     console.warn('rendition close failed', e)
   }
   bookKey.value = null
+  bookInfo.value = null
   url.value = null
   rendition.value = null
   vscode?.postMessage({ type: 'title', content: '' })
@@ -111,17 +188,12 @@ const addBook = async (book: BookSource) => {
     // A newer open/close action owns the state; discard this stale result.
     if (requestId !== openRequestId) return
 
-    url.value = preparedBook
+    const storedBookInfo = await loadBookInfo(id)
+    if (requestId !== openRequestId) return
+
+    bookInfo.value = storedBookInfo
     bookKey.value = id
-    const existingBook = bookList.value.find((item: BookInfo) => item.id === id)
-    if (!existingBook) {
-      bookList.value.push({
-        id,
-        lastLocation: undefined,
-        bookmarks: [],
-        highlights: [],
-      })
-    }
+    url.value = preparedBook
   } catch (error) {
     if (error instanceof DOMException && error.name === 'AbortError') return
     throw error
@@ -131,5 +203,5 @@ const addBook = async (book: BookSource) => {
 }
 // addBook('/files/征服市场的人：西蒙斯传.epub')
 export default function useStore() {
-  return { url, bookKey, bookList, addBook, removeBook, closeBook }
+  return { url, bookKey, bookInfo, addBook, removeBook, closeBook }
 }
