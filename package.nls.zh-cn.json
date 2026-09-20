@@ -11,5 +11,6 @@
   "view.readerSidebar": "阅读侧栏",
   "editor.displayName": "电子书阅读器",
   "configuration.title": "电子书阅读器",
-  "configuration.bookFolderPath": "包含电子书的文件夹路径"
+  "configuration.bookFolderPath": "包含电子书的文件夹路径",
+  "configuration.alwaysDisguiseTabTitle": "开启代码伪装时，始终伪装编辑器标签页标题"
 }

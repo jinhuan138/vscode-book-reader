@@ -72,6 +72,13 @@ export class SidebarViewerProvider implements vscode.WebviewViewProvider {
               vscode.workspace.getConfiguration('book-reader').get<boolean>('codeDisguise', false),
             ),
           })
+          webview.postMessage({
+            type: 'alwaysDisguiseTabTitle',
+            content: this.context.globalState.get<boolean>(
+              'alwaysDisguiseTabTitle',
+              vscode.workspace.getConfiguration('book-reader').get<boolean>('alwaysDisguiseTabTitle', false),
+            ),
+          })
           break
         case 'title':
           webviewView.title = message.content
@@ -116,6 +123,12 @@ export class SidebarViewerProvider implements vscode.WebviewViewProvider {
           vscode.workspace
             .getConfiguration('book-reader')
             .update('codeDisguise', message.content, vscode.ConfigurationTarget.Global)
+          break
+        case 'alwaysDisguiseTabTitle':
+          this.context.globalState.update('alwaysDisguiseTabTitle', message.content)
+          vscode.workspace
+            .getConfiguration('book-reader')
+            .update('alwaysDisguiseTabTitle', message.content, vscode.ConfigurationTarget.Global)
           break
         case 'ttsSpeak': {
           const { id, text, voice, speed } = message.content

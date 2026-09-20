@@ -14,6 +14,11 @@
         <el-switch v-model="codeDisguise" />
       </el-tooltip>
     </el-form-item>
+    <el-form-item :label="t('settings.alwaysDisguiseTabTitle')">
+      <el-tooltip :content="t('settings.alwaysDisguiseTabTitleTip')" placement="top">
+        <el-switch v-model="alwaysDisguiseTabTitle" :disabled="!codeDisguise" />
+      </el-tooltip>
+    </el-form-item>
   </el-form>
 </template>
 <script setup>
@@ -24,6 +29,6 @@ import { useI18n } from 'vue-i18n'
 
 
 const { theme } = useTheme()
-const { codeDisguise } = useDisguise()
+const { codeDisguise, alwaysDisguiseTabTitle } = useDisguise()
 const { t } = useI18n()
 </script>

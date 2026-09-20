@@ -3,7 +3,7 @@
   "displayName": "%extension.displayName%",
   "description": "%extension.description%",
   "publisher": "lindacong",
-  "version": "1.4.7",
+  "version": "1.4.8",
   "icon": "renderer/public/logo.png",
   "license": "MIT",
   "repository": {
@@ -142,6 +142,11 @@
           "type": "string",
           "default": "",
           "description": "%configuration.bookFolderPath%"
+        },
+        "book-reader.alwaysDisguiseTabTitle": {
+          "type": "boolean",
+          "default": false,
+          "description": "%configuration.alwaysDisguiseTabTitle%"
         }
       }
     }

@@ -93,6 +93,8 @@ export default {
     grayscale: '灰度模式',
     codeDisguise: '代码伪装',
     codeDisguiseTip: '按空格键切换伪装状态',
+    alwaysDisguiseTabTitle: '标签页标题始终伪装',
+    alwaysDisguiseTabTitleTip: '开启后，阅读时标签页也显示伪装文件名。需先开启代码伪装。',
   },
   reader: {
     toc: '目录',

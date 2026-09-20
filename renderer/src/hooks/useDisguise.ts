@@ -9,21 +9,28 @@ const fileType = ref('')
 const vscode = useVscode()
 const info = useInfo()
 const codeDisguise = useLocalStorage<boolean>('codeDisguise', false)
+const alwaysDisguiseTabTitle = useLocalStorage<boolean>('alwaysDisguiseTabTitle', false)
 const active = ref<boolean>(true)
 const showBook = ref(true)
 const title = computed(() => {
-  if (active.value) {
+  if (!codeDisguise.value || (active.value && !alwaysDisguiseTabTitle.value)) {
     return info.value?.title
-  } else {
-    return isSidebar.value ? '' : fileName
   }
+
+  return isSidebar.value ? '' : fileName
 })
 
-document.body.onkeydown = function (event: KeyboardEvent) {
+export function handleDisguiseKeydown(event: KeyboardEvent) {
   if ((event.key === ' ' || event.code === 'Space') && codeDisguise.value) {
-    active.value = !active.value
     event.preventDefault()
+    if (!event.repeat) {
+      active.value = !active.value
+    }
   }
+}
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('keydown', handleDisguiseKeydown, true)
 }
 export default function useDisguise() {
   watch(codeDisguise, (enabled: boolean) => {
@@ -37,6 +44,12 @@ export default function useDisguise() {
         content: enabled,
       })
     }
+  })
+  watch(alwaysDisguiseTabTitle, (enabled: boolean) => {
+    vscode?.postMessage({
+      type: 'alwaysDisguiseTabTitle',
+      content: enabled,
+    })
   })
   const codeLines = computed(() => {
     const generator = getCodeGenerator(fileType.value)
@@ -61,13 +74,17 @@ export default function useDisguise() {
     } else {
       showBook.value = false
     }
-    vscode?.postMessage({
-      type: 'title',
-      content: title.value,
-    })
   })
 
-  return { codeDisguise, active, showBook, codeLines }
+  watch(
+    title,
+    (value) => {
+      if (value) vscode?.postMessage({ type: 'title', content: value })
+    },
+    { immediate: true },
+  )
+
+  return { codeDisguise, alwaysDisguiseTabTitle, active, showBook, codeLines }
 }
 /** 文件类型映射表 */
 

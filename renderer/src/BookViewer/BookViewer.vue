@@ -60,6 +60,7 @@ const { t } = useI18n()
 const { url, addBook } = useStore()
 const info = useInfo()
 const { showBook } = useDisguise()
+
 const { theme, defaultBackgroundColor, defaultTextColor } = useTheme()
 useFootnote()
 

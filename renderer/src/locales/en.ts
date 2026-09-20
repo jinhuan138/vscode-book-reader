@@ -93,6 +93,8 @@ export default {
     grayscale: 'Grayscale mode',
     codeDisguise: 'Code disguise',
     codeDisguiseTip: 'Press Space to toggle disguise',
+    alwaysDisguiseTabTitle: 'Always disguise tab title',
+    alwaysDisguiseTabTitleTip: 'Keep a disguised filename in the editor tab while reading. Requires code disguise.',
   },
   reader: {
     toc: 'Table of contents',

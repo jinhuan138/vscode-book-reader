@@ -12,7 +12,7 @@ const { addBook } = useStore()
 const flow = useFlow()
 const { theme } = useTheme()
 const animation = useAnimation()
-const { codeDisguise, active } = useDisguise()
+const { codeDisguise, alwaysDisguiseTabTitle, active } = useDisguise()
 const { ttsConfig } = useTTS()
 
 const handleMessage = ({ data }) => {
@@ -40,6 +40,9 @@ const handleMessage = ({ data }) => {
       case 'codeDisguise':
         codeDisguise.value = Boolean(data.content)
         break
+      case 'alwaysDisguiseTabTitle':
+        alwaysDisguiseTabTitle.value = Boolean(data.content)
+        break
       case 'ttsConfig':
         ttsConfig.value = JSON.parse(data.content)
         break
@@ -47,7 +50,6 @@ const handleMessage = ({ data }) => {
   }
 }
 window.addEventListener('message', handleMessage)
-window.focus()
 window.addEventListener('blur', () => {
   if (!document.hasFocus() && codeDisguise.value) {
     active.value = false
@@ -60,3 +62,8 @@ window.addEventListener('focus', () => {
   }
   vscode?.postMessage({ type: 'focused' })
 })
+
+if (document.hasFocus()) {
+  vscode?.postMessage({ type: 'focused' })
+}
+window.focus()

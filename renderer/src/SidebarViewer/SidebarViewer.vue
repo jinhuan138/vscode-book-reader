@@ -64,8 +64,9 @@ import useChapter from '@/hooks/useChapter'
 import useInfo from '@/hooks/useInfo'
 import '@/hooks/useKeyboard'
 import localforage from 'localforage'
-import useDisguise from '@/hooks/useDisguise'
+import useDisguise, { handleDisguiseKeydown } from '@/hooks/useDisguise'
 import useTTS from '@/hooks/useTTS'
+import useFootnote from '@/hooks/useFootnote'
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 const { showBook } = useDisguise()
@@ -79,6 +80,7 @@ const chapter = useChapter()
 const { theme } = useTheme()
 const showSlider = ref(false)
 const { isReading } = useTTS()
+useFootnote()
 
 const close = () => {
   closeBook()
@@ -108,10 +110,12 @@ const onchange = (file: UploadFile) => {
 const currentToc = ref<number | null>(null)
 onReady(() => {
   rendition.value.addEventListener('load', ({ detail }) => {
-    if (detail.doc?.body) {
-      detail.doc.body.onkeydown = document.body.onkeydown
-    }
+    const doc = detail?.doc
+    if (!doc) return
+
+    doc.addEventListener('keydown', handleDisguiseKeydown, true)
   })
+
   rendition.value.addEventListener('relocate', ({ detail }) => {
     if (detail.tocItem) {
       currentToc.value = detail.tocItem.id

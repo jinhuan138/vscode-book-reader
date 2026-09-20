@@ -105,6 +105,20 @@ export class BookViewerProvider implements vscode.CustomReadonlyEditorProvider {
             type: 'openBook',
             content: webview.asWebviewUri(uri).toString(),
           })
+          webview.postMessage({
+            type: 'codeDisguise',
+            content: this._context.globalState.get<boolean>(
+              'codeDisguise',
+              vscode.workspace.getConfiguration('book-reader').get<boolean>('codeDisguise', false),
+            ),
+          })
+          webview.postMessage({
+            type: 'alwaysDisguiseTabTitle',
+            content: this._context.globalState.get<boolean>(
+              'alwaysDisguiseTabTitle',
+              vscode.workspace.getConfiguration('book-reader').get<boolean>('alwaysDisguiseTabTitle', false),
+            ),
+          })
           break
         case 'style':
           this._context.globalState.update('style', message.content)
@@ -190,6 +204,12 @@ export class BookViewerProvider implements vscode.CustomReadonlyEditorProvider {
           vscode.workspace
             .getConfiguration('book-reader')
             .update('codeDisguise', message.content, vscode.ConfigurationTarget.Global)
+          break
+        case 'alwaysDisguiseTabTitle':
+          this._context.globalState.update('alwaysDisguiseTabTitle', message.content)
+          vscode.workspace
+            .getConfiguration('book-reader')
+            .update('alwaysDisguiseTabTitle', message.content, vscode.ConfigurationTarget.Global)
           break
         case 'ttsConfig':
           this._context.globalState.update('ttsConfig', message.content)
