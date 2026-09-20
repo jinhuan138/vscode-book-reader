@@ -24,6 +24,10 @@ export default {
     highlight: 'Highlight',
     highlightAndAdd: 'Highlight and add note',
     edit: 'Edit note',
+    chapter: 'Chapter',
+    unknownChapter: 'Unspecified chapter',
+    createdAt: 'Created: {time}',
+    updatedAt: 'Updated: {time}',
   },
   translation: {
     title: 'Translate',

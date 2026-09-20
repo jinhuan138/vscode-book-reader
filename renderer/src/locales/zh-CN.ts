@@ -24,6 +24,10 @@ export default {
     highlight: '高亮',
     highlightAndAdd: '高亮并添加笔记',
     edit: '编辑笔记',
+    chapter: '章节',
+    unknownChapter: '未标注章节',
+    createdAt: '创建：{time}',
+    updatedAt: '修改：{time}',
   },
   translation: {
     title: '翻译',

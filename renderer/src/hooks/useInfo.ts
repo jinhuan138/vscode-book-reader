@@ -12,6 +12,7 @@ export interface Highlight {
   value: string
   type?: string
   color?: string
+  chapter?: string
   /** Selected text. */
   quote: string
   /** User-authored note. */

@@ -244,6 +244,7 @@ const createAnnotation = (withNote: boolean) => {
     quote: text.value,
     note: '',
     color: highlightColor.value,
+    chapter: rendition.value.lastLocation?.tocItem?.label || '',
     createdAt: now,
     updatedAt: now,
   }

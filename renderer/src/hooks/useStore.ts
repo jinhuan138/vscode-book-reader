@@ -28,13 +28,20 @@ const createBookInfo = (id: string): BookInfo => ({
   highlights: [],
 })
 
-const normalizeBookInfo = (value: Partial<BookInfo> | null, id: string): BookInfo => ({
-  ...createBookInfo(id),
-  ...value,
-  id,
-  bookmarks: Array.isArray(value?.bookmarks) ? value.bookmarks : [],
-  highlights: Array.isArray(value?.highlights) ? value.highlights : [],
-})
+const normalizeBookInfo = (value: Partial<BookInfo> | null, id: string): BookInfo => {
+  return {
+    ...createBookInfo(id),
+    ...value,
+    id,
+    bookmarks: Array.isArray(value?.bookmarks) ? value.bookmarks : [],
+    highlights: Array.isArray(value?.highlights) ? value.highlights : [],
+  }
+}
+
+const serializeBookInfo = (info: BookInfo): BookInfo => {
+  const { cover: _cover, ...stored } = info
+  return JSON.parse(JSON.stringify(stored)) as BookInfo
+}
 
 const migrateLegacyBookInfos = () => {
   if (migrationPromise) return migrationPromise
@@ -64,7 +71,9 @@ const migrateLegacyBookInfos = () => {
 const loadBookInfo = async (id: string) => {
   await migrateLegacyBookInfos()
   const stored = await readingData.getItem<BookInfo>(getBookInfoKey(id))
-  if (stored) return normalizeBookInfo(stored, id)
+  if (stored) {
+    return normalizeBookInfo(stored, id)
+  }
 
   const info = createBookInfo(id)
   await readingData.setItem(getBookInfoKey(id), info)
@@ -72,7 +81,7 @@ const loadBookInfo = async (id: string) => {
 }
 
 const persistBookInfo = (info: BookInfo) => {
-  const snapshot = JSON.parse(JSON.stringify(info)) as BookInfo
+  const snapshot = serializeBookInfo(info)
   persistQueue = persistQueue
     .then(async () => {
       await readingData.setItem(getBookInfoKey(snapshot.id), snapshot)
@@ -84,7 +93,7 @@ watch(
   bookInfo,
   (info) => {
     if (!info) return
-    const snapshot = JSON.parse(JSON.stringify(info)) as BookInfo
+    const snapshot = serializeBookInfo(info)
     if (persistTimer) clearTimeout(persistTimer)
     persistTimer = setTimeout(() => persistBookInfo(snapshot), 300)
   },

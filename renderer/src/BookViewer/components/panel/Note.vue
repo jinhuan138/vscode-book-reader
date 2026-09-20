@@ -9,6 +9,11 @@
       <button v-for="note in notes" :key="note.value" class="note-item" @click="goToNote(note)">
         <div class="note-quote">{{ note.quote }}</div>
         <div class="note-content">{{ note.note }}</div>
+        <div class="note-meta">
+          <span>{{ t('note.chapter') }}：{{ note.chapter || t('note.unknownChapter') }}</span>
+          <span v-if="note.createdAt">{{ t('note.createdAt', { time: formatTime(note.createdAt) }) }}</span>
+          <span v-if="note.updatedAt">{{ t('note.updatedAt', { time: formatTime(note.updatedAt) }) }}</span>
+        </div>
       </button>
     </div>
   </el-drawer>
@@ -17,6 +22,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { Notebook } from '@element-plus/icons-vue'
+import { dayjs } from 'element-plus'
 import { rendition } from '@/hooks/useRendition'
 import useInfo, { type Highlight } from '@/hooks/useInfo'
 import { useI18n } from 'vue-i18n'
@@ -27,6 +33,8 @@ const bookInfo = useInfo()
 const notes = computed(() =>
   (bookInfo.value?.highlights || []).filter((highlight) => highlight.note.trim())
 )
+
+const formatTime = (time?: number) => (time ? dayjs(time).format('YYYY-MM-DD HH:mm') : '')
 
 const goToNote = (highlight: Highlight) => {
   rendition.value?.goTo?.(highlight.value)
@@ -86,5 +94,15 @@ const goToNote = (highlight: Highlight) => {
   font-size: 14px;
   white-space: pre-wrap;
   word-break: break-word;
+}
+
+.note-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin-top: 10px;
+  color: var(--el-text-color-secondary);
+  font-size: 12px;
+  line-height: 1.5;
 }
 </style>
