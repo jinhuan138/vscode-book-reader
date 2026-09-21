@@ -2,6 +2,8 @@ import { rendition, onReady, onClose } from './useRendition'
 
 const EPUB_NS = 'http://www.idpf.org/2007/ops'
 type Footnote = { text: string }
+const LEGACY_NOTE_REFERENCE_ID = /^notes\d+$/i
+const LEGACY_NOTE_TARGET_ID = /^notes\d+n$/i
 
 const tokens = (element: Element, name: string, namespace?: string) =>
   ((namespace ? element.getAttributeNS?.(namespace, name) : element.getAttribute(name)) ?? '')
@@ -16,6 +18,9 @@ const targetElement = (target: any): Element | null => {
 }
 
 const isFootnoteReference = (anchor: HTMLAnchorElement) => {
+  const href = anchor.getAttribute('href') ?? ''
+  if (LEGACY_NOTE_REFERENCE_ID.test(anchor.id) && /#notes\d+n$/i.test(href)) return true
+
   const types = tokens(anchor, 'type', EPUB_NS)
   const roles = tokens(anchor, 'role')
   if (
@@ -58,7 +63,13 @@ const isFootnoteContainer = (element: Element) => {
 }
 
 const footnoteText = (target: any) => {
-  for (let element = targetElement(target); element?.parentElement; element = element.parentElement) {
+  const targetNode = targetElement(target)
+  if (targetNode?.matches('a') && LEGACY_NOTE_TARGET_ID.test(targetNode.id)) {
+    const container = targetNode.closest('p, li, dd, td, blockquote, div')
+    return container?.textContent?.replace(/\s+/g, ' ').trim() ?? ''
+  }
+
+  for (let element = targetNode; element?.parentElement; element = element.parentElement) {
     if (isFootnoteContainer(element)) return element.textContent?.replace(/\s+/g, ' ').trim() ?? ''
   }
   return ''

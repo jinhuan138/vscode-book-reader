@@ -12,6 +12,9 @@ const codeDisguise = useLocalStorage<boolean>('codeDisguise', false)
 const alwaysDisguiseTabTitle = useLocalStorage<boolean>('alwaysDisguiseTabTitle', false)
 const active = ref<boolean>(true)
 const showBook = ref(true)
+const boundDisguiseDocuments = new WeakSet<Document>()
+const boundDisguiseRenditions = new WeakSet<object>()
+const handledDisguiseKeyEvents = new WeakSet<KeyboardEvent>()
 const title = computed(() => {
   if (!codeDisguise.value || (active.value && !alwaysDisguiseTabTitle.value)) {
     return info.value?.title
@@ -20,6 +23,23 @@ const title = computed(() => {
   return isSidebar.value ? '' : fileName
 })
 
+export function traceDisguise(source: string, event?: Event) {
+  const keyboardEvent = event as KeyboardEvent | undefined
+  const target = event?.target as Element | null
+
+  console.debug('[disguise]', {
+    source,
+    key: keyboardEvent?.key,
+    code: keyboardEvent?.code,
+    repeat: keyboardEvent?.repeat,
+    enabled: codeDisguise.value,
+    active: active.value,
+    showBook: showBook.value,
+    outerFocused: document.hasFocus(),
+    target: target?.tagName,
+  })
+}
+
 export function handleDisguiseKeydown(event: KeyboardEvent) {
   if ((event.key === ' ' || event.code === 'Space') && codeDisguise.value) {
     event.preventDefault()
@@ -27,6 +47,41 @@ export function handleDisguiseKeydown(event: KeyboardEvent) {
       active.value = !active.value
     }
   }
+}
+
+export function bindDisguiseKeydown(doc: Document, source: string) {
+  if (boundDisguiseDocuments.has(doc)) return
+  boundDisguiseDocuments.add(doc)
+
+  traceDisguise(`${source}:load`)
+  const onKeydown = (event: KeyboardEvent) => {
+    if (handledDisguiseKeyEvents.has(event)) return
+    handledDisguiseKeyEvents.add(event)
+
+    traceDisguise(`${source}:keydown`, event)
+    handleDisguiseKeydown(event)
+  }
+
+  doc.defaultView?.addEventListener('keydown', onKeydown, true)
+  doc.addEventListener('keydown', onKeydown, true)
+  doc.defaultView?.addEventListener('blur', (event) => traceDisguise(`${source}:blur`, event))
+  doc.defaultView?.addEventListener('focus', (event) => traceDisguise(`${source}:focus`, event))
+}
+
+export function bindDisguiseToRendition(currentRendition: any, source: string) {
+  if (!currentRendition || boundDisguiseRenditions.has(currentRendition)) return
+  boundDisguiseRenditions.add(currentRendition)
+
+  const bindDocument = (doc?: Document) => {
+    if (doc) bindDisguiseKeydown(doc, source)
+  }
+
+  const contents = currentRendition.renderer?.getContents?.() ?? []
+  for (const { doc } of contents) {
+    bindDocument(doc)
+  }
+
+  currentRendition.addEventListener('load', ({ detail }: any) => bindDocument(detail?.doc))
 }
 
 if (typeof window !== 'undefined') {

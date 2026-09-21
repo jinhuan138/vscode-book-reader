@@ -1,6 +1,6 @@
 <template>
   <div v-if="url" :style="style">
-    <book-view :url="url" :getRendition="(val) => (rendition = val)"
+    <book-view :style="bookStyle" :url="url" :getRendition="(val) => (rendition = val)"
       :initOption="{ lastLocation: info!.lastLocation }" />
     <!-- menu tree -->
     <el-icon class="menu-icon" color="#ccc" @click="expand = true">
@@ -64,7 +64,7 @@ import useChapter from '@/hooks/useChapter'
 import useInfo from '@/hooks/useInfo'
 import '@/hooks/useKeyboard'
 import localforage from 'localforage'
-import useDisguise, { handleDisguiseKeydown } from '@/hooks/useDisguise'
+import useDisguise, { bindDisguiseToRendition } from '@/hooks/useDisguise'
 import useTTS from '@/hooks/useTTS'
 import useFootnote from '@/hooks/useFootnote'
 import { useI18n } from 'vue-i18n'
@@ -95,7 +95,6 @@ const style = computed(() => {
   return {
     filter: theme.value.grayscale ? 'grayscale(100%)' : 'none',
     color: theme.value.textColor,
-    fontSize: `${theme.value.fontSize}%`,
     opacity: theme.value.opacity,
     width: '100%',
     height: '100vh',
@@ -103,18 +102,16 @@ const style = computed(() => {
     display: showBook.value ? 'block' : 'none',
   }
 })
+const bookStyle = computed(() => ({
+  fontSize: `${theme.value.fontSize}%`,
+}))
 const onchange = (file: UploadFile) => {
   addBook(file)
 }
 
 const currentToc = ref<number | null>(null)
 onReady(() => {
-  rendition.value.addEventListener('load', ({ detail }) => {
-    const doc = detail?.doc
-    if (!doc) return
-
-    doc.addEventListener('keydown', handleDisguiseKeydown, true)
-  })
+  bindDisguiseToRendition(rendition.value, 'sidebar')
 
   rendition.value.addEventListener('relocate', ({ detail }) => {
     if (detail.tocItem) {

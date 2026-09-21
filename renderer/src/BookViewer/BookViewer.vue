@@ -42,13 +42,13 @@ import { type UploadFile } from 'element-plus'
 import CodeInterface from './components/CodeInterface/CodeInterface.vue'
 import Panel from './components/panel/Panel.vue'
 import BubbleMenu from '@/components/BubbleMenu.vue'
-import { rendition } from '@/hooks/useRendition'
+import { rendition, onReady } from '@/hooks/useRendition'
 import useTheme from '@/hooks/useTheme'
 import useStore from '@/hooks/useStore'
 import useChapter from '@/hooks/useChapter'
 import useProgress from '@/hooks/useProgress'
 import useLocation from '@/hooks/useLocation'
-import useDisguise from '@/hooks/useDisguise'
+import useDisguise, { bindDisguiseToRendition } from '@/hooks/useDisguise'
 import useProcessDisplay from '@/hooks/useProcessDisplay'
 import '@/hooks/useKeyboard'
 import useInfo from '@/hooks/useInfo'
@@ -60,6 +60,10 @@ const { t } = useI18n()
 const { url, addBook } = useStore()
 const info = useInfo()
 const { showBook } = useDisguise()
+
+onReady(() => {
+  bindDisguiseToRendition(rendition.value, 'viewer')
+})
 
 const { theme, defaultBackgroundColor, defaultTextColor } = useTheme()
 useFootnote()
