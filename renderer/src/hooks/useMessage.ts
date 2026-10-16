@@ -5,14 +5,12 @@ import useAnimation from '@/hooks/useAnimation'
 import useTheme from '@/hooks/useTheme'
 import useDisguise from '@/hooks/useDisguise'
 import useTTS from '@/hooks/useTTS'
-import useVscode from '@/hooks/useVscode'
 
-const vscode = useVscode()
 const { addBook } = useStore()
 const flow = useFlow()
 const { theme } = useTheme()
 const animation = useAnimation()
-const { codeDisguise, alwaysDisguiseTabTitle, active } = useDisguise()
+const { codeDisguise, alwaysDisguiseTabTitle } = useDisguise()
 const { ttsConfig } = useTTS()
 
 const handleMessage = ({ data }) => {
@@ -23,9 +21,6 @@ const handleMessage = ({ data }) => {
         break
       case 'isSidebar':
         isSidebar.value = true
-        break
-      case 'active':
-        active.value = Boolean(data.content)
         break
       case 'style':
         const newTheme = JSON.parse(data.content)
@@ -50,20 +45,5 @@ const handleMessage = ({ data }) => {
   }
 }
 window.addEventListener('message', handleMessage)
-window.addEventListener('blur', () => {
-  if (!document.hasFocus() && codeDisguise.value) {
-    active.value = false
-  }
-})
 
-window.addEventListener('focus', () => {
-  if (codeDisguise.value) {
-    active.value = true
-  }
-  vscode?.postMessage({ type: 'focused' })
-})
-
-if (document.hasFocus()) {
-  vscode?.postMessage({ type: 'focused' })
-}
 window.focus()

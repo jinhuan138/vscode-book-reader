@@ -1,8 +1,10 @@
 <template>
   <el-config-provider :locale="elementPlusLocale">
-    <BookViewer v-if="!isSidebar" />
-    <SidebarViewer v-else />
-    <ImageViewer />
+    <div style="height: 100vh" @mouseenter="handleMouseEnter" @mouseleave="handleMouseLeave">
+      <BookViewer v-if="!isSidebar" />
+      <SidebarViewer v-else />
+      <ImageViewer />
+    </div>
   </el-config-provider>
 </template>
 <script setup lang="ts">
@@ -12,6 +14,7 @@ import BookViewer from '@/BookViewer/BookViewer.vue'
 import SidebarViewer from '@/SidebarViewer/SidebarViewer.vue'
 import ImageViewer from '@/components/ImageViewer.vue'
 import { isSidebar } from '@/hooks/useSidebar'
+import useDisguise from '@/hooks/useDisguise'
 import useVscode from '@/hooks/useVscode'
 import pkg from '../../package.json'
 import '@/hooks/useMessage'
@@ -24,4 +27,11 @@ console.log(
 )
 const vscode = useVscode()
 vscode && vscode.postMessage({ type: 'init' })
+const { codeDisguise, active } = useDisguise()
+const handleMouseEnter = () => {
+  if (codeDisguise.value) active.value = true
+}
+const handleMouseLeave = () => {
+  if (codeDisguise.value) active.value = false
+}
 </script>

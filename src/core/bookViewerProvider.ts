@@ -232,13 +232,6 @@ export class BookViewerProvider implements vscode.CustomReadonlyEditorProvider {
           break
       }
     })
-    // 当面板失去焦点的时候，使用伪装代码
-    webviewPanel.onDidChangeViewState((e) => {
-      webview.postMessage({
-        type: 'active',
-        content: e.webviewPanel.active,
-      })
-    })
     // 当面板关闭/销毁，从列表中移除
     webviewPanel.onDidDispose(() => {
       clearTTSCache(ttsSessionId)
