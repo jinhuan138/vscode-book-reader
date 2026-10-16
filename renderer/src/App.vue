@@ -1,6 +1,6 @@
 <template>
   <el-config-provider :locale="elementPlusLocale">
-    <div style="height: 100vh" @mouseenter="handleMouseEnter" @mouseleave="handleMouseLeave">
+    <div style="height: 100vh">
       <BookViewer v-if="!isSidebar" />
       <SidebarViewer v-else />
       <ImageViewer />
@@ -13,6 +13,7 @@
 import BookViewer from '@/BookViewer/BookViewer.vue'
 import SidebarViewer from '@/SidebarViewer/SidebarViewer.vue'
 import ImageViewer from '@/components/ImageViewer.vue'
+import { useEventListener } from '@vueuse/core'
 import { isSidebar } from '@/hooks/useSidebar'
 import useDisguise from '@/hooks/useDisguise'
 import useVscode from '@/hooks/useVscode'
@@ -28,10 +29,11 @@ console.log(
 const vscode = useVscode()
 vscode && vscode.postMessage({ type: 'init' })
 const { codeDisguise, active } = useDisguise()
-const handleMouseEnter = () => {
-  if (codeDisguise.value) active.value = true
+
+const setDisguiseActive = (value: boolean) => {
+  if (codeDisguise.value) active.value = value
 }
-const handleMouseLeave = () => {
-  if (codeDisguise.value) active.value = false
-}
+
+useEventListener(document.documentElement, 'mouseenter', () => setDisguiseActive(true))
+useEventListener(document.documentElement, 'mouseleave', () => setDisguiseActive(false))
 </script>

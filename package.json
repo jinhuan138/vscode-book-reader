@@ -3,7 +3,7 @@
   "displayName": "%extension.displayName%",
   "description": "%extension.description%",
   "publisher": "lindacong",
-  "version": "1.4.9",
+  "version": "1.5.0",
   "icon": "renderer/public/logo.png",
   "license": "MIT",
   "repository": {
@@ -172,7 +172,7 @@
   },
   "dependencies": {
     "bing-translate-api": "^4.2.1",
-    "node-edge-tts": "1.2.10"
+    "node-edge-tts": "^1.2.11"
   },
   "vsce": {
     "dependencies": false,
