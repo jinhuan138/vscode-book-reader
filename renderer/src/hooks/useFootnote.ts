@@ -31,7 +31,7 @@ const isFootnoteReference = (anchor: HTMLAnchorElement) => {
   }
 
   if (
-    anchor.closest('.subscript') ||
+    anchor.closest('[class~="subscript" i]') ||
     anchor.matches('sup') ||
     anchor.querySelector('sup') ||
     anchor.parentElement?.matches('sup')
