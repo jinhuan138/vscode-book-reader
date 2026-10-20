@@ -13,7 +13,7 @@
       <el-button :icon="Delete" @click="removeAnnotation" v-else></el-button>
       <el-button :icon="ChatLineRound" :title="t('note.edit')" @click="openNoteEditor" v-if="editAnnotation"></el-button>
       <el-button :icon="CopyDocument" @click="copyText"></el-button>
-      <el-popover :width="'min(360px, calc(100vw - 24px))'" trigger="click" @show="translateText">
+      <el-popover :width="'min(360px, calc(100vw - 24px))'" trigger="click" @show="translateText" @hide="resetTranslation">
         <template #reference>
           <el-button :icon="Collection" :title="t('translation.title')">
           </el-button>
@@ -76,7 +76,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, onUnmounted } from 'vue'
 import { useLocalStorage } from '@vueuse/core'
 import { ElMessage } from 'element-plus'
 import 'element-plus/es/components/message/style/css'
@@ -290,9 +290,8 @@ const translationLoading = ref(false)
 const translationError = ref('')
 const detectedSource = ref('')
 const translationCache = new Map<string, { text: string, source: string }>()
-let translationRequestSequence = 0
-let activeTranslationRequestId = 0
-let activeTranslationCacheKey = ''
+let translationController: AbortController | null = null
+onUnmounted(() => translationController?.abort())
 
 const lang: Record<string, string> = {
   af: 'Afrikaans',
@@ -487,22 +486,21 @@ const setTranslationCache = (key: string, value: { text: string, source: string 
 }
 
 const resetTranslation = () => {
-  activeTranslationRequestId = ++translationRequestSequence
-  activeTranslationCacheKey = ''
+  translationController?.abort()
+  translationController = null
   translatedText.value = ''
   detectedSource.value = ''
   translationLoading.value = false
   translationError.value = ''
 }
 
-const translateText = () => {
+const translateText = async () => {
+  resetTranslation()
   const sourceText = text.value.trim()
   if (!sourceText) {
-    resetTranslation()
     return
   }
   if (!vscode) {
-    resetTranslation()
     translationError.value = getTranslationError('UNAVAILABLE')
     return
   }
@@ -510,8 +508,6 @@ const translateText = () => {
   const cacheKey = JSON.stringify([sourceText, translateTo.value])
   const cached = translationCache.get(cacheKey)
   if (cached) {
-    activeTranslationRequestId = ++translationRequestSequence
-    activeTranslationCacheKey = cacheKey
     translatedText.value = cached.text
     detectedSource.value = cached.source
     translationLoading.value = false
@@ -519,19 +515,31 @@ const translateText = () => {
     return
   }
 
-  const requestId = ++translationRequestSequence
-  activeTranslationRequestId = requestId
-  activeTranslationCacheKey = cacheKey
-  translatedText.value = ''
-  detectedSource.value = ''
+  const controller = new AbortController()
+  translationController = controller
   translationLoading.value = true
-  translationError.value = ''
-  vscode.postMessage({
-    type: 'translate',
-    requestId,
-    content: sourceText,
-    to: translateTo.value,
-  })
+  try {
+    const result = await vscode.invoke('translate', {
+      text: sourceText,
+      to: translateTo.value,
+    }, { signal: controller.signal })
+    if (controller.signal.aborted) return
+    translatedText.value = result.content
+    detectedSource.value = result.from
+    if (result.content) {
+      setTranslationCache(cacheKey, { text: result.content, source: result.from })
+    } else {
+      translationError.value = getTranslationError('TRANSLATE_FAILED')
+    }
+  } catch (error) {
+    if (controller.signal.aborted) return
+    translationError.value = getTranslationError(error instanceof Error ? error.message : 'TRANSLATE_FAILED')
+  } finally {
+    if (translationController === controller) {
+      translationLoading.value = false
+      translationController = null
+    }
+  }
 }
 
 const copyTranslation = () => {
@@ -544,28 +552,6 @@ const copyTranslation = () => {
     })
   })
 }
-
-window.addEventListener('message', ({ data }) => {
-  if (!data || data.type !== 'translate' || data.requestId !== activeTranslationRequestId) return
-
-  translationLoading.value = false
-  if (data.error) {
-    translatedText.value = ''
-    detectedSource.value = ''
-    translationError.value = getTranslationError(data.error)
-    return
-  }
-
-  translatedText.value = data.content || ''
-  detectedSource.value = data.from || ''
-  translationError.value = translatedText.value ? '' : getTranslationError('TRANSLATE_FAILED')
-  if (translatedText.value && activeTranslationCacheKey) {
-    setTranslationCache(activeTranslationCacheKey, {
-      text: translatedText.value,
-      source: detectedSource.value,
-    })
-  }
-})
 </script>
 
 <style lang="scss" scoped>

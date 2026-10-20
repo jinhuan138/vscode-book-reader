@@ -1,12 +1,11 @@
 import * as vscode from 'vscode'
 import { Store } from '../store'
-import { generateEdgeTTS, clearTTSCache } from '../ttsPlayer'
+import { createWebviewMessageHandler } from '../webviewMessageHandler'
 import { getWebviewHtml } from '../webviewHtml'
 import { join } from 'path'
 
 export class SidebarViewerProvider implements vscode.WebviewViewProvider {
   private extensionPath: string
-  private title: string = ''
   private context: vscode.ExtensionContext
 
   constructor(context: vscode.ExtensionContext) {
@@ -45,7 +44,7 @@ export class SidebarViewerProvider implements vscode.WebviewViewProvider {
   resolveWebviewView(webviewView: vscode.WebviewView) {
     Store.sliderWebview = webviewView
     const webview = webviewView.webview
-    const ttsSessionId = 'sidebar'
+    const messages = createWebviewMessageHandler(webview, this.context, () => webviewView.title ?? '')
     this.updateLocalResourceRoots(webview)
     vscode.workspace.onDidChangeConfiguration((e) => {
       if (e.affectsConfiguration('book-reader.bookFolderPath')) {
@@ -53,8 +52,10 @@ export class SidebarViewerProvider implements vscode.WebviewViewProvider {
       }
     })
     webview.onDidReceiveMessage(async (message) => {
+      if (messages.handleMessage(message)) return
       switch (message.type) {
         case 'init':
+          messages.stop()
           webview.postMessage({
             type: 'isSidebar',
             content: true,
@@ -77,70 +78,9 @@ export class SidebarViewerProvider implements vscode.WebviewViewProvider {
         case 'title':
           webviewView.title = message.content
           break
-        case 'download':
-          const imgName = `${this.title}${Date.now()}.jpg`
-          const workspaceFolders = vscode.workspace.workspaceFolders
-          if (!workspaceFolders || workspaceFolders.length === 0) {
-            // 如果没有工作区，让用户选择保存位置
-            const uri = await vscode.window.showOpenDialog({
-              canSelectFiles: false,
-              canSelectFolders: true,
-              canSelectMany: false,
-              openLabel: 'Select Img Save Folder',
-            })
-
-            if (uri) {
-              const filePath = vscode.Uri.joinPath(uri[0], imgName)
-              await vscode.workspace.fs.writeFile(filePath, message.content)
-              // 打开文件
-              vscode.commands.executeCommand('vscode.open', imgName, {
-                forceNewWindow: true,
-              })
-            }
-          } else {
-            // 保存到工作区根目录
-            const filePath = vscode.Uri.joinPath(workspaceFolders[0].uri, imgName)
-            await vscode.workspace.fs.writeFile(filePath, message.content)
-            // 打开文件
-            vscode.commands.executeCommand('vscode.open', filePath, {
-              forceNewWindow: true,
-            })
-          }
-          break
-        case 'codeDisguise':
-          vscode.workspace
-            .getConfiguration('book-reader')
-            .update('codeDisguise', message.content, vscode.ConfigurationTarget.Global)
-          break
-        case 'alwaysDisguiseTabTitle':
-          this.context.globalState.update('alwaysDisguiseTabTitle', message.content)
-          vscode.workspace
-            .getConfiguration('book-reader')
-            .update('alwaysDisguiseTabTitle', message.content, vscode.ConfigurationTarget.Global)
-          break
-        case 'ttsSpeak': {
-          const { id, text, voice, speed } = message.content
-          generateEdgeTTS(
-            ttsSessionId,
-            text,
-            voice,
-            speed || 1,
-          ).then(({ filePath, error }) => {
-            if (filePath) {
-              const url = webview.asWebviewUri(vscode.Uri.file(filePath)).toString()
-              webview.postMessage({ type: 'ttsAudio', id, content: url })
-            } else {
-              webview.postMessage({ type: 'ttsEnd', id, error })
-            }
-          })
-          break
-        }
-        case 'ttsStop':
-          clearTTSCache(ttsSessionId)
-          break
       }
     })
-    webviewView.onDidDispose(() => clearTTSCache(ttsSessionId))
+    webviewView.onDidDispose(() => messages.dispose())
     webviewView.webview.html = getWebviewHtml(webview, this.extensionPath)
   }
 }

@@ -1,10 +1,9 @@
 import { watch, onMounted } from 'vue'
-import useVscode from './useVscode'
+import { saveConfig } from './useVscode'
 import { rendition, onReady } from './useRendition'
 import { isSidebar } from './useSidebar'
 import { useLocalStorage } from '@vueuse/core'
 
-const vscode = useVscode()
 type Flow = 'paginated' | 'scrolled'
 export default function useFlow() {
   const flow = useLocalStorage<Flow>('flow', 'paginated')
@@ -26,11 +25,8 @@ export default function useFlow() {
   })
   watch(flow, (f) => {
     setFlow(f)
-    if (!isSidebar.value && vscode) {
-      vscode.postMessage({
-        type: 'flow',
-        content: f,
-      })
+    if (!isSidebar.value) {
+      void saveConfig('flow', f)
     }
   })
   return flow

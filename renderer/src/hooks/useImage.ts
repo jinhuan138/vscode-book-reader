@@ -3,6 +3,7 @@ import useVscode from './useVscode'
 import { rendition, onReady } from './useRendition'
 import { useLocalStorage } from '@vueuse/core'
 import { useI18n } from 'vue-i18n'
+import { ElMessage } from 'element-plus'
 
 const vscode = useVscode()
 
@@ -14,7 +15,7 @@ const imageUrlToUint8Array = async (url: string) => {
     }
     const blob = await response.blob()
     const fileReader = new FileReader()
-    return new Promise((resolve, reject) => {
+    return new Promise<Uint8Array>((resolve, reject) => {
       fileReader.onloadend = (e) => {
         resolve(new Uint8Array(e.target!.result as ArrayBuffer))
       }
@@ -45,14 +46,16 @@ export default function useImage() {
     })
   }
 
-  const downloadImage = (index: number) => {
+  const downloadImage = async (index: number) => {
     if (vscode) {
-      imageUrlToUint8Array(srcList.value[index]).then((data) => {
-        vscode.postMessage({
-          type: 'download',
-          content: data,
-        })
-      })
+      try {
+        const data = await imageUrlToUint8Array(srcList.value[index])
+        return await vscode.invoke('download', { data: Array.from(data) }, { timeout: 300000 })
+      } catch (error) {
+        if (error instanceof Error && error.name === 'AbortError') return
+        console.error('Image download failed:', error)
+        ElMessage.error(error instanceof Error ? error.message : String(error))
+      }
     } else {
       const downloadLink = document.createElement('a')
       downloadLink.href = srcList.value[index]

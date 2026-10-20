@@ -5,6 +5,7 @@ import useAnimation from '@/hooks/useAnimation'
 import useTheme from '@/hooks/useTheme'
 import useDisguise from '@/hooks/useDisguise'
 import useTTS from '@/hooks/useTTS'
+import { applyConfigUpdate } from '@/hooks/useVscode'
 
 const { addBook } = useStore()
 const flow = useFlow()
@@ -24,22 +25,22 @@ const handleMessage = ({ data }) => {
         break
       case 'style':
         const newTheme = JSON.parse(data.content)
-        theme.value = { ...theme.value, ...newTheme }
+        applyConfigUpdate('style', () => { theme.value = { ...theme.value, ...newTheme } })
         break
       case 'flow':
-        flow.value = data.content
+        applyConfigUpdate('flow', () => { flow.value = data.content })
         break
       case 'animation':
-        animation.value = Boolean(data.content)
+        applyConfigUpdate('animation', () => { animation.value = Boolean(data.content) })
         break
       case 'codeDisguise':
-        codeDisguise.value = Boolean(data.content)
+        applyConfigUpdate('codeDisguise', () => { codeDisguise.value = Boolean(data.content) })
         break
       case 'alwaysDisguiseTabTitle':
-        alwaysDisguiseTabTitle.value = Boolean(data.content)
+        applyConfigUpdate('alwaysDisguiseTabTitle', () => { alwaysDisguiseTabTitle.value = Boolean(data.content) })
         break
       case 'ttsConfig':
-        ttsConfig.value = JSON.parse(data.content)
+        applyConfigUpdate('ttsConfig', () => { ttsConfig.value = JSON.parse(data.content) })
         break
     }
   }

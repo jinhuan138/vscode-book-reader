@@ -1,10 +1,9 @@
 import { watch } from 'vue'
 import { useLocalStorage } from '@vueuse/core'
-import useVscode from './useVscode'
+import { saveConfig } from './useVscode'
 import { rendition, onReady } from './useRendition'
 import { isSidebar } from './useSidebar'
 
-const vscode = useVscode()
 export default function useAnimation() {
   const animation = useLocalStorage<boolean>('animation', false)
   const setAnimation = (animated: boolean) => {
@@ -18,10 +17,7 @@ export default function useAnimation() {
   watch(animation, (a) => {
     setAnimation(a)
     if (!isSidebar.value) {
-      vscode?.postMessage({
-        type: 'animation',
-        content: String(a),
-      })
+      void saveConfig('animation', a)
     }
   })
   return animation

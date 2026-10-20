@@ -2,7 +2,7 @@ import { watch, toRaw } from 'vue'
 import { useLocalStorage } from '@vueuse/core'
 import { rendition, onReady } from './useRendition'
 import { isSidebar } from './useSidebar'
-import useVscode from './useVscode'
+import { saveConfig } from './useVscode'
 
 // ============ 工具函数 ============
 const hexToRgba = (hex: string, opacity: number) => {
@@ -38,7 +38,6 @@ const updateRgbaOpacity = (rgbaStr: string, opacity: number, decimals: number = 
 }
 
 // ============ 配置常量 ============
-const vscode = useVscode()
 const styles = getComputedStyle(document?.documentElement)
 
 const vscodeBackgroundColor = styles.getPropertyValue('--vscode-editor-background')
@@ -146,10 +145,7 @@ const updatedTheme = (newTheme: { [key: string]: any }) => {
   rendition.value.renderer?.setStyles?.(getCSS(newTheme))
 
   if (!isSidebar.value) {
-    vscode?.postMessage({
-      type: 'style',
-      content: JSON.stringify(newTheme),
-    })
+    void saveConfig('style', JSON.stringify(newTheme))
   }
 }
 watch(theme, (val) => updatedTheme(val), {

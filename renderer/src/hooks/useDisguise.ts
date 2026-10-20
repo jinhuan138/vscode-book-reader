@@ -1,5 +1,5 @@
 import { ref, watch, computed } from 'vue'
-import useVscode from './useVscode'
+import useVscode, { saveConfig } from './useVscode'
 import useInfo from './useInfo'
 import { isSidebar } from './useSidebar'
 import { useLocalStorage } from '@vueuse/core'
@@ -93,18 +93,10 @@ export default function useDisguise() {
       active.value = true
       showBook.value = true
     }
-    if (vscode) {
-      vscode.postMessage({
-        type: 'codeDisguise',
-        content: enabled,
-      })
-    }
+    void saveConfig('codeDisguise', enabled)
   })
   watch(alwaysDisguiseTabTitle, (enabled: boolean) => {
-    vscode?.postMessage({
-      type: 'alwaysDisguiseTabTitle',
-      content: enabled,
-    })
+    void saveConfig('alwaysDisguiseTabTitle', enabled)
   })
   const codeLines = computed(() => {
     const generator = getCodeGenerator(fileType.value)

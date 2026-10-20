@@ -4,7 +4,7 @@ import { ElMessage } from 'element-plus'
 import 'element-plus/es/components/message/style/css'
 import { rendition } from './useRendition'
 import { isSidebar } from './useSidebar'
-import useVscode from './useVscode'
+import useVscode, { saveConfig } from './useVscode'
 import { edgeVoiceOptions } from './edgeVoices'
 import { parseSSML, type Segment } from './splitSentence'
 
@@ -85,13 +85,10 @@ export default function useTTS() {
 
   // Edge TTS 请求管理
   const BUFFER_SIZE = 4
-  let rid = 0
-  const nid = () => String(++rid)
-  let curId: string | null = null
-  let preIds: string[] = [] // 预取队列，最多 BUFFER_SIZE-1 个
-  const requestedIds = new Set<string>()
-  const urlCache = new Map<string, string>()
-  const urlWait = new Map<string, (u: string) => void>()
+  type AudioResult = { url: string; error?: never } | { url?: never; error: unknown }
+  let audioQueue: Promise<AudioResult>[] = []
+  let nextAudioIndex = 0
+  let requestController = new AbortController()
   const TTS_ERROR_NOTICE_INTERVAL = 60 * 1000
   let lastTTSErrorNoticeAt = 0
 
@@ -108,8 +105,8 @@ export default function useTTS() {
     )
   }
 
-  // AudioContext 创建一次，整个生命周期复用
-  const ctx = new window.AudioContext()
+  // 真正播放 Edge 音频时才创建，后续复用。
+  let ctx: AudioContext | null = null
   let schedEnd = 0
   let playbackRun = 0
   let playbackState: 'idle' | 'starting' | 'playing' | 'stopping' = 'idle'
@@ -134,100 +131,88 @@ export default function useTTS() {
 
   const clearEdge = () => {
     schedEnd = 0
-    curId = null
-    preIds = []
-    requestedIds.clear()
-    urlCache.clear()
-    urlWait.forEach((r) => r(''))
-    urlWait.clear()
+    requestController.abort()
+    requestController = new AbortController()
+    audioQueue = []
+    nextAudioIndex = 0
+    vscode?.postMessage({ type: 'ttsStop' })
   }
 
-  const getUrl = (id: string) => {
-    const c = urlCache.get(id)
-    if (c !== undefined) {
-      urlCache.delete(id)
-      return Promise.resolve(c)
-    }
-    return new Promise<string>((r) => urlWait.set(id, r))
+  const failPlayback = (error: unknown, run: number) => {
+    if (!isCurrentRun(run)) return
+    console.error('[TTS] 朗读失败:', error)
+    showTTSError(error instanceof Error ? error.message : String(error))
+    isReading.value = false
   }
 
-  const reqAudio = (id: string, text: string) => {
-    requestedIds.add(id)
-    vscode?.postMessage({
-      type: 'ttsSpeak',
-      content: { id, text, voice: ttsConfig.value.edgeVoice, speed: ttsConfig.value.speed },
-    })
+  const requestAudio = (text: string): Promise<AudioResult> => {
+    const request = vscode
+      ? vscode.invoke('ttsSpeak', {
+          text,
+          voice: ttsConfig.value.edgeVoice,
+          speed: ttsConfig.value.speed,
+        }, { signal: requestController.signal })
+      : Promise.reject(new Error('Edge TTS requires the VS Code extension'))
+
+    // 预取立即接住错误，轮到该句时再处理，避免提前失败丢失或未处理的 rejection。
+    return request.then((url) => ({ url }), (error) => ({ error }))
   }
 
-  const playUrl = async (url: string, id: string, run: number) => {
-    if (!url || !isCurrentRun(run) || curId !== id) {
-      return
-    }
+  const playUrl = async (url: string, run: number, signal: AbortSignal) => {
+    if (signal.aborted || !isCurrentRun(run)) return
     try {
-      if ((ctx as any).state === 'suspended') {
-        await (ctx as any).resume()
-      }
-      const resp = await fetch(url)
-      if (!resp.ok || !isCurrentRun(run) || curId !== id) {
-        return
-      }
-      const buf = await (ctx as any).decodeAudioData(await resp.arrayBuffer())
-      if (!isCurrentRun(run) || curId !== id) return
-      const src = (ctx as any).createBufferSource()
+      if (!url) throw new Error('Speech generation returned no audio URL')
+      const audio = ctx ??= new window.AudioContext()
+      if (audio.state === 'suspended') await audio.resume()
+      if (signal.aborted || !isCurrentRun(run)) return
+      const resp = await fetch(url, { signal })
+      if (!resp.ok) throw new Error(`Failed to load speech audio: ${resp.status}`)
+      const buf = await audio.decodeAudioData(await resp.arrayBuffer())
+      if (signal.aborted || !isCurrentRun(run)) return
+      const src = audio.createBufferSource()
       src.buffer = buf
-      src.connect((ctx as any).destination)
-      const t = Math.max((ctx as any).currentTime + 0.02, schedEnd)
+      src.connect(audio.destination)
+      const t = Math.max(audio.currentTime + 0.02, schedEnd)
       schedEnd = t + buf.duration
       src.onended = () => {
         activeSources.delete(src)
-        if (isCurrentRun(run) && curId === id) advance(run)
+        src.disconnect()
+        if (!signal.aborted && isCurrentRun(run)) advance(run)
       }
       // 音频下载、解码完成并即将播放时才切换高亮，避免网络等待期间提前高亮。
       setMarks(segs[segIdx]?.marks ?? [])
       activeSources.add(src)
       src.start(t)
     } catch (e) {
-      console.error('[TTS] 播放异常:', e)
-      if (isCurrentRun(run) && curId === id) advance(run)
+      if (!signal.aborted) failPlayback(e, run)
     }
   }
 
-  const speakEdge = (i: number, run: number) => {
+  const playNextAudio = async (run: number) => {
     if (!isCurrentRun(run)) return
-    const id = nid()
-    curId = id
-    reqAudio(id, segs[i].text)
-    // 预取后续最多 BUFFER_SIZE-1 句
-    preIds = []
-    for (let p = 1; p < BUFFER_SIZE && i + p < segs.length; p++) {
-      const pid = nid()
-      preIds.push(pid)
-      reqAudio(pid, segs[i + p].text)
+    const signal = requestController.signal
+    // 队列包含当前句和后续最多三句，按原文顺序消费 Promise。
+    while (audioQueue.length < BUFFER_SIZE && nextAudioIndex < segs.length) {
+      audioQueue.push(requestAudio(segs[nextAudioIndex++].text))
     }
-    getUrl(id).then((u) => playUrl(u, id, run))
+    const next = audioQueue.shift()
+    if (!next) return
+    const result = await next
+    if (signal.aborted || !isCurrentRun(run)) return
+    if ('error' in result) failPlayback(result.error, run)
+    else await playUrl(result.url, run, signal)
+  }
+
+  const speakEdge = (index: number, run: number) => {
+    nextAudioIndex = index
+    void playNextAudio(run)
   }
 
   const advance = (run: number) => {
     if (!isCurrentRun(run)) return
     segIdx++
     if (segIdx < segs.length) {
-      // 从预取队列取ID（已在飞请求），否则新建并立即请求
-      let id: string
-      if (preIds.length > 0) {
-        id = preIds.shift()!
-      } else {
-        id = nid()
-        reqAudio(id, segs[segIdx].text)
-      }
-      curId = id
-      getUrl(id).then((u) => playUrl(u, id, run))
-      // 队尾补1个新预取，维持 BUFFER_SIZE-1 深度
-      const nextPrefetch = segIdx + preIds.length + 1
-      if (nextPrefetch < segs.length) {
-        const pid = nid()
-        preIds.push(pid)
-        reqAudio(pid, segs[nextPrefetch].text)
-      }
+      void playNextAudio(run)
     } else {
       nextBlock(run)
     }
@@ -266,20 +251,25 @@ export default function useTTS() {
   }
 
   const nextBlock = async (run: number) => {
-    if (!rendition.value || !isCurrentRun(run)) return
-    const n = rendition.value.tts?.next?.()
-    if (n) {
-      loadBlock(n, run)
-      return
+    const current = rendition.value
+    if (!current || !isCurrentRun(run)) return
+    try {
+      const n = current.tts?.next?.()
+      if (n) {
+        loadBlock(n, run)
+        return
+      }
+      await current.next()
+      if (!isCurrentRun(run) || rendition.value !== current) return
+      current.tts = null
+      await current.initTTS('word', highlightTTSRange)
+      if (!isCurrentRun(run) || rendition.value !== current) return
+      const first = current.tts?.from?.(current.lastLocation?.range)
+      if (first) loadBlock(first, run)
+      else isReading.value = false
+    } catch (error) {
+      failPlayback(error, run)
     }
-    await rendition.value.next()
-    if (!isCurrentRun(run)) return
-    if (rendition.value.tts) rendition.value.tts = null
-    await rendition.value.initTTS('word', highlightTTSRange)
-    if (!isCurrentRun(run)) return
-    const first = rendition.value.tts?.from?.(rendition.value.lastLocation?.range)
-    if (first) loadBlock(first, run)
-    else isReading.value = false
   }
 
   const stopAll = () => {
@@ -294,30 +284,9 @@ export default function useTTS() {
     stopEdgePlayback()
     clearEdge()
     stopSys()
-    vscode?.postMessage({ type: 'ttsStop' })
     if (rendition.value?.tts) rendition.value.tts = null
     playbackState = 'idle'
   }
-
-  const handleMsg = ({ data }: MessageEvent) => {
-    if (!isReading.value || ttsConfig.value.engine !== 'edge') return
-    if (data?.type === 'ttsAudio' && data.id != null) {
-      if (!requestedIds.has(data.id)) return
-      const w = urlWait.get(data.id)
-      if (w) {
-        urlWait.delete(data.id)
-        w(data.content)
-      } else urlCache.set(data.id, data.content)
-    } else if (data?.type === 'ttsEnd' && data.id != null) {
-      if (!requestedIds.has(data.id)) return
-      const w = urlWait.get(data.id)
-      if (w) {
-        urlWait.delete(data.id)
-        w('')
-      }
-    }
-  }
-  window.addEventListener('message', handleMsg)
 
   watch(isReading, async (val: boolean) => {
     if (val) {
@@ -334,12 +303,17 @@ export default function useTTS() {
         isReading.value = false
         return
       }
-      if (rendition.value.tts) rendition.value.tts = null
-      await rendition.value.initTTS('word', highlightTTSRange)
-      if (!isReading.value || run !== playbackRun) return
-      const ssml = rendition.value.tts?.from?.(rendition.value.lastLocation?.range)
-      if (ssml) loadBlock(ssml, run)
-      else isReading.value = false
+      const current = rendition.value
+      try {
+        current.tts = null
+        await current.initTTS('word', highlightTTSRange)
+        if (!isCurrentRun(run) || rendition.value !== current) return
+        const ssml = current.tts?.from?.(current.lastLocation?.range)
+        if (ssml) loadBlock(ssml, run)
+        else isReading.value = false
+      } catch (error) {
+        failPlayback(error, run)
+      }
     } else {
       stopAll()
     }
@@ -384,25 +358,19 @@ export default function useTTS() {
   watch(
     ttsConfig,
     (config: Object) => {
-      if (!isSidebar.value && vscode) {
-        vscode.postMessage({
-          type: 'ttsConfig',
-          content: JSON.stringify(config),
-        })
-        // 朗读中配置变化 → 用新配置重新生成当前句并继续播放
-        if (isReading.value && segs.length) {
-          restartCurrent()
-        }
+      if (!isSidebar.value) {
+        void saveConfig('ttsConfig', JSON.stringify(config))
       }
+      // 包括侧边栏接收同步配置的情况。
+      if (isReading.value && segs.length) restartCurrent()
     },
     { deep: true },
   )
 
   onUnmounted(() => {
     stopAll()
-    ctx.close().catch(() => { })
+    ctx?.close().catch(() => { })
     window.speechSynthesis?.removeEventListener('voiceschanged', loadVoices)
-    window.removeEventListener('message', handleMsg)
   })
 
   return {
