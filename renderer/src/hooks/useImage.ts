@@ -74,14 +74,15 @@ export default function useImage() {
         indexRef.value = index
         showPreview.value = true
       })
-      handleImage()
     })
+    handleImage()
   }
 
   const handleImage = () => {
     imageList.value.forEach((img) => {
       if (imageDisplayMode.value === 'Mini') {
         img.style.width = `${miniMediaScale.value}%`
+        img.style.display = 'inline-block'
       } else if (imageDisplayMode.value === 'Hide') {
         img.style.display = 'none'
       } else {
